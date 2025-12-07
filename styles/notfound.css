@@ -1,0 +1,66 @@
+.nf-container {
+  min-height: 80vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #c2b9e9;
+  padding: 30px;
+}
+
+.nf-box {
+  text-align: center;
+  background: #4f4f51;
+  padding: 40px 30px;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  color: #fff;
+}
+
+.nf-title {
+  font-size: 90px;
+  margin: 0;
+  font-weight: 800;
+  color: #f58f7c;
+}
+
+.nf-sub {
+  font-size: 26px;
+  margin: 10px 0 20px;
+}
+
+.nf-text {
+  font-size: 18px;
+  line-height: 1.8;
+  opacity: 0.9;
+  margin-bottom: 30px;
+}
+
+.nf-btn {
+  display: inline-block;
+  background: #f58f7c;
+  color: #2c2b30;
+  padding: 12px 25px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 700;
+  transition: 0.2s;
+}
+
+.nf-btn:hover {
+  background: #f2c4ce;
+}
+
+/* موبايل */
+@media (max-width: 600px) {
+  .nf-title {
+    font-size: 65px;
+  }
+  .nf-sub {
+    font-size: 22px;
+  }
+  .nf-text {
+    font-size: 16px;
+  }
+}

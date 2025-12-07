@@ -811,8 +811,8 @@ body.modal-open {
   padding: 0;
   animation: slideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   max-height: 85vh;
-  overflow-y: auto;
   z-index: 100000;
+  padding-bottom: 148px;
 
   /* إصلاح التفاعل */
   pointer-events: auto;
@@ -1104,6 +1104,7 @@ body.modal-open {
 
 @media (max-width: 480px) {
   .dynamic-product-card {
+    padding-bottom: 148px;
     width: 187px;
   }
 

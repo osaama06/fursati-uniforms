@@ -1,26 +1,68 @@
-export default function ContactPage() {
-    return (
-        <div>
-            <h1>Contact Us</h1>
-            <p>Feel free to reach out to us through the form below.</p>
-            <form>
-                <label>
-                    Name:
-                    <input type="text" name="name" />
-                </label>
-                <br />
-                <label>
-                    Email:
-                    <input type="email" name="email" />
-                </label>
-                <br />
-                <label>
-                    Message:
-                    <textarea name="message"></textarea>
-                </label>
-                <br />
-                <button type="submit">Submit</button>
-            </form>
-        </div>
-    );
+'use client'
+import "@/styles/contact-us.css";
+
+import { useState } from "react";
+
+
+
+export default function ContactForm() {
+const [form, setForm] = useState({ name: "", email: "", message: "" });
+const [sent, setSent] = useState(false);
+
+
+const handleChange = (e) => {
+setForm({ ...form, [e.target.name]: e.target.value });
+};
+
+
+const handleSubmit = (e) => {
+e.preventDefault();
+setSent(true);
+};
+
+
+return (
+<div className="contact-container" dir="rtl">
+<h1 className="contact-title">تواصل معنا</h1>
+
+
+{sent ? (
+<div className="success-message">تم إرسال رسالتك بنجاح. شكرًا لتواصلك!</div>
+) : (
+<form className="contact-form" onSubmit={handleSubmit}>
+<label>الاسم</label>
+<input
+type="text"
+name="name"
+value={form.name}
+onChange={handleChange}
+required
+/>
+
+
+<label>البريد الإلكتروني</label>
+<input
+type="email"
+name="email"
+value={form.email}
+onChange={handleChange}
+required
+/>
+
+
+<label>الرسالة</label>
+<textarea
+name="message"
+value={form.message}
+onChange={handleChange}
+rows="5"
+required
+></textarea>
+
+
+<button type="submit" className="submit-btn">إرسال</button>
+</form>
+)}
+</div>
+);
 }

@@ -325,11 +325,11 @@ export default function DynamicProductCard({ product }) {
           <div className="price-section">
             <div className="price-container">
               <div className="current-price">
-                {finalPrice} <span className="currency">ر.س</span>
+                {finalPrice} <span className="currency">&#xFDFC;</span>
               </div>
               {originalPrice && product.sale_price && (
                 <div className="original-price">
-                  {originalPrice} ر.س
+                  {originalPrice}  &#xFDFC;
                 </div>
               )}
             </div>

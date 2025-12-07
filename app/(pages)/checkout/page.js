@@ -1,14 +1,12 @@
 'use client';
-
 import { useCart } from '../../context/CartContext';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '@/styles/checkOut.module.css';
 
 export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
   const router = useRouter();
-
   const [form, setForm] = useState({
     address: '',
     city: '',
@@ -16,50 +14,45 @@ export default function CheckoutPage() {
     postcode: '',
     country: 'SA',
   });
-
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleOrder = async () => {
-  setLoading(true);
-
-  try {
-    const response = await fetch('/api/create-order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, cartItems }),
-    });
-
-    let data = {};
+    setLoading(true);
     try {
-      data = await response.json();
-    } catch (jsonError) {
-      throw new Error("الرد من السيرفر ليس JSON صالح");
+      const token = localStorage.getItem('auth_token');
+
+      console.log("🚀 البيانات المرسلة:", { ...form, cartItems });
+      const response = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
+        body: JSON.stringify({ ...form, cartItems }),
+      });
+
+      const data = await response.json();
+      setLoading(false);
+
+      if (response.ok) {
+        clearCart();
+        router.push('/orders?new=true');
+      } else {
+        alert(data?.error || 'فشل في إنشاء الطلب');
+      }
+    } catch (error) {
+      setLoading(false);
+      alert('❌ خطأ: ' + error.message);
     }
-
-    setLoading(false);
-
-    if (response.ok) {
-      clearCart();
-      router.push('/thank-you');
-    } else {
-      alert(data?.error || 'فشل في إنشاء الطلب');
-    }
-  } catch (error) {
-    setLoading(false);
-    alert('❌ خطأ أثناء إنشاء الطلب: ' + error.message);
-  }
-};
-
+  };
 
   return (
     <div className={styles.checkoutPage}>
       <h1 className={styles.checkoutHeading}>الدفع</h1>
-
       {cartItems.length === 0 ? (
         <p className={styles.checkoutEmpty}>سلتك فارغة</p>
       ) : (
@@ -73,7 +66,6 @@ export default function CheckoutPage() {
               </div>
             ))}
           </div>
-
           <div className={styles.checkoutFormSection}>
             <h2>📦 العنوان</h2>
             <div className={styles.checkoutFormGrid}>
@@ -83,18 +75,9 @@ export default function CheckoutPage() {
               <input name="postcode" placeholder="الرمز البريدي" onChange={handleChange} className={styles.checkoutInput} />
               <input name="country" value="SA" readOnly className={styles.checkoutInput} />
             </div>
-
-            <button
-              onClick={handleOrder}
-              disabled={loading}
-              className={styles.checkoutButton}
-            >
+            <button onClick={handleOrder} disabled={loading} className={styles.checkoutButton}>
               {loading ? '⏳ يتم الإرسال...' : '✅ إرسال الطلب'}
             </button>
-
-            {error && (
-              <p style={{ color: 'red', marginTop: '1rem' }}>{error}</p>
-            )}
           </div>
         </div>
       )}

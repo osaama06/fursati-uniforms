@@ -1,0 +1,87 @@
+
+.wp-page-container {
+  max-width: 850px;
+  margin: 60px auto;
+  padding: 0 20px;
+  direction: rtl;
+  text-align: right;
+  font-family: "Tajawal", sans-serif;
+}
+
+/* العنوان */
+.wp-page-container h1 {
+  font-size: 32px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  color: #2c2b30;
+  border-right: 5px solid #f58f7c;
+  padding-right: 12px;
+}
+
+/* محتوى الصفحة */
+.wp-page-content {
+  font-size: 18px;
+  line-height: 1.9;
+  color: #333;
+}
+
+/* تنسيق العناوين داخل المحتوى */
+.wp-page-content h2,
+.wp-page-content h3,
+.wp-page-content h4 {
+  margin-top: 30px;
+  color: #2c2b30;
+  font-weight: 600;
+}
+
+/* تنسيق القوائم */
+.wp-page-content ul,
+.wp-page-content ol {
+  padding-right: 25px;
+  margin: 15px 0;
+}
+
+.wp-page-content li {
+  margin-bottom: 8px;
+}
+
+/* الروابط داخل المحتوى */
+.wp-page-content a {
+  color: #f58f7c;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.wp-page-content a:hover {
+  opacity: 0.7;
+}
+
+/* فواصل جميلة */
+.wp-page-content p {
+  margin-bottom: 18px;
+}
+
+/* اقتباسات */
+.wp-page-content blockquote {
+  padding: 15px 20px;
+  background: #f8f8f8;
+  border-right: 4px solid #f58f7c;
+  margin: 20px 0;
+  border-radius: 6px;
+  font-size: 17px;
+}
+
+/* للجوال */
+@media (max-width: 600px) {
+  .wp-page-container {
+    margin: 30px auto;
+  }
+
+  .wp-page-container h1 {
+    font-size: 26px;
+  }
+
+  .wp-page-content {
+    font-size: 16px;
+  }
+}

@@ -1,22 +1,26 @@
+// app/products/[slug]/page.js
 import ProductContent from './ProductContent';
+import { notFound } from "next/navigation";
+import { 
+  generateProductSchema, 
+  generateProductBreadcrumb,
+  renderSchema 
+} from '@/utils/schema';
 
 async function getProductBySlug(slug) {
   const consumerKey = process.env.WOO_CONSUMER_KEY;
   const secretKey = process.env.WOO_SECRET_KEY;
   const auth = Buffer.from(`${consumerKey}:${secretKey}`).toString("base64");
-
+  
   const res = await fetch(
     `https://furssati.io/wp-json/wc/v3/products?slug=${slug}`,
     {
-      headers: {
-        Authorization: `Basic ${auth}`,
-      },
+      headers: { Authorization: `Basic ${auth}` },
       cache: "no-store",
     }
   );
-
+  
   if (!res.ok) return null;
-
   const data = await res.json();
   return data.length > 0 ? data[0] : null;
 }
@@ -25,29 +29,87 @@ async function getVariations(productId) {
   const consumerKey = process.env.WOO_CONSUMER_KEY;
   const secretKey = process.env.WOO_SECRET_KEY;
   const auth = Buffer.from(`${consumerKey}:${secretKey}`).toString("base64");
-
+  
   const res = await fetch(
     `https://furssati.io/wp-json/wc/v3/products/${productId}/variations`,
     {
-      headers: {
-        Authorization: `Basic ${auth}`,
-      },
+      headers: { Authorization: `Basic ${auth}` },
       cache: "no-store",
     }
   );
-
+  
   if (!res.ok) return [];
+  return await res.json();
+}
 
-  const data = await res.json();
-  return data;
+function stripHtml(html) {
+  if (!html) return '';
+  return html.replace(/<[^>]*>/g, '').trim();
+}
+
+export async function generateMetadata({ params }) {
+  const product = await getProductBySlug(params.slug);
+  if (!product) return {};
+  
+  const seo = product.yoast_seo || {};
+  
+  return {
+    title: seo.title || product.name,
+    description: stripHtml(seo.metaDesc || product.short_description),
+    alternates: {
+      canonical: seo.canonical || `https://furssati.io/products/${product.slug}`,
+    },
+    openGraph: {
+      title: seo.opengraphTitle || seo.title || product.name,
+      description: stripHtml(seo.opengraphDescription || seo.metaDesc),
+      images: seo.opengraphImage ? [seo.opengraphImage] : product.images?.map(img => img.src),
+      url: seo.canonical || `https://furssati.io/products/${product.slug}`,
+      siteName: 'Furssati',
+      locale: 'ar_SA',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: seo.twitterTitle || seo.title || product.name,
+      description: stripHtml(seo.twitterDescription || seo.metaDesc),
+      images: seo.twitterImage ? [seo.twitterImage] : product.images?.[0]?.src,
+    },
+    other: {
+      'product:price:amount': product.price,
+      'product:price:currency': 'SAR',
+      'product:availability': product.stock_status === 'instock' ? 'in stock' : 'out of stock',
+    }
+  };
 }
 
 export default async function ProductPage({ params }) {
   const product = await getProductBySlug(params.slug);
+  
   if (!product) {
-    return <div >❌ المنتج غير موجود</div>;
+    notFound();
   }
-
+  
   const variations = await getVariations(product.id);
-  return <ProductContent product={product} variations={variations} />;
+  
+  // بناء الـ Schemas
+  const productSchema = generateProductSchema(product);
+  const breadcrumbSchema = generateProductBreadcrumb(product);
+  
+  return (
+    <>
+      {/* Product Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={renderSchema(productSchema)}
+      />
+      
+      {/* Breadcrumb Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={renderSchema(breadcrumbSchema)}
+      />
+      
+      <ProductContent product={product} variations={variations} />
+    </>
+  );
 }
