@@ -19,11 +19,11 @@ export function generateProductSchema(product) {
     "sku": product.sku || undefined,
     "brand": {
       "@type": "Brand",
-      "name": product.brand || "Furssati"
+      "name": product.brand || "Fursati"
     },
     "offers": {
       "@type": "Offer",
-      "url": `https://furssati.io/products/${product.slug}`,
+      "url": `https://fursatiuniforms.com/products/${product.slug}`,
       "priceCurrency": "SAR",
       "price": parseFloat(product.price),
       "priceValidUntil": new Date(new Date().setFullYear(new Date().getFullYear() + 1))
@@ -35,8 +35,8 @@ export function generateProductSchema(product) {
         : "https://schema.org/OutOfStock",
       "seller": {
         "@type": "Organization",
-        "name": "Furssati",
-        "url": "https://furssati.io"
+        "name": "Fursati",
+        "url": "https://fursatiuniforms.com"
       }
     }
   };
@@ -81,22 +81,22 @@ export function generateBreadcrumbSchema(items) {
 // Helper للمنتجات - يبني الـ Breadcrumb تلقائياً
 export function generateProductBreadcrumb(product) {
   const items = [
-    { name: "الرئيسية", url: "https://furssati.io" },
-    { name: "المنتجات", url: "https://furssati.io/products" }
+    { name: "الرئيسية", url: "https://fursatiuniforms.com" },
+    { name: "المنتجات", url: "https://fursatiuniforms.com/products" }
   ];
   
   // إضافة الفئة إذا موجودة
   if (product.categories && product.categories.length > 0) {
     items.push({
       name: product.categories[0].name,
-      url: `https://furssati.io/category/${product.categories[0].slug}`
+      url: `https://fursatiuniforms.com/category/${product.categories[0].slug}`
     });
   }
   
   // إضافة المنتج
   items.push({
     name: product.name,
-    url: `https://furssati.io/products/${product.slug}`
+    url: `https://fursatiuniforms.com/products/${product.slug}`
   });
   
   return generateBreadcrumbSchema(items);
@@ -111,7 +111,7 @@ export function generateCategorySchema(category, products = []) {
     "@type": "CollectionPage",
     "name": category.name,
     "description": stripHtml(category.description),
-    "url": `https://furssati.io/category/${category.slug}`,
+    "url": `https://fursatiuniforms.com/category/${category.slug}`,
   };
   
   // إضافة المنتجات كـ ItemList
@@ -125,7 +125,7 @@ export function generateCategorySchema(category, products = []) {
         "item": {
           "@type": "Product",
           "name": product.name,
-          "url": `https://furssati.io/products/${product.slug}`,
+          "url": `https://fursatiuniforms.com/products/${product.slug}`,
           "image": product.images?.[0]?.src,
           "offers": {
             "@type": "Offer",
@@ -146,9 +146,9 @@ export function generateCategorySchema(category, products = []) {
 // Helper للفئات - يبني الـ Breadcrumb تلقائياً
 export function generateCategoryBreadcrumb(category) {
   return generateBreadcrumbSchema([
-    { name: "الرئيسية", url: "https://furssati.io" },
-    { name: "المنتجات", url: "https://furssati.io/products" },
-    { name: category.name, url: `https://furssati.io/category/${category.slug}` }
+    { name: "الرئيسية", url: "https://fursatiuniforms.com" },
+    { name: "المنتجات", url: "https://fursatiuniforms.com/products" },
+    { name: category.name, url: `https://fursatiuniforms.com/category/${category.slug}` }
   ]);
 }
 
@@ -159,21 +159,21 @@ export function generateOrganizationSchema(config = {}) {
   return {
     "@context": "https://schema.org/",
     "@type": "Organization",
-    "name": config.name || "Furssati",
-    "url": config.url || "https://furssati.io",
-    "logo": config.logo || "https://furssati.io/logo.png",
+    "name": config.name || "Fursati",
+    "url": config.url || "https://fursatiuniforms.com",
+    "logo": config.logo || "https://fursati.io/logo.png",
     "description": config.description || "متجر إلكتروني متخصص في بيع المنتجات عالية الجودة",
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": config.phone || "+966-XX-XXX-XXXX",
+      "telephone": config.phone || "+966-533-812-602",
       "contactType": "Customer Service",
       "areaServed": "SA",
       "availableLanguage": ["Arabic", "English"]
     },
     "sameAs": config.socialLinks || [
-      "https://twitter.com/furssati",
-      "https://instagram.com/furssati",
-      "https://facebook.com/furssati"
+      "https://twitter.com/fursati",
+      "https://instagram.com/fursati",
+      "https://facebook.com/fursati"
     ]
   };
 }
@@ -185,14 +185,14 @@ export function generateWebsiteSchema(config = {}) {
   return {
     "@context": "https://schema.org/",
     "@type": "WebSite",
-    "name": config.name || "Furssati",
-    "url": config.url || "https://furssati.io",
-    "description": config.description || "متجر إلكتروني متخصص في بيع المنتجات",
+    "name": config.name || "Fursati",
+    "url": config.url || "https://fursatiuniforms.com",
+    "description": config.description || "متجر فرصتي للزي الموحد ",
     "potentialAction": {
       "@type": "SearchAction",
       "target": {
         "@type": "EntryPoint",
-        "urlTemplate": `${config.url || "https://furssati.io"}/search?q={search_term_string}`
+        "urlTemplate": `${config.url || "https://fursatiuniforms.com"}/search?q={search_term_string}`
       },
       "query-input": "required name=search_term_string"
     },
@@ -234,19 +234,19 @@ export function generateArticleSchema(article) {
     "dateModified": article.modified || article.updated_at,
     "author": {
       "@type": "Person",
-      "name": article.author?.name || "Furssati Team"
+      "name": article.author?.name || "Fursati Team"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "Furssati",
+      "name": "Fursati",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://furssati.io/logo.png"
+        "url": "https://fursatiuniforms.com/logo.png"
       }
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": article.url || `https://furssati.io/blog/${article.slug}`
+      "@id": article.url || `https://fursatiuniforms.com/blog/${article.slug}`
     }
   };
 }
@@ -259,9 +259,9 @@ export function generateLocalBusinessSchema(config = {}) {
     "@context": "https://schema.org/",
     "@type": "LocalBusiness",
     "name": config.name || "Fursati",
-    "image": config.image || "https://furssati.io/logo.png",
-    "url": config.url || "https://fursati-uniforms.com",
-    "telephone": config.phone || "+966-XX-XXX-XXXX",
+    "image": config.image || "https://fursatiuniforms.com/logo.png",
+    "url": config.url || "https://fursatiuniforms.com",
+    "telephone": config.phone || "+966-533-8",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": config.street || "شارع  الشيخ فيصل",

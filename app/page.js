@@ -31,22 +31,22 @@ async function getProductsByCategoryId(id) {
 
 // ✅ Metadata للـ Homepage
 export const metadata = {
-  title: 'Furssati - متجر الزي المدرسي والطبي الموحد | جودة عالية وأسعار منافسة',
-  description: 'متجر فرصتي المتخصص في بيع الزي المدرسي والطبي الموحد بجودة عالية وأسعار منافسة. نوفر سكراب طبي، مريول مدرسي، لابكوت، وجميع مستلزمات الزي الموحد في السعودية.',
-  keywords: 'زي مدرسي، سكراب طبي، مريول، لابكوت، زي موحد، فرصتي، furssati، ملابس طبية، ملابس مدرسية، زي موحد السعودية',
+  title: 'Fursati - متجر فرصتي للزي الموحد الطبي و المدرسي  | جودة عالية وأسعار حريقة',
+  description: 'متجر فرصتي للزي الموحد طبي و مدرسي وغيره بجودة عالية وأسعار حريقة. نوفر سكراب طبي، مريول مدرسي، لابكوت، وجميع مستلزمات الزي الموحد في السعودية.',
+  keywords: 'زي مدرسي، سكراب طبي، مريول، لابكوت،سديري,وزارة الصحة ,سدريي سحاب,بلوزة ,بالطو ، زي موحد، فرصتي، fursati، ملابس طبية، ملابس مدرسية، زي موحد السعودية,بالطو ',
   
   // Open Graph
   openGraph: {
-    title: 'Furssati - متجر الزي المدرسي والطبي الموحد',
+    title: 'Fursati - متجر فرصتي للزي الموحد ',
     description: 'متجر فرصتي المتخصص في بيع الزي المدرسي والطبي بجودة عالية وأسعار منافسة. توصيل لجميع مدن المملكة.',
-    url: 'https://furssati.io',
-    siteName: 'Furssati',
+    url: 'https://fursatiuniforms',
+    siteName: 'Fursatiuniforms',
     images: [
       {
-        url: 'https://furssati.io/og-image.jpg',
+        url: 'https://fursatiuniforms/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Furssati - متجر الزي الموحد',
+        alt: 'Fursati - متجر للزي الموحد',
       }
     ],
     locale: 'ar_SA',
@@ -56,15 +56,15 @@ export const metadata = {
   // Twitter Card
   twitter: {
     card: 'summary_large_image',
-    title: 'Furssati - متجر الزي المدرسي والطبي الموحد',
-    description: 'متجر فرصتي المتخصص في بيع الزي المدرسي والطبي بجودة عالية',
-    images: ['https://furssati.io/og-image.jpg'],
-    creator: '@furssati',
+    title: 'Fursati - متجر فرصتي للزي الموحد طبي مدرسي',
+    description: 'Fursati - متجر فرصتي للزي الموحد طبي مدرسي',
+    images: ['https://fursatiuniforms/og-image.jpg'],
+    creator: '@fursati',
   },
   
   // Additional Meta Tags
   alternates: {
-    canonical: 'https://furssati.io',
+    canonical: 'https://fursatiuniforms',
   },
   
   robots: {
@@ -96,26 +96,22 @@ export default async function Home() {
   
   // ✅ إعدادات الموقع للـ Schema
   const siteConfig = {
-    name: "Furssati",
+    name: "Fursati",
     alternateName: "فرصتي",
-    url: "https://furssati.io",
-    logo: "https://furssati.io/logo.png",
-    image: "https://furssati.io/og-image.jpg",
+    url: "https://fursatiuniforms",
+    logo: "https://fursatiuniforms/logo.png",
+    image: "https://fursatiuniforms/og-image.jpg",
     description: "متجر فرصتي المتخصص في بيع الزي المدرسي والطبي الموحد بجودة عالية وأسعار منافسة. نوفر سكراب طبي، مريول مدرسي، لابكوت، وجميع مستلزمات الزي الموحد في السعودية مع التوصيل لجميع المدن.",
-    phone: "+966500000000", // ⚠️ غير هذا لرقمك الفعلي
+    phone: "+966533812602", 
     email: "info@furssati.io",
     address: {
-      street: "شارع الملك فهد",
-      city: "الدمام",
-      region: "المنطقة الشرقية",
-      postalCode: "31952",
       country: "SA"
     },
     socialLinks: [
-      "https://twitter.com/furssati",
-      "https://instagram.com/furssati",
-      "https://facebook.com/furssati",
-      "https://tiktok.com/@furssati"
+      "https://twitter.com/fursati",
+      "https://instagram.com/fursati",
+      "https://facebook.com/fursati",
+      "https://tiktok.com/@fursati"
     ]
   };
   

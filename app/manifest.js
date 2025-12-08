@@ -1,8 +1,8 @@
 // app/manifest.js
 export default function manifest() {
   return {
-    name: 'Furssati - متجر الزي الموحد',
-    short_name: 'Furssati',
+    name: 'Fursati -متجر فرصتي للزي الموحد',
+    short_name: 'Fursati',
     description: 'متجر فرصتي المتخصص في بيع الزي المدرسي والطبي الموحد',
     start_url: '/',
     display: 'standalone',

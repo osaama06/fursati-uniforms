@@ -47,7 +47,7 @@ async function getCategories() {
 }
 
 export default async function sitemap() {
-  const baseUrl = 'https://furssati.io';
+  const baseUrl = 'https://fursatiuniforms';
   
   // جلب البيانات
   const products = await getProducts();

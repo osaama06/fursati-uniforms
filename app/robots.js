@@ -24,7 +24,7 @@ export default function robots() {
         ],
       },
     ],
-    sitemap: 'https://furssati.io/sitemap.xml',
-    host: 'https://furssati.io',
+    sitemap: 'https://fursatiuniforms/sitemap.xml',
+    host: 'https://fursatiuniforms',
   };
 }

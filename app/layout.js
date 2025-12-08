@@ -27,11 +27,11 @@ const geistMono = Geist_Mono({
 
 // ✅ Metadata الأساسية (سيتم override في الصفحات)
 export const metadata = {
-  metadataBase: new URL('https://furssati.io'),
+  metadataBase: new URL('https://fursatiuniforms.com'),
   
   title: {
-    default: 'Furssati - متجر الزي المدرسي والطبي الموحد',
-    template: '%s | Furssati', // لصفحات فرعية
+    default: 'Fursati -متجر فرصتي للزي الموحد',
+    template: '%s | Fussati', // لصفحات فرعية
   },
   
   description: 'متجر فرصتي المتخصص في بيع الزي المدرسي والطبي الموحد بجودة عالية وأسعار منافسة',
@@ -63,8 +63,8 @@ export const metadata = {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'default',
-    'apple-mobile-web-app-title': 'Furssati',
-    'application-name': 'Furssati',
+    'apple-mobile-web-app-title': 'Fursati',
+    'application-name': 'Fursati',
   },
 };
 
@@ -73,8 +73,8 @@ export default function RootLayout({ children }) {
     <html lang="ar" dir="rtl" className={`${tajawal.variable} ${geistSans.variable} ${geistMono.variable}`}>
       <head>
         {/* ✅ Preconnect للأداء */}
-        <link rel="preconnect" href="https://furssati.io" />
-        <link rel="dns-prefetch" href="https://furssati.io" />
+        <link rel="preconnect" href="https://ursatiuniforms.com" />
+        <link rel="dns-prefetch" href="https://ursatiuniforms.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
