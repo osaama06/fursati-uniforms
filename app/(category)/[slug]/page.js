@@ -53,7 +53,7 @@ export async function generateMetadata({ params }) {
   
   if (!seo) {
     return {
-      title: `${category.name} - Furssati`,
+      title: `${category.name} - Fursati`,
       description: stripHtml(category.description) || `تسوق منتجات ${category.name}`,
     };
   }
@@ -69,7 +69,7 @@ export async function generateMetadata({ params }) {
       description: stripHtml(seo.opengraphDescription) || stripHtml(seo.metaDesc) || stripHtml(category.description),
       images: seo.opengraphImage ? [seo.opengraphImage] : (category.image?.src ? [category.image.src] : []),
       url: seo.canonical || `https://furssati.io/category/${category.slug}`,
-      siteName: 'Furssati',
+      siteName: 'Fursati',
       locale: 'ar_SA',
       type: 'website',
     },

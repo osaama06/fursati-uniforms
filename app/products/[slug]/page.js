@@ -57,14 +57,14 @@ export async function generateMetadata({ params }) {
     title: seo.title || product.name,
     description: stripHtml(seo.metaDesc || product.short_description),
     alternates: {
-      canonical: seo.canonical || `https://furssati.io/products/${product.slug}`,
+      canonical: seo.canonical || `https://fursatiuniforms.com/products/${product.slug}`,
     },
     openGraph: {
       title: seo.opengraphTitle || seo.title || product.name,
       description: stripHtml(seo.opengraphDescription || seo.metaDesc),
       images: seo.opengraphImage ? [seo.opengraphImage] : product.images?.map(img => img.src),
-      url: seo.canonical || `https://furssati.io/products/${product.slug}`,
-      siteName: 'Furssati',
+      url: seo.canonical || `https://fursatiuniforms.com/products/${product.slug}`,
+      siteName: 'Fursati',
       locale: 'ar_SA',
       type: 'website',
     },

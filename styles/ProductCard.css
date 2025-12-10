@@ -1104,7 +1104,6 @@ body.modal-open {
 
 @media (max-width: 480px) {
   .dynamic-product-card {
-    padding-bottom: 148px;
     width: 187px;
   }
 

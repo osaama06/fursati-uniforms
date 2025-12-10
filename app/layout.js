@@ -31,7 +31,7 @@ export const metadata = {
   
   title: {
     default: 'Fursati -متجر فرصتي للزي الموحد',
-    template: '%s | Fussati', // لصفحات فرعية
+    template: '%s | Fursati', // لصفحات فرعية
   },
   
   description: 'متجر فرصتي المتخصص في بيع الزي المدرسي والطبي الموحد بجودة عالية وأسعار منافسة',
