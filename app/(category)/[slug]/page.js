@@ -11,9 +11,7 @@ import {
 
 import { fixYoastUrls } from "@/utils/seoCleaner";
 
-// ================================
-// جلب الكاتيجوري
-// ================================
+
 async function getCategoryBySlug(slug) {
   const auth = Buffer.from(
     `${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`
