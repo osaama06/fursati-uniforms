@@ -35,12 +35,11 @@
 }
 
 .logo-img {
-  max-height: 100%;
+  width: 120px;
   height: auto;
-  width: auto;
-  max-width: 100px;
   object-fit: contain;
 }
+
 
 .location {
   color: white;

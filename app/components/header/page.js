@@ -81,7 +81,7 @@ export default function Header() {
           </div>
           <Link href="/">
             <Image
-              src="/fursati-logo.png"
+              src="/logo.png"
               alt="Logo"
               width={120}
               height={40}
