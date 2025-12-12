@@ -5,7 +5,7 @@ const nextConfig = {
   images: {
     domains: [
       "furssati.io",
-      "furssati.com",
+      "fursatiuniforms.com",
       "i0.wp.com",
       "secure.gravatar.com"
     ]

@@ -73,8 +73,8 @@ export default function RootLayout({ children }) {
     <html lang="ar" dir="rtl" className={`${tajawal.variable} ${geistSans.variable} ${geistMono.variable}`}>
       <head>
         {/* ✅ Preconnect للأداء */}
-        <link rel="preconnect" href="https://ursatiuniforms.com" />
-        <link rel="dns-prefetch" href="https://ursatiuniforms.com" />
+        <link rel="preconnect" href="https://fursatiuniforms.com" />
+        <link rel="dns-prefetch" href="https://fursatiuniforms.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         

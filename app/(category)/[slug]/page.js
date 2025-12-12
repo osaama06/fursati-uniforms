@@ -2,27 +2,43 @@
 import ProductCard from "@/app/productCard/page";
 import { notFound } from "next/navigation";
 import "@/styles/products-grid.css";
+
 import { 
   generateCategorySchema, 
   generateCategoryBreadcrumb,
   renderSchema 
 } from '@/utils/schema';
 
+import { fixYoastUrls } from "@/utils/seoCleaner";
+
+// ================================
+// جلب الكاتيجوري
+// ================================
 async function getCategoryBySlug(slug) {
-  const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString("base64");
+  const auth = Buffer.from(
+    `${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`
+  ).toString("base64");
+
   const res = await fetch(
     "https://furssati.io/wp-json/wc/v3/products/categories",
-    { 
+    {
       headers: { Authorization: `Basic ${auth}` },
       cache: "no-store",
     }
   );
+
   const categories = await res.json();
   return categories.find((cat) => cat.slug === slug);
 }
 
+// ================================
+// جلب المنتجات حسب الكاتيجوري
+// ================================
 async function getProductsByCategoryId(id) {
-  const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString("base64");
+  const auth = Buffer.from(
+    `${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`
+  ).toString("base64");
+
   const res = await fetch(
     `https://furssati.io/wp-json/wc/v3/products?category=${id}&per_page=50`,
     {
@@ -30,104 +46,141 @@ async function getProductsByCategoryId(id) {
       cache: "no-store",
     }
   );
+
   return await res.json();
 }
 
-// دالة لتنظيف HTML tags
+// ================================
+// حذف HTML من النص
+// ================================
 function stripHtml(html) {
-  if (!html) return '';
-  return html.replace(/<[^>]*>/g, '').trim();
+  if (!html) return "";
+  return html.replace(/<[^>]*>/g, "").trim();
 }
 
-// ✅ Generate Metadata للكاتجوري
+// ================================
+// GENERATE METADATA
+// ================================
 export async function generateMetadata({ params }) {
   const category = await getCategoryBySlug(params.slug);
-  
+
   if (!category) {
     return {
-      title: 'فئة غير موجودة',
+      title: "فئة غير موجودة",
     };
   }
-  
+
   const seo = category.yoast_seo;
-  
+
+  // ما فيه Yoast → نحط شيء يدوي
   if (!seo) {
     return {
       title: `${category.name} - Fursati`,
-      description: stripHtml(category.description) || `تسوق منتجات ${category.name}`,
+      description:
+        stripHtml(category.description) || `تسوق منتجات ${category.name}`,
     };
   }
-  
+
   return {
-    title: seo.title || `${category.name} - Furssati`,
-    description: stripHtml(seo.metaDesc) || stripHtml(category.description) || `تسوق منتجات ${category.name}`,
+    title: fixYoastUrls(seo.title || `${category.name} - Fursati`),
+
+    description: fixYoastUrls(
+      stripHtml(seo.metaDesc) ||
+        stripHtml(category.description) ||
+        `تسوق منتجات ${category.name}`
+    ),
+
     alternates: {
-      canonical: seo.canonical || `https://furssati.io/category/${category.slug}`,
+      canonical: fixYoastUrls(
+        seo.canonical ||
+          `https://fursatiuniforms.com/category/${category.slug}`
+      ),
     },
+
     openGraph: {
-      title: seo.opengraphTitle || seo.title || category.name,
-      description: stripHtml(seo.opengraphDescription) || stripHtml(seo.metaDesc) || stripHtml(category.description),
-      images: seo.opengraphImage ? [seo.opengraphImage] : (category.image?.src ? [category.image.src] : []),
-      url: seo.canonical || `https://furssati.io/category/${category.slug}`,
-      siteName: 'Fursati',
-      locale: 'ar_SA',
-      type: 'website',
+      title: fixYoastUrls(seo.opengraphTitle || seo.title || category.name),
+
+      description: fixYoastUrls(
+        stripHtml(seo.opengraphDescription) ||
+          stripHtml(seo.metaDesc) ||
+          stripHtml(category.description)
+      ),
+
+      images: seo.opengraphImage
+        ? [fixYoastUrls(seo.opengraphImage)]
+        : category.image?.src
+        ? [fixYoastUrls(category.image.src)]
+        : [],
+
+      url: fixYoastUrls(
+        seo.canonical ||
+          `https://fursatiuniforms.com/category/${category.slug}`
+      ),
+
+      siteName: "Fursati",
+      locale: "ar_SA",
+      type: "website",
     },
+
     twitter: {
-      card: 'summary_large_image',
-      title: seo.twitterTitle || seo.title || category.name,
-      description: stripHtml(seo.twitterDescription) || stripHtml(seo.metaDesc) || stripHtml(category.description),
-      images: seo.twitterImage ? [seo.twitterImage] : (category.image?.src ? [category.image.src] : []),
+      card: "summary_large_image",
+      title: fixYoastUrls(seo.twitterTitle || seo.title || category.name),
+      description: fixYoastUrls(
+        stripHtml(seo.twitterDescription) ||
+          stripHtml(seo.metaDesc) ||
+          stripHtml(category.description)
+      ),
+      images: seo.twitterImage
+        ? [fixYoastUrls(seo.twitterImage)]
+        : category.image?.src
+        ? [fixYoastUrls(category.image.src)]
+        : [],
     },
   };
 }
 
+// ================================
+// PAGE
+// ================================
 export default async function CategoryPage({ params }) {
   const category = await getCategoryBySlug(params.slug);
-  
-  if (!category) {
-    notFound();
-  }
-  
+
+  if (!category) notFound();
+
   const products = await getProductsByCategoryId(category.id);
-  
-  // ✅ بناء الـ Schemas
+
+  // Schemas
   const categorySchema = generateCategorySchema(category, products);
   const breadcrumbSchema = generateCategoryBreadcrumb(category);
-  
+
   return (
     <>
-      {/* ✅ Category CollectionPage Schema */}
+      {/* Category Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={renderSchema(categorySchema)}
       />
-      
-      {/* ✅ Breadcrumb Schema */}
+
+      {/* Breadcrumb Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={renderSchema(breadcrumbSchema)}
       />
-      
-      {/* محتوى الصفحة */}
+
       <main className="products-page">
         <div className="category-header">
           <h1>منتجات {category.name}</h1>
-          
-          {/* وصف الفئة إذا موجود */}
+
           {category.description && (
-            <div 
+            <div
               className="category-description"
               dangerouslySetInnerHTML={{ __html: category.description }}
             />
           )}
-          
-          {/* عدد المنتجات */}
-          <p className="products-count">
-            {products.length} منتج
-          </p>
+
+          <p className="products-count">{products.length} منتج</p>
         </div>
-        
+
         {products.length === 0 ? (
           <p className="no-products">لا توجد منتجات في هذه الفئة</p>
         ) : (

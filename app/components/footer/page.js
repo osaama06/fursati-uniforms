@@ -24,13 +24,14 @@ export default function Footer() {
             <li><Link href="/about-us">من نحن</Link></li>
             <li><Link href="/contact">تواصل معنا</Link></li>
             <li><Link href="/shipping">الشحن </Link></li>
+            <li><Link href="/blog">المدونة </Link></li>
           </ul>
         </div>
 
         <div className="footer-col">
           <h3>تواصل معنا</h3>
           <ul>
-            <li>📞 رقم التواصل: 05xxxxxxxx</li>
+            <li>📞 رقم التواصل: 0533812602</li>
             <li>📩 البريد: info@furssati.io</li>
             <li><a href="https://wa.me/+966533812602">واتساب المتجر</a></li>
           </ul>

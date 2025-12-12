@@ -47,7 +47,7 @@ async function getCategories() {
 }
 
 export default async function sitemap() {
-  const baseUrl = 'https://fursatiuniforms';
+  const baseUrl = 'https://fursatiuniforms.com';
   
   // جلب البيانات
   const products = await getProducts();
@@ -68,7 +68,7 @@ export default async function sitemap() {
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/about`,
+      url: `${baseUrl}/about-us`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.5,

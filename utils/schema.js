@@ -159,10 +159,10 @@ export function generateOrganizationSchema(config = {}) {
   return {
     "@context": "https://schema.org/",
     "@type": "Organization",
-    "name": config.name || "Fursati",
+    "name": config.name || "Fursati فرصتي ",
     "url": config.url || "https://fursatiuniforms.com",
     "logo": config.logo || "https://fursati.io/logo.png",
-    "description": config.description || "متجر إلكتروني متخصص في بيع المنتجات عالية الجودة",
+    "description": config.description || "متجر فرصتي يونيفومز لكل ملابس الزي الموحد الطبي و المدرسي و المهني والتطريز",
     "contactPoint": {
       "@type": "ContactPoint",
       "telephone": config.phone || "+966-533-812-602",
@@ -246,44 +246,11 @@ export function generateArticleSchema(article) {
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": article.url || `https://fursatiuniforms.com/blog/${article.slug}`
+      "@id": article.url || `https://fursatiuniforms.com/blog/${slug}`
     }
   };
 }
 
-// ========================================
-// 8. Local Business Schema - للأعمال المحلية
-// ========================================
-export function generateLocalBusinessSchema(config = {}) {
-  return {
-    "@context": "https://schema.org/",
-    "@type": "LocalBusiness",
-    "name": config.name || "Fursati",
-    "image": config.image || "https://fursatiuniforms.com/logo.png",
-    "url": config.url || "https://fursatiuniforms.com",
-    "telephone": config.phone || "+966-533-8",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": config.street || "شارع  الشيخ فيصل",
-      "addressLocality": config.city || "سكاكا",
-      "addressRegion": config.region || "الجوف",
-      "addressCountry": "SA"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": config.latitude || 24.7136,
-      "longitude": config.longitude || 46.6753
-    },
-    "openingHoursSpecification": config.openingHours || [
-      {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
-        "opens": "09:00",
-        "closes": "18:00"
-      }
-    ]
-  };
-}
 
 // ========================================
 // 9. Helper - تنسيق Schema للاستخدام

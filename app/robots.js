@@ -25,6 +25,6 @@ export default function robots() {
       },
     ],
     sitemap: 'https://fursatiuniforms/sitemap.xml',
-    host: 'https://fursatiuniforms',
+    host: 'https://fursatiuniforms.com',
   };
 }
