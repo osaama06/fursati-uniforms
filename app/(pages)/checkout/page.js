@@ -2,7 +2,7 @@
 import { useCart } from '../../context/CartContext';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import styles from '@/styles/checkOut.module.css';
+import styles from '@/styles/cpages/heckOut.module.css';
 
 export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();

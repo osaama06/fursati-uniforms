@@ -1,4 +1,4 @@
-import "@/styles/products-grid.css";
+import "@/styles/components/products-grid.css";
 import ProductCard from "../productCard/page";
 import { searchProducts } from "@/lib/api";
 import { renderSchema, combineSchemas } from "@/utils/schema";

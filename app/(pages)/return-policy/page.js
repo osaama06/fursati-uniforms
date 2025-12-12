@@ -1,4 +1,4 @@
-import "@/styles/info-pages.css";
+import "@/styles/pages/info-pages.css";
 
 // تنظيف HTML من التاجات
 function stripHtml(html) {

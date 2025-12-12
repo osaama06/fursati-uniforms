@@ -1,4 +1,4 @@
-import "@/styles/info-pages.css";
+import "@/styles/pages/info-pages.css";
 
 // ---------------------
 // 🟦 Metadata

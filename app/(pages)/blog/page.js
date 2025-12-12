@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import "@/styles/blog.css";
+import "@/styles/pages/blog.css";
 
 // =========================================================
 // 1) جلب بوستات WordPress

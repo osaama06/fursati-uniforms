@@ -9,7 +9,7 @@ import { FiShoppingCart } from 'react-icons/fi';
 import { Star, Heart, Share2, Truck, Shield, RotateCcw, Award, Plus, Minus, X, ChevronLeft, ChevronRight } from "lucide-react";
 import ReviewForm from "@/app/components/ReviewForm";
 import ProductSlider from "@/app/components/ProductSlider/page";
-import '@/styles/ProductPage.css';
+import '@/styles/pages/ProductPage.css';
 
 export default function ProductContent({ product, variations }) {
   const { addToCart } = useCart();

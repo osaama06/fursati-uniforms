@@ -1,5 +1,5 @@
 'use client'
-import "@/styles/contact-us.css";
+import "@/styles/pages/contact-us.css";
 
 import { useState } from "react";
 

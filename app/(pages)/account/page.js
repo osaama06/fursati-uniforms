@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import Image from 'next/image';
 import Link from 'next/link';
-import '@/styles/account.css';
+import '@/styles/pages/account.css';
 import { redirect } from 'next/navigation';
 
 const secret = process.env.JWT_SECRET;

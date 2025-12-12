@@ -1,10 +1,12 @@
+//banner slider component
 'use client';
 
-import "@/styles/BannerSlider.css";
+import "@/styles/components/BannerSlider.css";
 import { useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 export default function BannerSlider() {
+  
   const [banners, setBanners] = useState([]);
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -39,9 +41,27 @@ export default function BannerSlider() {
   const nextSlide = () => setCurrent((prev) => (prev + 1) % banners.length);
   const prevSlide = () => setCurrent((prev) => (prev - 1 + banners.length) % banners.length);
 
-  if (banners.length === 0) return null;
+  // if (banners.length === 0) return null;
+  if (banners.length === 0) {
+  return (
+    <div className="banner-slider skeleton">
+      <div className="skeleton-img"></div>
+
+      <button className="left skeleton-btn">
+        <FaChevronLeft size={24} />
+      </button>
+
+      <button className="right skeleton-btn">
+        <FaChevronRight size={24} />
+      </button>
+    </div>
+  );
+}
+
 
   return (
+
+    
     <div
       className="banner-slider"
       onMouseEnter={() => setPaused(true)}

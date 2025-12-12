@@ -1,7 +1,7 @@
 //app/category/[slug]/page.js
 import ProductCard from "@/app/productCard/page";
 import { notFound } from "next/navigation";
-import "@/styles/products-grid.css";
+import "@/styles/components/products-grid.css";
 
 import { 
   generateCategorySchema, 

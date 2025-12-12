@@ -1,5 +1,5 @@
 // import Link from "next/link";
-import "@/styles/footer.css";
+import "@/styles/components/footer.css";
 // app/components/Footer.js
 
 import Link from "next/link";

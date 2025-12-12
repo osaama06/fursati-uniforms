@@ -4,7 +4,7 @@ import { useCart } from '../../context/CartContext';
 import Image from 'next/image';
 import Link from 'next/link';
 import ReusableButton from '../../button/page';
-import styles from '@/styles/cart.module.css';
+import styles from '@/styles/pages/cart.module.css';
 
 
 

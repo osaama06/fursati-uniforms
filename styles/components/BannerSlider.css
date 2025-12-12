@@ -1,0 +1,112 @@
+.banner-slider {
+  position: relative;
+  width: 100%;
+  height: 530px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.banner-slider img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* مهم لضبط أبعاد الصورة */
+  transition: opacity 0.5s ease;
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.banner-slider img.active {
+  opacity: 1;
+  z-index: 1;
+  position: relative;
+}
+
+.banner-slider button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.4);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  cursor: pointer;
+  z-index: 2;
+  border-radius: 6px;
+}
+
+.banner-slider button.left {
+  left: 15px;
+}
+
+.banner-slider button.right {
+  right: 15px;
+}
+
+/* 👇 الوضع للجوال */
+@media (max-width: 768px) {
+  .banner-slider {
+    height: auto;
+    aspect-ratio: 16 / 6;
+  }
+
+  .banner-slider button {
+    padding: 6px;
+  }
+}
+
+
+/*skeleton styles*/
+/* Skeleton Parent */
+.banner-slider.skeleton {
+  position: relative;
+  width: 100%;
+  height: 530px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #e5e5e5;
+}
+
+/* Skeleton Image */
+.skeleton-img {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #e5e5e5 0%, #f2f2f2 50%, #e5e5e5 100%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.4s infinite;
+}
+
+/* Skeleton Buttons (شفافة) */
+.skeleton-btn {
+  background-color: rgba(0, 0, 0, 0.15);
+  border: none;
+  color: #ffffffbd;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+/* نفس أماكن الأزرار الأصلية */
+.skeleton-btn.left {
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+}
+
+.skeleton-btn.right {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+}
+
+/* الشيمر */
+@keyframes loading-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}

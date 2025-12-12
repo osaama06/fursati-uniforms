@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { IoBagAddOutline } from "react-icons/io5";
 import { useCart } from '../context/CartContext';
 import { useRouter } from 'next/navigation';
-import '@/styles/ProductCard.css';
+import '@/styles/components/ProductCard.css';
 
 export default function DynamicProductCard({ product }) {
   const [added, setAdded] = useState(false);

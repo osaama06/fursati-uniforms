@@ -9,7 +9,7 @@ import { IoMenuSharp } from "react-icons/io5";
 import { useCart } from "../../context/CartContext";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import "@/styles/Header.css";
+import "@/styles/components/Header.css";
 
 export default function Header() {
   const { cartItems } = useCart();

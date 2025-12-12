@@ -1,3 +1,4 @@
+/* Thumbnails */
 .story-thumbnails {
   display: flex;
   gap: 10px;
@@ -6,6 +7,7 @@
   margin: 10px 0;
 }
 
+/* Story circle */
 .story-circle {
   width: 40px;
   height: 40px;
@@ -20,18 +22,40 @@
   transform: scale(1.05);
 }
 
+/* Skeleton */
+.story-skeleton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    #e0e0e0 25%,
+    #f0f0f0 37%,
+    #e0e0e0 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* Fullscreen */
 .story-fullscreen {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.9);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
   flex-direction: column;
+  z-index: 9999;
   padding: 20px;
 }
 
@@ -39,15 +63,16 @@
   max-width: 90%;
   max-height: 80%;
   border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
+/* Controls */
 .close-btn {
   position: absolute;
   top: 20px;
   right: 30px;
   font-size: 30px;
-  color: white;
+  color: #fff;
   background: none;
   border: none;
   cursor: pointer;
@@ -58,7 +83,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 40px;
-  color: white;
+  color: #fff;
   background: none;
   border: none;
   cursor: pointer;
@@ -72,6 +97,7 @@
   right: 20px;
 }
 
+/* Progress bar */
 .progress-bar {
   height: 5px;
   width: 90%;
@@ -99,19 +125,15 @@
   }
 }
 
-
-/* Media query for laptops (min-width: 1024px) */
-@media (min-width: 1024px) and (max-width: 1440px) {
+/* Laptop */
+@media (min-width: 1024px) {
+  .story-circle,
+  .story-skeleton {
+    width: 60px;
+    height: 60px;
+  }
 
   .story-thumbnails {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin: 20px 0;
-}
-  .story-circle {
-  width: 60px;
-  height: 60px;
-}
+    margin: 20px 0;
+  }
 }
