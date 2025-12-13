@@ -1,86 +1,166 @@
-//banner slider component
 'use client';
-
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import Image from "next/image";
+// استخدام المسار النسبي لضمان العمل بغض النظر عن إعدادات الـ alias
 import "@/styles/components/BannerSlider.css";
-import { useState, useEffect } from "react";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+
+const ChevronLeft = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" width="24" height="24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+  </svg>
+);
+
+const ChevronRight = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" width="24" height="24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+  </svg>
+);
 
 export default function BannerSlider() {
-  
   const [banners, setBanners] = useState([]);
   const [current, setCurrent] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const touchStartX = useRef(null);
+  const touchEndX = useRef(null);
 
   useEffect(() => {
+    let mounted = true;
     async function fetchBanners() {
       try {
         const res = await fetch('https://furssati.io/wp-json/wp/v2/banner?_embed');
         const data = await res.json();
 
-        const bannerImages = data.map(post =>
-          post._embedded?.['wp:featuredmedia']?.[0]?.source_url || ''
-        );
+        // استخراج الصور بأمان بدون أنواع TS معقدة لتجنب أخطاء السنتاكس
+        const bannerImages = data.map((post) => {
+           // التأكد من وجود البيانات المتداخلة
+           const media = post._embedded && post._embedded['wp:featuredmedia'];
+           return (media && media[0] && media[0].source_url) || '';
+        });
 
-        setBanners(bannerImages.filter(Boolean));
+        if (mounted) {
+          setBanners(bannerImages.filter(Boolean));
+          setIsLoading(false);
+        }
       } catch (err) {
         console.error("فشل في تحميل البانرات:", err);
+        if (mounted) setIsLoading(false);
       }
     }
 
     fetchBanners();
+    return () => { mounted = false; };
   }, []);
 
+  const nextSlide = useCallback(() => {
+    setCurrent((prev) => (prev + 1) % banners.length);
+  }, [banners.length]);
+
+  const prevSlide = useCallback(() => {
+    setCurrent((prev) => (prev - 1 + banners.length) % banners.length);
+  }, [banners.length]);
+
+  const goToSlide = (index) => {
+    setCurrent(index);
+  };
+
   useEffect(() => {
-    if (paused || banners.length === 0) return;
-    const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % banners.length);
-    }, 5000);
+    if (isPaused || banners.length === 0) return;
+    const interval = setInterval(nextSlide, 5000);
     return () => clearInterval(interval);
-  }, [paused, banners, current]);
+  }, [isPaused, banners.length, nextSlide]);
 
-  const nextSlide = () => setCurrent((prev) => (prev + 1) % banners.length);
-  const prevSlide = () => setCurrent((prev) => (prev - 1 + banners.length) % banners.length);
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+    setIsPaused(true);
+  };
 
-  // if (banners.length === 0) return null;
-  if (banners.length === 0) {
-  return (
-    <div className="banner-slider skeleton">
-      <div className="skeleton-img"></div>
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
 
-      <button className="left skeleton-btn">
-        <FaChevronLeft size={24} />
-      </button>
-
-      <button className="right skeleton-btn">
-        <FaChevronRight size={24} />
-      </button>
-    </div>
-  );
-}
-
-
-  return (
-
+  const handleTouchEnd = () => {
+    setIsPaused(false);
+    if (!touchStartX.current || !touchEndX.current) return;
     
+    const distance = touchStartX.current - touchEndX.current;
+    const SWIPE_THRESHOLD = 50;
+
+    if (distance > SWIPE_THRESHOLD) {
+      nextSlide();
+    } else if (distance < -SWIPE_THRESHOLD) {
+      prevSlide();
+    }
+    
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
+  if (isLoading || banners.length === 0) {
+    return (
+      <div className="banner-skeleton">
+        <div className="skeleton-shimmer"></div>
+      </div>
+    );
+  }
+
+  return (
     <div
       className="banner-slider"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      role="region"
+      aria-label="Promotional Banners"
     >
       {banners.map((src, index) => (
-        <img
+        <div
           key={index}
-          src={src}
-          alt={`banner-${index}`}
-          className={index === current ? "active" : ""}
-        />
+          className={`banner-slide ${index === current ? "active" : ""}`}
+        >
+          <Image
+            src={src}
+            alt={`Banner ${index + 1}`}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+            className="banner-image"
+            priority={index === 0}
+            draggable={false}
+          />
+          <div className="banner-overlay"></div>
+        </div>
       ))}
-      <button onClick={prevSlide} className="left">
-        <FaChevronLeft size={24} />
+
+      <button 
+        className="banner-control prev" 
+        onClick={(e) => { e.stopPropagation(); prevSlide(); }}
+        aria-label="Previous Slide"
+      >
+        <ChevronLeft />
       </button>
-      <button onClick={nextSlide} className="right">
-        <FaChevronRight size={24} />
+
+      <button 
+        className="banner-control next" 
+        onClick={(e) => { e.stopPropagation(); nextSlide(); }}
+        aria-label="Next Slide"
+      >
+        <ChevronRight />
       </button>
+
+      <div className="banner-indicators">
+        {banners.map((_, index) => (
+          <button
+            key={index}
+            className={`banner-dot ${index === current ? "active" : ""}`}
+            onClick={(e) => { e.stopPropagation(); goToSlide(index); }}
+            aria-label={`Go to slide ${index + 1}`}
+            aria-current={index === current}
+          />
+        ))}
+      </div>
     </div>
   );
 }

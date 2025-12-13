@@ -1,122 +1,169 @@
+/* --- Main Container --- */
 .banner-slider {
   position: relative;
   width: 100%;
-  height: 530px;
+  height: 250px; /* Mobile height */
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 16px;
+  background-color: #1a1a1a;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  user-select: none; /* Prevent text selection during swipe */
 }
 
-.banner-slider img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* مهم لضبط أبعاد الصورة */
-  transition: opacity 0.5s ease;
-  opacity: 0;
+@media (min-width: 640px) {
+  .banner-slider {
+    height: 350px;
+  }
+}
+
+@media (min-width: 768px) {
+  .banner-slider {
+    height: 530px;
+  }
+}
+
+/* --- Slides --- */
+.banner-slide {
   position: absolute;
   top: 0;
   left: 0;
-}
-
-.banner-slider img.active {
-  opacity: 1;
-  z-index: 1;
-  position: relative;
-}
-
-.banner-slider button {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: rgba(0, 0, 0, 0.4);
-  border: none;
-  color: white;
-  padding: 8px 12px;
-  cursor: pointer;
-  z-index: 2;
-  border-radius: 6px;
-}
-
-.banner-slider button.left {
-  left: 15px;
-}
-
-.banner-slider button.right {
-  right: 15px;
-}
-
-/* 👇 الوضع للجوال */
-@media (max-width: 768px) {
-  .banner-slider {
-    height: auto;
-    aspect-ratio: 16 / 6;
-  }
-
-  
-
-  .banner-slider button {
-    padding: 6px;
-  }
-}
-
-
-/*skeleton styles*/
-/* Skeleton Parent */
-.banner-slider.skeleton {
-  position: relative;
-  width: 100%;
-  height: 530px;
-  overflow: hidden;
-  border-radius: 12px;
-  background: #e5e5e5;
-}
-
-/* Skeleton Image */
-.skeleton-img {
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, #e5e5e5 0%, #f2f2f2 50%, #e5e5e5 100%);
-  background-size: 200% 100%;
-  animation: loading-shimmer 1.4s infinite;
+  opacity: 0;
+  z-index: 0;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity;
 }
 
-/* Skeleton Buttons (شفافة) */
-.skeleton-btn {
-  background-color: rgba(0, 0, 0, 0.15);
-  border: none;
-  color: #ffffffbd;
+.banner-slide.active {
+  opacity: 1;
+  z-index: 10;
+}
+
+.banner-image {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+/* Overlay for text contrast (optional) */
+.banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* --- Controls (Glassmorphism Buttons) --- */
+.banner-control {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0; /* Hidden by default, shown on hover/touch */
+}
+
+/* Show controls on hover or if focused */
+.banner-slider:hover .banner-control,
+.banner-control:focus {
+  opacity: 1;
+}
+
+.banner-control:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.banner-control:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.banner-control.prev {
+  left: 16px;
+}
+
+.banner-control.next {
+  right: 16px;
+}
+
+/* --- Indicators (Dots) --- */
+.banner-indicators {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  gap: 8px;
   padding: 8px 12px;
-  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+  border-radius: 20px;
 }
 
-/* نفس أماكن الأزرار الأصلية */
-.skeleton-btn.left {
+.banner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  border: none;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.4s ease;
+}
+
+.banner-dot:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.banner-dot.active {
+  width: 24px;
+  background: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+/* --- Skeleton Loading (Shimmer) --- */
+.banner-skeleton {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  background: #e0e0e0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) { .banner-skeleton { height: 350px; } }
+@media (min-width: 768px) { .banner-skeleton { height: 530px; } }
+
+.skeleton-shimmer {
   position: absolute;
-  top: 50%;
-  left: 15px;
-  transform: translateY(-50%);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-20deg);
+  animation: shimmer 1.5s infinite;
 }
 
-.skeleton-btn.right {
-  position: absolute;
-  top: 50%;
-  right: 15px;
-  transform: translateY(-50%);
-}
-
-/* الشيمر */
-@keyframes loading-shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-@media (max-width: 768px) {
-
-  
-  .banner-slider.skeleton{
-    height: auto;
-    aspect-ratio: 16 / 6;
-  }
+@keyframes shimmer {
+  0% { transform: translateX(-150%) skewX(-20deg); }
+  100% { transform: translateX(150%) skewX(-20deg); }
 }
