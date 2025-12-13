@@ -52,7 +52,7 @@ async function getProductsByCategoryId(id) {
 // ✅ Metadata (Homepage)
 // =============================
 export const metadata = {
-  title: "Fursati | متجر فرصتي للزي الموحد الطبي والمدرسي",
+  title: "فرصتي | تسوق جميع منتجات الزي الموحد",
   description:
     "متجر فرصتي للزي الموحد الطبي والمدرسي. سكراب طبي، مريول مدرسي، لابكوت، زي موحد بجودة عالية وأسعار منافسة مع توصيل لجميع مدن السعودية.",
   keywords:

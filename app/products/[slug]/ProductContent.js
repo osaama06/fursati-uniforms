@@ -306,9 +306,9 @@ export default function ProductContent({ product, variations }) {
               <span className="currentPrice">
                 {product.sale_price || product.price} <Image
                           src="/sar.webp"
-                          alt="Logo"
-                          width={200}
-                          height={200}
+                          alt="curentpice"
+                          width={20}
+                          height={20}
                           className="sarsymbol-img"
                         /> 
               </span>
@@ -317,7 +317,7 @@ export default function ProductContent({ product, variations }) {
                   <span className="originalPrice">
                     {product.regular_price} <Image
                           src="/sar.webp"
-                          alt="Logo"
+                          alt="originalprice"
                           width={20}
                           height={20}
                           className="sarsymbol-img"
@@ -451,7 +451,7 @@ export default function ProductContent({ product, variations }) {
           <div className="buyBoxPrice">
             {product.sale_price || product.price} <Image
                           src="/sar.webp"
-                          alt="Logo"
+                          alt="paybox"
                           width={20}
                           height={20}
                           className="sarsymbol-img"
@@ -463,7 +463,7 @@ export default function ProductContent({ product, variations }) {
               <span className="originalPrice" style={{fontSize: '14px'}}>
                 {product.regular_price} <Image
                           src="/sar.webp"
-                          alt="Logo"
+                          alt="originalprice"
                           width={20}
                           height={20}
                           className="sarsymbol-img"

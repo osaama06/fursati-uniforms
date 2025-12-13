@@ -253,10 +253,18 @@ export default function DynamicProductCard({ product }) {
               <span className="review-count">(0)</span>
             </div>
           </div>
-          <h3 className="product-name">جاري التحميل...</h3>
+          <h3 className="product-name">loading...</h3>
           <div className="price-section">
             <div className="price-container">
-              <div className="current-price">-- <span className="currency">ر.س</span></div>
+              <div className="current-price">00<span className="currency">
+                                    {product.regular_price} <Image
+                                          src="/sar.webp"
+                                          alt="Logo"
+                                          width={20}
+                                          height={20}
+                                          className="sarsymbol-img"
+                                        /> 
+                </span></div>
             </div>
           </div>
         </div>
@@ -325,7 +333,16 @@ export default function DynamicProductCard({ product }) {
           <div className="price-section">
             <div className="price-container">
               <div className="current-price">
-                {finalPrice} <span className="currency">&#xFDFC;</span>
+                 <span className="currency">
+                                      {product.regular_price} <Image
+                                            src="/sar.webp"
+                                            alt="Logo"
+                                            width={20}
+                                            height={20}
+                                            className="sarsymbol-img"
+                                          /> 
+                </span>  
+                {finalPrice}
               </div>
               {originalPrice && product.sale_price && (
                 <div className="original-price">
