@@ -42,13 +42,12 @@ export const metadata = {
     apple: '/apple-touch-icon.png',
   },
   
-  // Manifest للـ PWA
-  manifest: '/manifest.json',
+
   
   // Theme Color
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0070f3' },
+    { media: '(prefers-color-scheme: dark)', color: '#251f35' },
   ],
   
   // Viewport

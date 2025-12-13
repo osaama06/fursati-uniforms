@@ -51,6 +51,8 @@
     aspect-ratio: 16 / 6;
   }
 
+  
+
   .banner-slider button {
     padding: 6px;
   }
@@ -108,5 +110,13 @@
   }
   100% {
     background-position: 200% 0;
+  }
+}
+@media (max-width: 768px) {
+
+  
+  .banner-slider.skeleton{
+    height: auto;
+    aspect-ratio: 16 / 6;
   }
 }

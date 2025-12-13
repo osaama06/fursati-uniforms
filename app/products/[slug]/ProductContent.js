@@ -181,6 +181,8 @@ export default function ProductContent({ product, variations }) {
 
   const discount = calculateDiscount();
 
+  
+
   return (
     <div className="productContainer">
       {/* Breadcrumb */}
@@ -298,14 +300,28 @@ export default function ProductContent({ product, variations }) {
               <span className="reviewCount">({reviewStats.total} تقييم)</span>
             </div>
 
+
+     
             <div className="priceSection">
               <span className="currentPrice">
-                {product.sale_price || product.price} ريال
+                {product.sale_price || product.price} <Image
+                          src="/sar.webp"
+                          alt="Logo"
+                          width={200}
+                          height={200}
+                          className="sarsymbol-img"
+                        /> 
               </span>
               {product.regular_price && product.sale_price && (
                 <>
                   <span className="originalPrice">
-                    {product.regular_price} ريال
+                    {product.regular_price} <Image
+                          src="/sar.webp"
+                          alt="Logo"
+                          width={20}
+                          height={20}
+                          className="sarsymbol-img"
+                        /> 
                   </span>
                   <span className="discountBadge">
                     -{discount}%
@@ -433,13 +449,25 @@ export default function ProductContent({ product, variations }) {
         {/* Desktop Buy Box */}
         <div className="buyBox">
           <div className="buyBoxPrice">
-            {product.sale_price || product.price} ريال
+            {product.sale_price || product.price} <Image
+                          src="/sar.webp"
+                          alt="Logo"
+                          width={20}
+                          height={20}
+                          className="sarsymbol-img"
+                        /> 
           </div>
 
           {product.regular_price && product.sale_price && (
             <div style={{marginBottom: '8px'}}>
               <span className="originalPrice" style={{fontSize: '14px'}}>
-                {product.regular_price} ريال
+                {product.regular_price} <Image
+                          src="/sar.webp"
+                          alt="Logo"
+                          width={20}
+                          height={20}
+                          className="sarsymbol-img"
+                        /> 
               </span>
               <span className="discountBadge" style={{marginLeft: '8px', fontSize: '12px'}}>
                 -{discount}%
