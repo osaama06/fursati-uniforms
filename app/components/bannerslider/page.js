@@ -130,7 +130,7 @@ export default function BannerSlider() {
             priority={index === 0}
             draggable={false}
           />
-          <div className="banner-overlay"></div>
+          {/* <div className="banner-overlay"></div> */}
         </div>
       ))}
 

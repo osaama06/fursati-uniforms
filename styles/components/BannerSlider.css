@@ -6,7 +6,7 @@
   overflow: hidden;
   border-radius: 16px;
   background-color: #1a1a1a;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  /* box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); */
   user-select: none; /* Prevent text selection during swipe */
 }
 
@@ -46,13 +46,6 @@
   height: 100%;
 }
 
-/* Overlay for text contrast (optional) */
-.banner-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, transparent 50%);
-  pointer-events: none;
-}
 
 /* --- Controls (Glassmorphism Buttons) --- */
 .banner-control {
@@ -101,17 +94,18 @@
 
 /* --- Indicators (Dots) --- */
 .banner-indicators {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  display: flex;
-  gap: 8px;
-  padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(4px);
-  border-radius: 20px;
+    z-index: 20;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    background: rgb(0 0 0 / 2%);
+    border-radius: 20px;
+    gap: 8px;
+    padding: 8px 12px;
+    display: flex;
+    position: absolute;
+    bottom: 69px;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .banner-dot {
@@ -131,7 +125,6 @@
 .banner-dot.active {
   width: 24px;
   background: #ffffff;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }
 
 /* --- Skeleton Loading (Shimmer) --- */
