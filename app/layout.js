@@ -128,7 +128,7 @@ export default function RootLayout({ children }) {
         
         <CartProvider>
           <Header />
-          <Navbar />
+          {/* <Navbar /> */}
           <main>{children}</main>
           <Footer />
         </CartProvider>

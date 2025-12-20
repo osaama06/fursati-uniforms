@@ -154,7 +154,7 @@ export default async function Home() {
         <BannerSlider />
         
         {/* 2. Stories Section */}
-        <StoriesSlider />
+        {/* <StoriesSlider /> */}
 
         {/* 3. Best Sellers Section (Featured First) */}
         {bestSellers.length > 0 && (

@@ -1,146 +1,71 @@
-'use client';
-
+"use client";
+import { useState } from "react";
 import Link from "next/link";
-import Image from 'next/image';
-import { FiShoppingCart } from "react-icons/fi";
-import { IoIosSearch } from "react-icons/io";
-import { MdPerson } from "react-icons/md";
-import { IoMenuSharp } from "react-icons/io5";
-import { useCart } from "../../context/CartContext";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { HiOutlineSearch, HiOutlineUser, HiOutlineShoppingBag, HiMenu, HiX } from "react-icons/hi";
 import "@/styles/components/Header.css";
 
+
 export default function Header() {
-  const { cartItems } = useCart();
-  const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const [query, setQuery] = useState('');
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [showHeader, setShowHeader] = useState(true);
-  const router = useRouter();
-
-  // 🟡 تحسين منطق إخفاء الهيدر
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
-    let timeoutId = null;
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const delta = currentScrollY - lastScrollY;
-
-      if (delta < -20) {
-        // المستخدم طالع → أظهر الهيدر على طول
-        setShowHeader(true);
-        if (timeoutId) clearTimeout(timeoutId);
-      } else if (delta > 40) {
-        // المستخدم نازل كثير → أخفي الهيدر بعد تأخير بسيط
-        if (!timeoutId) {
-          timeoutId = setTimeout(() => {
-            setShowHeader(false);
-            timeoutId = null;
-          }, 150);
-        }
-      }
-
-      lastScrollY = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // 🔒 منع التمرير عند فتح القائمة
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : 'auto';
-  }, [menuOpen]);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
-    }
-  };
-
-  const [categories, setCategories] = useState([]);
-  useEffect(() => {
-    async function fetchCategories() {
-      const res = await fetch("/api/categories");
-      const data = await res.json();
-      const filtered = data.filter(cat => cat.count > 0);
-      setCategories(filtered);
-    }
-    fetchCategories();
-  }, []);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  
 
   return (
-    <header className={`header ${!showHeader ? 'header--hidden' : ''}`}>
-      <div className="wrapper">
-        <div className="logo">
-          <div className="menu" onClick={() => setMenuOpen(true)}>
-            <IoMenuSharp />
+    <>
+      <header className="main-header" dir="rtl">
+        <div className="header-container">
+          <div className="header-row">
+            
+            {/* اليمين: أيقونة المنيو واللوجو باللون الجديد */}
+            <div className="right-section">
+              <button className="menu-toggle-btn" onClick={() => setIsMenuOpen(true)}>
+                <HiMenu size={28} />
+              </button>
+              <Link href="/" className="logo">فرصتي</Link>
+            </div>
+
+            {/* المنتصف: بار البحث */}
+            <div className={`search-section ${isSearchOpen ? "show-mobile" : ""}`}>
+              <form className="search-wrapper">
+                <input type="text" placeholder="..سكرب , لابكوت , مريول" className="search-input" />
+                <button type="submit" className="search-submit-btn">
+                  <HiOutlineSearch size={20} />
+                </button>
+              </form>
+            </div>
+
+            {/* اليسار: الأيقونات باللون الجديد */}
+            <div className="left-section">
+              <button className="mobile-search-btn" onClick={() => setIsSearchOpen(!isSearchOpen)}>
+                {isSearchOpen ? <HiX size={24} /> : <HiOutlineSearch size={24} />}
+              </button>
+
+              <Link href="/account" className="icon-link">
+                <HiOutlineUser size={24} />
+              </Link>
+
+              <Link href="/cart" className="icon-link cart-link">
+                <HiOutlineShoppingBag size={24} />
+                <span className="cart-badge">0</span>
+              </Link>
+            </div>
           </div>
-          <Link href="/">
-            <Image
-              src="/logo.png"
-              alt="Logo"
-              width={120}
-              height={40}
-              className="logo-img"
-              priority
-            />
-          </Link>
         </div>
+      </header>
 
-        <div className="account">
-          <Link href="../signup">
-            <div className="sub-text">تسجيل الدخول</div>
-          </Link>
+      {/* المنيو الجانبي */}
+      <div className={`drawer-overlay ${isMenuOpen ? "active" : ""}`} onClick={() => setIsMenuOpen(false)}></div>
+      <div className={`side-drawer ${isMenuOpen ? "open" : ""}`}>
+        <div className="drawer-header">
+          <span>القائمة</span>
+          <button className="close-drawer" onClick={() => setIsMenuOpen(false)}><HiX size={24} /></button>
         </div>
-
-        <div className="icons">
-          <Link href="/orders" className="icon-block">
-            <div className="sub-text">المرتجعات</div>
-            <strong>والطلبات</strong>
-          </Link>
-          <Link href="/account" className="icon-btn">
-            <MdPerson className="icon" />
-          </Link>
-          <Link href="/cart" className="icon-btn cart-icon">
-            <FiShoppingCart className="icon" />
-            {totalQuantity > 0 && (
-              <span className="cart-count">{totalQuantity}</span>
-            )}
-          </Link>
+        <div className="drawer-content">
+           <Link href="/category/scrubs" onClick={() => setIsMenuOpen(false)}>سكراب طبي</Link>
+           <Link href="/category/labcoats" onClick={() => setIsMenuOpen(false)}>لابكوت</Link>
+           <Link href="/category/school" onClick={() => setIsMenuOpen(false)}>زي مدرسي</Link>
         </div>
-
-        <form className="search-bar" onSubmit={handleSearch}>
-          <input
-            className="search-input"
-            placeholder="على ايش تدور؟"
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <button className="search-btn" type="submit" aria-label="بحث">
-            <IoIosSearch className="search-icon" />
-          </button>
-        </form>
       </div>
-
-      {menuOpen && (
-        <div className="side-menu">
-          <button className="close-btn" onClick={() => setMenuOpen(false)}>×</button>
-          <div className="side-menu-content">
-            <ul>
-              {categories.map((cat) => (
-                <li key={cat.id} onClick={() => setMenuOpen(false)}>
-                  <Link href={`/${cat.slug}`}>{cat.name}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
-    </header>
+    </>
   );
 }
