@@ -1,72 +1,90 @@
+/* الحاوية الرئيسية */
 .slider-container {
-  padding: 5px 20px;
+  padding: 20px 0;
   direction: rtl;
-  background-color: #ffff;
-  text-align: center;
+  background-color: #fff;
   position: relative;
+  margin-bottom: 30px;
 }
 
+/* الهيدر: يحتوي على العنوان والرابط */
+.slider-header {
+  display: flex;
+  justify-content: space-between; /* يوزع العنوان يمين والرابط يسار */
+  align-items: center;
+  padding: 0 20px;
+  margin-bottom: 15px;
+}
+
+/* تنسيق العنوان */
 .slider-title {
-  margin-bottom: 20px;
-  font-size: 24px;
-  color: #333;
-}
-
-.slider-wrapper {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0;
   position: relative;
-  overflow: hidden;
 }
 
+/* تنسيق رابط "عرض الكل" */
+.view-all-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #555; /* لون هادئ */
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background-color: #f9f9f9; /* خلفية خفيفة للزر */
+}
+
+.view-all-link:hover {
+  color: #000;
+  background-color: #f0f0f0;
+}
+
+/* حركة السهم عند التمرير */
+.view-all-link svg {
+  transition: transform 0.3s ease;
+}
+
+.view-all-link:hover svg {
+  transform: translateX(-3px); /* السهم يتحرك لليسار قليلاً */
+}
+
+/* منطقة السلايدر (المنتجات) */
 .slider {
   display: flex;
   gap: 16px;
   overflow-x: auto;
   scroll-behavior: smooth;
-  padding-bottom: 10px;
-  /* إخفاء السكروبار */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  padding: 10px 20px;
+  /* إخفاء السكرول بار */
+  scrollbar-width: none; 
+  -ms-overflow-style: none;
 }
 
 .slider::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
+  display: none;
 }
+
 .slider > * {
   flex: 0 0 auto;
 }
 
-.nav-btn {
-  position: absolute;
-  top: 10px;
-  transform: none;
-  background-color: #100f1300;
-  color: #9b9b9b;
-  border: none;
-  padding: 10px 14px;
-  cursor: pointer;
-  font-size: 18px;
-  border-radius: 50%;
-  z-index: 10;
-}
-
-.nav-btn.left {
-  right: 10px;
-}
-
-.nav-btn.right {
-  left: 10px;
-}
-.slider-link {
-  color: #000000;
-  text-decoration: none;
-}
-.slider-link:hover {
-  text-decoration: underline;
-}
-
-
+/* تنسيقات الموبايل */
 @media (max-width: 600px) {
+  .slider-title {
+    font-size: 18px;
+  }
+  
+  .view-all-link {
+    font-size: 13px;
+  }
+
   .product-card {
-    min-width: 140px;
+    min-width: 160px; /* تحسين العرض على الجوال */
   }
 }
