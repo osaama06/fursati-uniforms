@@ -1,14 +1,24 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // إضافة لوجيك التوجيه
 import { HiOutlineSearch, HiOutlineUser, HiOutlineShoppingBag, HiMenu, HiX } from "react-icons/hi";
 import "@/styles/components/Header.css";
-
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  
+  const router = useRouter();
+
+  // دالة معالجة البحث
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const searchTerm = e.target.search.value;
+    if (searchTerm.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchTerm)}`);
+      setIsSearchOpen(false);
+    }
+  };
 
   return (
     <>
@@ -16,7 +26,7 @@ export default function Header() {
         <div className="header-container">
           <div className="header-row">
             
-            {/* اليمين: أيقونة المنيو واللوجو باللون الجديد */}
+            {/* اليمين: أيقونة المنيو واللوجو */}
             <div className="right-section">
               <button className="menu-toggle-btn" onClick={() => setIsMenuOpen(true)}>
                 <HiMenu size={28} />
@@ -26,15 +36,20 @@ export default function Header() {
 
             {/* المنتصف: بار البحث */}
             <div className={`search-section ${isSearchOpen ? "show-mobile" : ""}`}>
-              <form className="search-wrapper">
-                <input type="text" placeholder="..سكرب , لابكوت , مريول" className="search-input" />
+              <form className="search-wrapper" onSubmit={handleSearch}>
+                <input 
+                  type="text" 
+                  name="search" 
+                  placeholder="..سكرب , لابكوت , مريول" 
+                  className="search-input" 
+                />
                 <button type="submit" className="search-submit-btn">
                   <HiOutlineSearch size={20} />
                 </button>
               </form>
             </div>
 
-            {/* اليسار: الأيقونات باللون الجديد */}
+            {/* اليسار: الأيقونات */}
             <div className="left-section">
               <button className="mobile-search-btn" onClick={() => setIsSearchOpen(!isSearchOpen)}>
                 {isSearchOpen ? <HiX size={24} /> : <HiOutlineSearch size={24} />}
