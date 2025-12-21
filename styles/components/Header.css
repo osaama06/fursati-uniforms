@@ -27,12 +27,12 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
 .logo {
   font-size: 24px;
   font-weight: 800;
-  color: #f2856d; 
+  color: #0d0628; 
   text-decoration: none;
 }
 
 .menu-toggle-btn, .icon-link, .mobile-search-btn {
-  color: #f2856d; 
+  color: #0d0628; 
   background: none;
   border: none;
   cursor: pointer;
@@ -67,7 +67,7 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
   width: 100%;
   padding: 10px 45px 10px 15px;
   border-radius: 50px;
-  border: 1px solid #f2856d;
+  border: 1px solid #0d0628;
   background-image: linear-gradient(aliceblue);
   
   color: #000000;
@@ -81,7 +81,7 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #f2856d;
+  color: #0d0628;
 }
 
 .cart-link { position: relative; }
@@ -90,8 +90,8 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
   position: absolute;
   top: -8px;
   right: -8px;
-  background: #f2856d;
-  color: #0d0628;
+  background: #0d0628;
+  color: #ffffff;
   font-size: 10px;
   width: 18px;
   height: 18px;
@@ -132,7 +132,7 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
 .drawer-header {
   padding: 20px;
   background: #0d0628;
-  color: #f2856d;
+  color: #ffffff;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -147,7 +147,7 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
   border-bottom: 1px solid #eee;
 }
 
-.close-drawer { background: none; border: none; color: #f2856d; cursor: pointer; }
+.close-drawer { background: none; border: none; color: #0d0628; cursor: pointer; }
 
 /* الموبايل */
 @media (max-width: 768px) {
