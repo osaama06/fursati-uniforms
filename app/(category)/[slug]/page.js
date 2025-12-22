@@ -169,7 +169,8 @@ export default async function CategoryPage({ params }) {
 
       <main className="products-page">
         <header className="category-header">
-          <h1 className="category-title">منتجات {category.name}</h1>
+          <h1 className="category-title">
+             {category.name}</h1>
 
           {category.description && (
             <div

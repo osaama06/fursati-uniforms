@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // إضافة لوجيك التوجيه
+import Image from "next/image"; // تأكد من استيراد المكون
+import { useRouter } from "next/navigation"; 
 import { HiOutlineSearch, HiOutlineUser, HiOutlineShoppingBag, HiMenu, HiX } from "react-icons/hi";
 import "@/styles/components/Header.css";
 
@@ -10,7 +11,6 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const router = useRouter();
 
-  // دالة معالجة البحث
   const handleSearch = (e) => {
     e.preventDefault();
     const searchTerm = e.target.search.value;
@@ -26,15 +26,24 @@ export default function Header() {
         <div className="header-container">
           <div className="header-row">
             
-            {/* اليمين: أيقونة المنيو واللوجو */}
+            {/* اليمين: أيقونة المنيو + صورة اللوجو + نص فرصتي */}
             <div className="right-section">
               <button className="menu-toggle-btn" onClick={() => setIsMenuOpen(true)}>
                 <HiMenu size={28} />
               </button>
-              <Link href="/" className="logo">فرصتي</Link>
+              
+              <Link href="/" className="logo-link" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+                <Image 
+                  src="/logo.png"
+                  alt="فرصتي"
+                  width={40}
+                  height={40}
+                />
+                <span className="logo">فرصتي</span>
+              </Link>
             </div>
 
-            {/* المنتصف: بار البحث */}
+            {/* باقي الكود كما هو بدون أي تغيير */}
             <div className={`search-section ${isSearchOpen ? "show-mobile" : ""}`}>
               <form className="search-wrapper" onSubmit={handleSearch}>
                 <input 
@@ -49,7 +58,6 @@ export default function Header() {
               </form>
             </div>
 
-            {/* اليسار: الأيقونات */}
             <div className="left-section">
               <button className="mobile-search-btn" onClick={() => setIsSearchOpen(!isSearchOpen)}>
                 {isSearchOpen ? <HiX size={24} /> : <HiOutlineSearch size={24} />}
@@ -68,7 +76,7 @@ export default function Header() {
         </div>
       </header>
 
-      {/* المنيو الجانبي */}
+      {/* المنيو الجانبي وباقي الأجزاء بدون تغيير */}
       <div className={`drawer-overlay ${isMenuOpen ? "active" : ""}`} onClick={() => setIsMenuOpen(false)}></div>
       <div className={`side-drawer ${isMenuOpen ? "open" : ""}`}>
         <div className="drawer-header">

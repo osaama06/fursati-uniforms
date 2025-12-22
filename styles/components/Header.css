@@ -147,7 +147,7 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
   border-bottom: 1px solid #eee;
 }
 
-.close-drawer { background: none; border: none; color: #0d0628; cursor: pointer; }
+.close-drawer { background: none; border: none; color: #ffffff; cursor: pointer; }
 
 /* الموبايل */
 @media (max-width: 768px) {
