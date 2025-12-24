@@ -19,12 +19,13 @@ const getAuthHeader = () => {
 };
 
 // =============================
-// 🧠 Fetch Categories
+// 🧠 Fetch Categories (Modified for ID: 59)
 // =============================
 async function getCategories() {
   try {
+    // تم التعديل هنا لجلب الأبناء التابعين للكاتيجوري 59 فقط
     const res = await fetch(
-      "https://furssati.io/wp-json/wc/v3/products/categories?per_page=20",
+      "https://furssati.io/wp-json/wc/v3/products/categories?parent=59&per_page=20",
       {
         headers: { Authorization: `Basic ${getAuthHeader()}` },
         next: { revalidate: 3600 },
@@ -32,7 +33,8 @@ async function getCategories() {
     );
     if (!res.ok) return [];
     const data = await res.json();
-    return data.filter((cat) => cat.count > 0 && cat.slug !== "uncategorized");
+    // تصفية الأقسام الفارغة
+    return data.filter((cat) => cat.count > 0);
   } catch (error) {
     console.error("Error fetching categories:", error);
     return [];
@@ -103,13 +105,13 @@ export const metadata = {
 // 🏠 Homepage Component
 // =============================
 export default async function Home() {
-  // 1. Fetch Categories and Best Sellers in parallel
+  // 1. Fetch Home Categories (Parent 59) and Best Sellers in parallel
   const [categories, bestSellers] = await Promise.all([
     getCategories(),
     getBestSellingProducts(),
   ]);
 
-  // 2. Fetch products for each category in parallel
+  // 2. Fetch products for each sub-category of 59
   const sliders = await Promise.all(
     categories.map(async (category) => {
       const products = await getProductsByCategoryId(category.id);
@@ -153,10 +155,7 @@ export default async function Home() {
         {/* 1. Hero Section */}
         <BannerSlider />
         
-        {/* 2. Stories Section */}
-        {/* <StoriesSlider /> */}
-
-        {/* 3. Best Sellers Section (Featured First) */}
+        {/* 2. Best Sellers Section (Featured First) */}
         {bestSellers.length > 0 && (
           <ProductSlider
             category={{ name: "الأكثر مبيعاً ✨", id: "best-sellers" }}
@@ -164,7 +163,7 @@ export default async function Home() {
           />
         )}
 
-        {/* 4. Dynamic Category Sections */}
+        {/* 3. Dynamic Sub-Category Sections (Under ID 59) */}
         {sliders.map(({ category, products }) =>
           products.length > 0 ? (
             <ProductSlider
