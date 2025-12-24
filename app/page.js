@@ -24,13 +24,14 @@ const getAuthHeader = () => {
 async function getCategories() {
   try {
     // تم التعديل هنا لجلب الأبناء التابعين للكاتيجوري 59 فقط
-    const res = await fetch(
-      "https://furssati.io/wp-json/wc/v3/products/categories?parent=59&per_page=20",
-      {
-        headers: { Authorization: `Basic ${getAuthHeader()}` },
-        next: { revalidate: 3600 },
-      }
-    );
+// أضفنا orderby=menu_order
+const res = await fetch(
+  "https://furssati.io/wp-json/wc/v3/products/categories?parent=59&per_page=20&orderby=menu_order&order=asc",
+  {
+    headers: { Authorization: `Basic ${getAuthHeader()}` },
+    next: { revalidate: 3600 },
+  }
+);
     if (!res.ok) return [];
     const data = await res.json();
     // تصفية الأقسام الفارغة
