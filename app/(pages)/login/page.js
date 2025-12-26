@@ -45,7 +45,7 @@ export default function LoginPage() {
     <div className="login-page-container">
       <div className="login-card">
         <div className="login-header">
-          <Image src="/2logo.png" alt="فرصتي" width={65} height={65} />
+          <Image src="/logo.png" alt="فرصتي" width={65} height={65} />
           <h2>تسجيل الدخول</h2>
           <p>مرحباً بك مجدداً في متجر فرصتي</p>
         </div>

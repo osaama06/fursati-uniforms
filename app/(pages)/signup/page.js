@@ -57,7 +57,7 @@ export default function SignupPage() {
     <div className="login-page-container">
       <div className="login-card" style={{ maxWidth: '500px' }}>
         <div className="login-header">
-          <Image src="/2logo.png" alt="فرصتي" width={65} height={65} />
+          <Image src="/logo.png" alt="فرصتي" width={65} height={65} />
           <h2>إنشاء حساب</h2>
           <p>انضم لأسرة فرصتي واستمتع بتجربة تسوق فريدة</p>
         </div>
