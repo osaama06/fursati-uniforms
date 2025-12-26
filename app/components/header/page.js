@@ -91,7 +91,7 @@ export default function Header() {
                 <HiMenu size={28} />
               </button>
               <Link href="/" className="logo-link" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-                <Image src="/2logo.png" alt="فرصتي" width={40} height={40} />
+                <Image src="/logo.png" alt="فرصتي" width={40} height={40} />
                 <span className="logo">فرصتي</span>
               </Link>
             </div>

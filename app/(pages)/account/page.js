@@ -90,7 +90,7 @@ export default async function AccountPage() {
             <Link href="/account" className="nav-link active">🏠 لوحة التحكم</Link>
             <Link href="/orders" className="nav-link">📦 طلباتي</Link>
             <Link href="/account/address" className="nav-link">📍 العناوين</Link>
-            <a href="/api/logout" className="nav-link logout-link">🚪 تسجيل الخروج</a>
+            <Link href="/api/logout" className="nav-link logout-link">🚪 تسجيل الخروج</Link>
           </nav>
         </aside>
 
