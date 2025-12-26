@@ -1,4 +1,8 @@
 // app/page.js
+
+// ✅ حل مشكلة فيرسل: إجبار الصفحة على العمل كوضع ديناميكي لتجنب خطأ الـ Build
+export const dynamic = "force-dynamic";
+
 import BannerSlider from "./components/bannerslider/page";
 import ProductSlider from "./components/ProductSlider/page";
 import StoriesSlider from "./components/storiesSlider/page";
@@ -27,7 +31,8 @@ async function getHomeCategories() {
       "https://furssati.io/wp-json/wc/v3/products/categories?per_page=100&hide_empty=false",
       {
         headers: { Authorization: `Basic ${getAuthHeader()}` },
-        next: { revalidate: 0 }, // 0 للتأكد من ظهور التعديلات فوراً
+        // ✅ تم التغيير من 0 إلى 60 لتجنب مشاكل الـ Static Generation في فيرسل
+        next: { revalidate: 60 }, 
       }
     );
 
@@ -53,7 +58,7 @@ async function getProductsByCategoryId(categoryId) {
       `https://furssati.io/wp-json/wc/v3/products?category=${categoryId}&status=publish&per_page=10`,
       {
         headers: { Authorization: `Basic ${getAuthHeader()}` },
-        next: { revalidate: 0 },
+        next: { revalidate: 60 }, // ✅ متناسق مع باقي الطلبات
       }
     );
     if (!res.ok) return [];
