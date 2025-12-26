@@ -1,7 +1,10 @@
 'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
+import '@/styles/pages/login.css';
 
 export default function SignupPage() {
   const [form, setForm] = useState({
@@ -13,8 +16,10 @@ export default function SignupPage() {
     confirmPassword: '',
   });
 
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [message, setMessage] = useState('');
-  const [showToast, setShowToast] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleChange = (e) => {
@@ -23,128 +28,89 @@ export default function SignupPage() {
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    setMessage('');
-
-    const { first_name, last_name, email, phone, password, confirmPassword } = form;
-
-    if (!first_name || !last_name || !email || !phone || !password || !confirmPassword) {
-      setMessage('⚠️ الرجاء تعبئة جميع الحقول.');
+    if (form.password !== form.confirmPassword) {
+      setMessage('❌ كلمة المرور غير متطابقة');
       return;
     }
-
-    if (password !== confirmPassword) {
-      setMessage('❌ كلمة المرور وتأكيدها غير متطابقتين.');
-      return;
-    }
-
+    setLoading(true);
     try {
       const res = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ first_name, last_name, email, phone, password }),
+        body: JSON.stringify(form),
       });
-
       const data = await res.json();
-
       if (data.success) {
-        setShowToast(true);
-        setTimeout(() => {
-          setShowToast(false);
-          router.push('/');
-        }, 1000);
+        setMessage('✅ تم إنشاء الحساب! جاري التحويل للدخول...');
+        setTimeout(() => router.push('/login'), 2000);
       } else {
-        setMessage('❌ ' + (data.message || 'حدث خطأ أثناء التسجيل.'));
+        setMessage('❌ ' + data.message);
       }
     } catch (err) {
-      setMessage('⚠️ فشل في الاتصال بالخادم.');
+      setMessage('⚠️ خطأ في الاتصال بالسيرفر');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      background: 'linear-gradient(to right, #fceabb, #f8b500)',
-      fontFamily: 'Arial, sans-serif',
-      position: 'relative'
-    }}>
-      {showToast && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          background: '#4BB543',
-          color: '#fff',
-          padding: '12px 20px',
-          borderRadius: '8px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-          zIndex: 1000
-        }}>
-          ✅ تم التسجيل بنجاح، سيتم تحويلك...
+    <div className="login-page-container">
+      <div className="login-card" style={{ maxWidth: '500px' }}>
+        <div className="login-header">
+          <Image src="/2logo.png" alt="فرصتي" width={65} height={65} />
+          <h2>إنشاء حساب</h2>
+          <p>انضم لأسرة فرصتي واستمتع بتجربة تسوق فريدة</p>
         </div>
-      )}
 
-      <form onSubmit={handleSignup} style={{
-        backgroundColor: '#fff',
-        padding: '2rem',
-        borderRadius: '12px',
-        boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
-        width: '100%',
-        maxWidth: '500px',
-        textAlign: 'center'
-      }}>
-        <h2 style={{ marginBottom: '1.5rem', color: '#333' }}>📝 تسجيل حساب جديد</h2>
+        <form onSubmit={handleSignup} className="login-form">
+          <div className="dual-input">
+            <div className="input-group">
+              <label>الاسم الأول</label>
+              <input type="text" name="first_name" placeholder="أحمد" onChange={handleChange} required />
+            </div>
+            <div className="input-group">
+              <label>الاسم الأخير</label>
+              <input type="text" name="last_name" placeholder="العلي" onChange={handleChange} required />
+            </div>
+          </div>
 
-        {[
-          { name: "first_name", type: "text", placeholder: "الاسم الأول" },
-          { name: "last_name", type: "text", placeholder: "الاسم الأخير" },
-          { name: "email", type: "email", placeholder: "البريد الإلكتروني" },
-          { name: "phone", type: "text", placeholder: "رقم الجوال" },
-          { name: "password", type: "password", placeholder: "كلمة المرور" },
-          { name: "confirmPassword", type: "password", placeholder: "تأكيد كلمة المرور" }
-        ].map((field) => (
-          <input
-            key={field.name}
-            type={field.type}
-            name={field.name}
-            placeholder={field.placeholder}
-            value={form[field.name]}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              marginBottom: '1rem',
-              borderRadius: '8px',
-              border: '1px solid #ccc',
-              fontSize: '1rem'
-            }}
-          />
-        ))}
+          <div className="input-group">
+            <label>البريد الإلكتروني</label>
+            <input type="email" name="email" placeholder="example@mail.com" onChange={handleChange} required />
+          </div>
 
-        <button type="submit" style={{
-          backgroundColor: '#f8b500',
-          color: '#fff',
-          border: 'none',
-          padding: '0.75rem 1.5rem',
-          borderRadius: '8px',
-          fontSize: '1rem',
-          cursor: 'pointer',
-          transition: 'background-color 0.2s ease-in-out'
-        }}
-          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#d49500'}
-          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f8b500'}>
-          تسجيل
-        </button>
+          <div className="input-group">
+            <label>رقم الجوال</label>
+            <input type="text" name="phone" placeholder="05xxxxxxxx" onChange={handleChange} required />
+          </div>
 
-        {message && (
-          <p style={{ marginTop: '1rem', color: message.includes("تم") ? "green" : "red" }}>
-            {message}
-          </p>
-        )}
-      </form>
+          <div className="input-group">
+            <label>كلمة المرور</label>
+            <div className="password-wrapper">
+              <input type={showPass ? "text" : "password"} name="password" onChange={handleChange} required />
+              <button type="button" className="eye-btn" onClick={() => setShowPass(!showPass)}>
+                {showPass ? <HiOutlineEyeOff size={22} /> : <HiOutlineEye size={22} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="input-group">
+            <label>تأكيد كلمة المرور</label>
+            <div className="password-wrapper">
+              <input type={showConfirmPass ? "text" : "password"} name="confirmPassword" onChange={handleChange} required />
+              <button type="button" className="eye-btn" onClick={() => setShowConfirmPass(!showConfirmPass)}>
+                {showConfirmPass ? <HiOutlineEyeOff size={22} /> : <HiOutlineEye size={22} />}
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" className="login-submit-btn" disabled={loading}>
+            {loading ? 'جاري المعالجة...' : 'تسجيل حساب جديد'}
+          </button>
+
+          {message && <div className={message.includes('✅') ? 'success-badge' : 'error-badge'}>{message}</div>}
+        </form>
+      </div>
     </div>
   );
 }

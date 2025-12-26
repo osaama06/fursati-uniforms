@@ -1,52 +1,129 @@
-.account-container {
-  max-width: 900px;
-  margin: 2rem auto;
-  padding: 1rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #222;
+.account-main {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+  background-color: #f9fbfc;
 }
 
-.profile-section {
-  text-align: center;
-  margin-bottom: 2rem;
+.account-hero-card {
+  background: white;
+  padding: 40px;
+  border-radius: 25px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+  border: 1px solid #f0f4f5;
+  margin-bottom: 30px;
 }
 
-.profile-image {
+.profile-flex {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.avatar-circle {
+  width: 90px;
+  height: 90px;
+  background: #00c2cb; /* لونك التركوازي */
+  color: white;
   border-radius: 50%;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  font-weight: bold;
+  box-shadow: 0 5px 15px rgba(0, 194, 203, 0.2);
 }
 
-.details-section, .orders-section {
-  background-color: #f9f9f9;
-  padding: 1.5rem;
+.welcome-text h1 { font-size: 1.8rem; color: #1a1a1a; margin-bottom: 5px; }
+.welcome-text p { color: #666; margin-bottom: 15px; }
+
+.user-meta-pills { display: flex; gap: 10px; }
+.meta-pill {
+  background: #f0fbfc;
+  color: #00c2cb;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.account-grid { display: grid; grid-template-columns: 280px 1fr; gap: 30px; }
+
+.side-nav {
+  background: white;
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid #f0f0f0;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
   border-radius: 12px;
-  margin-bottom: 2rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  text-decoration: none;
+  color: #555;
+  transition: 0.3s;
+  margin-bottom: 8px;
 }
 
-h1 {
-  font-size: 1.8rem;
-  margin-bottom: 0.25rem;
+.nav-link.active { background: #f0fbfc; color: #00c2cb; font-weight: bold; }
+.nav-link:hover { background: #f8f8f8; }
+.logout-link { color: #e53e3e; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+
+.order-item-row {
+  background: white;
+  padding: 20px;
+  border-radius: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border: 1px solid #f0f0f0;
+  transition: 0.2s;
 }
 
-h2 {
-  font-size: 1.3rem;
-  color: #444;
-  margin-bottom: 1rem;
-}
+.order-item-row:hover { transform: scale(1.01); box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
 
-.logout-button {
+.status-tag { padding: 6px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; }
+.status-tag.processing { background: #e0f7f8; color: #00c2cb; }
+.status-tag.completed { background: #f0fff4; color: #38a169; }
+
+.btn-cyan {
   display: inline-block;
-  background-color: #f44336;
-  color: #fff;
-  padding: 0.7rem 1.5rem;
-  border-radius: 8px;
+  background: #00c2cb;
+  color: white;
+  padding: 12px 25px;
+  border-radius: 12px;
   text-decoration: none;
   font-weight: 600;
-  transition: background-color 0.3s ease;
+  margin-top: 15px;
 }
 
-.logout-button:hover {
-  background-color: #d32f2f;
+@media (max-width: 768px) {
+  .account-grid { grid-template-columns: 1fr; }
+  .profile-flex { flex-direction: column; text-align: center; }
+}
+
+/* ألوان حالات الطلب */
+.status-tag {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-tag.processing { background: #e0f7f8; color: #00c2cb; }
+.status-tag.completed { background: #e8f5e9; color: #2e7d32; }
+.status-tag.pending { background: #fff3e0; color: #ef6c00; }
+.status-tag.on-hold { background: #f3e5f5; color: #7b1fa2; }
+.status-tag.cancelled { background: #ffeeb2; color: #c62828; }
+
+/* ستايل زر تسجيل الخروج ليكون كأنه رابط */
+.logout-link {
+  color: #e53e3e !important;
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 20px !important;
 }

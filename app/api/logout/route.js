@@ -1,16 +1,13 @@
-import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
-export async function POST() {
-  const response = NextResponse.json({ message: 'Logged out successfully' })
+export async function GET(request) {
+  // 1. حذف التوكن من الكوكيز
+  cookies().delete('token');
 
-  // حذف الكوكيز: ضبط maxAge=0 يعني تنتهي صلاحية الكوكيز فوراً
-  response.cookies.set('token', '', {
-    maxAge: 0,
-    path: '/',       // لازم نفس path اللي ضبطته عند تسجيل الدخول
-    httpOnly: true,  // نفس الخصائص الأصلية
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-  })
+  // 2. الحصول على رابط الموقع (سواء كان لوكال أو دومين حقيقي)
+  const baseURL = new URL(request.url).origin;
 
-  return response
+  // 3. التحويل لصفحة الدخول فوراً
+  return NextResponse.redirect(`${baseURL}/login`);
 }

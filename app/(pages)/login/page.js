@@ -1,103 +1,98 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
+import '@/styles/pages/login.css';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const router = useRouter();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setMessage('');
 
-    const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.ok) {
-      // ✅ حفظ التوكن في الكوكيز
-      document.cookie = `token=${data.token}; path=/`;
-
-      router.push('/account'); // إعادة التوجيه بعد تسجيل الدخول
-    } else {
-      setMessage('❌ فشل تسجيل الدخول: ' + (data.message || ''));
+      if (res.ok) {
+        router.push('/account');
+        router.refresh();
+      } else {
+        setMessage(data.message || 'بيانات الدخول غير صحيحة');
+      }
+    } catch (err) {
+      setMessage('حدث خطأ في الاتصال بالسيرفر');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      background: 'linear-gradient(to right, #fceabb, #f8b500)',
-      fontFamily: 'Arial, sans-serif'
-    }}>
-      <form onSubmit={handleLogin} style={{
-        backgroundColor: '#fff',
-        padding: '2rem',
-        borderRadius: '12px',
-        boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
-        width: '100%',
-        maxWidth: '400px',
-        textAlign: 'center'
-      }}>
-        <h2 style={{ marginBottom: '1.5rem', color: '#333' }}>🔐 تسجيل الدخول</h2>
+    <div className="login-page-container">
+      <div className="login-card">
+        <div className="login-header">
+          <Image src="/2logo.png" alt="فرصتي" width={65} height={65} />
+          <h2>تسجيل الدخول</h2>
+          <p>مرحباً بك مجدداً في متجر فرصتي</p>
+        </div>
 
-        <input
-          type="text"
-          placeholder="اسم المستخدم"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            marginBottom: '1rem',
-            borderRadius: '8px',
-            border: '1px solid #ccc',
-            fontSize: '1rem'
-          }}
-        />
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="input-group">
+            <label>اسم المستخدم أو البريد</label>
+            <input
+              type="text"
+              placeholder="أدخل بريدك الإلكتروني"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
 
-        <input
-          type="password"
-          placeholder="كلمة المرور"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            marginBottom: '1.5rem',
-            borderRadius: '8px',
-            border: '1px solid #ccc',
-            fontSize: '1rem'
-          }}
-        />
+          <div className="input-group">
+            <label>كلمة المرور</label>
+            <div className="password-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button 
+                type="button" 
+                className="eye-btn" 
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <HiOutlineEyeOff size={22} /> : <HiOutlineEye size={22} />}
+              </button>
+            </div>
+          </div>
 
-        <button type="submit" style={{
-          backgroundColor: '#f8b500',
-          color: '#fff',
-          border: 'none',
-          padding: '0.75rem 1.5rem',
-          borderRadius: '8px',
-          fontSize: '1rem',
-          cursor: 'pointer',
-          transition: 'background-color 0.2s ease-in-out'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#d49500'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f8b500'}>
-          دخول
-        </button>
+          <button type="submit" className="login-submit-btn" disabled={loading}>
+            {loading ? 'جاري التحقق...' : 'دخول'}
+          </button>
 
-        {message && <p style={{ color: 'red', marginTop: '1rem' }}>{message}</p>}
-      </form>
+          {message && <div className="error-badge">{message}</div>}
+        </form>
+
+        <div className="login-footer">
+          <p>ليس لديك حساب؟ <Link href="/signup">أنشئ حساباً جديداً</Link></p>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,18 +1,8 @@
 export async function POST(req) {
   const body = await req.json();
-  const {
-    email,
-    username,
-    password,
-    first_name,
-    last_name,
-    phone
-  } = body;
+  const { email, password, first_name, last_name, phone } = body;
 
-  const consumerKey = process.env.WOO_CONSUMER_KEY;
-  const secretKey = process.env.WOO_SECRET_KEY;
-
-  const auth = Buffer.from(`${consumerKey}:${secretKey}`).toString("base64");
+  const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString("base64");
 
   try {
     const response = await fetch("https://furssati.io/wp-json/wc/v3/customers", {
@@ -23,11 +13,19 @@ export async function POST(req) {
       },
       body: JSON.stringify({
         email,
-        username,
+        username: email, // نستخدم الإيميل كإسم مستخدم للسهولة
         password,
         first_name,
         last_name,
         billing: {
+          first_name,
+          last_name,
+          email,
+          phone
+        },
+        shipping: {
+          first_name,
+          last_name,
           phone
         }
       }),
@@ -38,17 +36,14 @@ export async function POST(req) {
     if (response.ok && data.id) {
       return Response.json({ success: true, user: data });
     } else {
-      return Response.json({
-        success: false,
-        message: "فشل في إنشاء الحساب.",
-        error: data
-      }, { status: 400 });
+      // إرجاع رسالة الخطأ من ووردبريس (مثل: البريد مسجل مسبقاً)
+      const errorMsg = data.code === "registration-error-email-exists" 
+        ? "هذا البريد الإلكتروني مسجل مسبقاً." 
+        : "فشل في إنشاء الحساب.";
+      
+      return Response.json({ success: false, message: errorMsg }, { status: 400 });
     }
   } catch (error) {
-    return Response.json({
-      success: false,
-      message: "خطأ في الاتصال بالسيرفر.",
-      error: error.message
-    }, { status: 500 });
+    return Response.json({ success: false, message: "خطأ في الاتصال بالسيرفر." }, { status: 500 });
   }
 }
