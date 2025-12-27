@@ -6,83 +6,107 @@ import Link from 'next/link';
 import ReusableButton from '../../button/page';
 import styles from '@/styles/pages/cart.module.css';
 
-
-
 const Cart = () => {
-  const {
-    cartItems,
-    removeFromCart,
-    increaseQuantity,
-    decreaseQuantity,
-  } = useCart();
+  const { cartItems, removeFromCart, increaseQuantity, decreaseQuantity } = useCart();
 
   const totalPrice = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
 
+  if (cartItems.length === 0) {
+    return (
+      <div dir="rtl" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
+        <div style={{ fontSize: '4rem' }}>🛒</div>
+        <h2>السلة فارغة حالياً</h2>
+        <Link href="/" style={{ color: '#00c2cb' }}>ابدأ التسوق الآن</Link>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.orders}>
-      <h1 className={styles.pagetitle}>السلة</h1>
-      <br />
+    <main dir="rtl" className={styles.cartContainer}>
+      <h1 className={styles.pageTitle}>🛒 سلة التسوق ({cartItems.length})</h1>
 
-      {cartItems.length === 0 ? (
-        <p>السلة فارغة</p>
-      ) : (
-        cartItems.map((item) => (
-          <div key={item.id} className={styles.ordercard}>
-            <div className={styles.imgecontainer}>
-              <Link href={`/products/${item.slug}`} className={styles.productLink}>
-                <Image
-                  src={item.images?.[0]?.src || '/placeholder.jpg'}
-                  alt={item.name}
-                  height={150}
-                  width={100}
-                />
-              </Link>
-            </div>
+      <div className={styles.cartGrid}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {cartItems.map((item) => {
+            // ✅ لوجيك الرابط: نأخذ السلوغ، وإذا مو موجود نأخذ الاسم ونحوله لسلوغ كاحتياط، أو نأخذ الايدي
+            const finalSlug = item.slug || (item.name ? item.name.toLowerCase().replace(/\s+/g, '-') : item.id);
+            const productLink = `/products/${finalSlug}`;
+            
+            // ✅ لوجيك الصورة اللي ضبط معاك
+            const productImage = item.images?.[0]?.src || item.image || '/placeholder.jpg';
 
-            <div className={styles.productinfo}>
-              <span className={styles.categorey}>
-                {item.categories?.map((cat) => cat.name).join(', ')}
-              </span>
+            return (
+              <div key={item.id} className={styles.orderCard}>
+                {/* الصورة كليكبل */}
+                <div className={styles.imageContainer}>
+                  <Link href={productLink}>
+                    <Image
+                      src={productImage}
+                      alt={item.name}
+                      fill
+                      style={{ objectFit: 'cover' }}
+                      unoptimized={true}
+                    />
+                  </Link>
+                </div>
 
-              <div onClick={() => removeFromCart(item.id)} className={styles.remvedProduct}>
-                <button onClick={() => removeFromCart(item.id)} title="حذف المنتج">
-                  X
-                </button>
-              </div>
+                <div className={styles.productInfo}>
+                  <div>
+                    <div className={styles.infoTop}>
+                      <span className={styles.category}>
+                        {item.categories && item.categories.length > 0 
+                          ? item.categories.map((cat) => cat.name).join(', ') 
+                          : 'منتج'}
+                      </span>
+                      <button onClick={() => removeFromCart(item.id)} className={styles.removeBtn}>✕</button>
+                    </div>
+                    
+                    {/* الاسم كليكبل */}
+                    <Link href={productLink} className={styles.productLink}>
+                      <h3 style={{ margin: '5px 0', fontSize: '1rem' }}>{item.name}</h3>
+                    </Link>
+                    
+                    <div className={styles.priceText}>{item.price} {item.currency || 'ر.س'}</div>
+                  </div>
 
-              <Link href={`/products/${item.slug}`} className={styles.productLink}>
-                <h2 className={styles.productTitle}>{item.name}</h2>
-              </Link>
-
-              <span>السعر: {item.price} {item.currency}</span>
-
-              <div className={styles.bottom}>
-                <div className={styles.qt}>
-                  <button onClick={() => increaseQuantity(item.id)}>+</button>
-                  <p>{item.quantity}</p>
-                  <button onClick={() => decreaseQuantity(item.id)}>-</button>
+                  <div className={styles.quantityControls}>
+                    <div className={styles.qtyBox}>
+                      <button onClick={() => decreaseQuantity(item.id)} className={styles.qtyBtn}>-</button>
+                      <span style={{ width: '30px', textAlign: 'center', fontWeight: 'bold' }}>{item.quantity}</span>
+                      <button onClick={() => increaseQuantity(item.id)} className={styles.qtyBtn}>+</button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        ))
-      )}
+            );
+          })}
+        </div>
 
-      {cartItems.length > 0 && (
-        <>
-          <div style={{ marginTop: '20px', fontWeight: 'bold' }}>
-            المجموع الكلي: {totalPrice.toFixed(2)} {cartItems[0]?.currency}
+        <div className={styles.summaryCard}>
+          <h3>ملخص الطلب</h3>
+          <div className={styles.summaryRow}>
+            <span>المجموع الفرعي</span>
+            <span>{totalPrice.toFixed(2)} {cartItems[0]?.currency || 'ر.س'}</span>
           </div>
-
-          <ReusableButton goToCheckout>
+          <div className={styles.summaryRow}>
+            <span>الشحن</span>
+            <span style={{ color: '#0ca678', fontWeight: 'bold' }}>مجاني</span>
+          </div>
+          <div className={styles.totalDivider}>
+            <span style={{ fontWeight: 'bold' }}>الإجمالي الكلي</span>
+            <span style={{ fontWeight: '900', fontSize: '1.5rem', color: '#00c2cb' }}>
+              {totalPrice.toFixed(2)} {cartItems[0]?.currency || 'ر.س'}
+            </span>
+          </div>
+          <ReusableButton goToCheckout style={{ width: '100%' }}>
             تابع إلى الدفع
           </ReusableButton>
-        </>
-      )}
-    </div>
+        </div>
+      </div>
+    </main>
   );
 };
 

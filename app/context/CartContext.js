@@ -7,6 +7,7 @@ const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
 
+  // 🧠 تحميل السلة من localStorage عند بداية التطبيق
   useEffect(() => {
     const storedCart = localStorage.getItem('cart');
     if (storedCart) {
@@ -14,29 +15,53 @@ export const CartProvider = ({ children }) => {
     }
   }, []);
 
+  // 💾 حفظ السلة عند أي تغيير
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
+  // ➕ إضافة منتج للسلة (مع تخزين الرابط الصحيح)
   const addToCart = (product) => {
+    const cartProduct = {
+      id: product.id,
+      name: product.name,
+      price: Number(product.price),
+      quantity: 1,
+      currency: product.currency || 'ر.س',
+
+      // 🖼️ صورة المنتج
+      image: product.images?.[0]?.src || product.image || '/placeholder.jpg',
+
+      // 🔗 الرابط النهائي للمنتج
+      slug: product.slug,
+      permalink: product.permalink
+        ? product.permalink.replace(process.env.NEXT_PUBLIC_WP_URL, '')
+        : `/products/${product.slug}`,
+    };
+
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const existing = prev.find((item) => item.id === cartProduct.id);
+
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === cartProduct.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
         );
-      } else {
-        return [...prev, { ...product, quantity: 1 }];
       }
+
+      return [...prev, cartProduct];
     });
   };
 
+  // ❌ إزالة منتج
   const removeFromCart = (productId) => {
-    const updatedCart = cartItems.filter(item => item.id !== productId);
+    const updatedCart = cartItems.filter((item) => item.id !== productId);
     setCartItems(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
   };
 
+  // ➕ زيادة الكمية
   const increaseQuantity = (id) => {
     setCartItems((prev) =>
       prev.map((item) =>
@@ -45,16 +70,18 @@ export const CartProvider = ({ children }) => {
     );
   };
 
+  // ➖ تقليل الكمية
   const decreaseQuantity = (id) => {
     setCartItems((prev) =>
       prev.map((item) =>
         item.id === id && item.quantity > 1
-          ? { ...item, quantity: item.quantity - 1 } : item
+          ? { ...item, quantity: item.quantity - 1 }
+          : item
       )
     );
   };
 
-  // ✅ أضف دالة clearCart
+  // 🧹 تفريغ السلة
   const clearCart = () => {
     setCartItems([]);
     localStorage.removeItem('cart');
@@ -68,7 +95,7 @@ export const CartProvider = ({ children }) => {
         removeFromCart,
         increaseQuantity,
         decreaseQuantity,
-        clearCart, // ✅ أضفها هنا أيضًا
+        clearCart,
       }}
     >
       {children}
