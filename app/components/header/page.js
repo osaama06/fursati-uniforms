@@ -62,10 +62,11 @@ export default function Header() {
         <div className="header-container">
           <div className="header-row">
             <div className="right-section">
-              <button className="menu-toggle-btn" onClick={() => setIsMenuOpen(true)}>
+              {/* حل مشكلة button do not have accessible name */}
+              <button className="menu-toggle-btn" onClick={() => setIsMenuOpen(true)} aria-label="فتح القائمة الجانبية">
                 <HiMenu size={28} />
               </button>
-              <Link href="/" className="logo-link" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+              <Link href="/" className="logo-link" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }} aria-label="الرئيسية">
                 <Image src="/logo.png" alt="فرصتي" width={40} height={40} />
                 <span className="logo">فرصتي</span>
               </Link>
@@ -77,17 +78,17 @@ export default function Header() {
                 const q = e.target.search.value;
                 if(q.trim()) router.push(`/search?q=${q}`);
               }}>
-                <input type="text" name="search" placeholder="بحث..سكرب , لابكوت , مريول" className="search-input" />
-                <button type="submit" className="search-submit-btn"><HiOutlineSearch size={20} /></button>
+                <input type="text" name="search" placeholder="بحث..سكرب , لابكوت , مريول" className="search-input" aria-label="بحث عن منتجات" />
+                <button type="submit" className="search-submit-btn" aria-label="تأكيد البحث"><HiOutlineSearch size={20} /></button>
               </form>
             </div>
 
             <div className="left-section">
-              <button className="mobile-search-btn" onClick={() => setIsSearchOpen(!isSearchOpen)}>
+              <button className="mobile-search-btn" onClick={() => setIsSearchOpen(!isSearchOpen)} aria-label="فتح البحث">
                 {isSearchOpen ? <HiX size={24} /> : <HiOutlineSearch size={24} />}
               </button>
-              <Link href="/account" className="icon-link"><HiOutlineUser size={24} /></Link>
-              <Link href="/cart" className="icon-link cart-link">
+              <Link href="/account" className="icon-link" aria-label="حسابي"><HiOutlineUser size={24} /></Link>
+              <Link href="/cart" className="icon-link cart-link" aria-label="سلة التسوق">
                 <HiOutlineShoppingBag size={24} />
                 <span className="cart-badge">0</span>
               </Link>
@@ -100,8 +101,8 @@ export default function Header() {
                 const q = e.target.search.value;
                 if(q.trim()) { router.push(`/search?q=${q}`); setIsSearchOpen(false); }
               }}>
-                <input type="text" name="search" placeholder="..سكرب , لابكوت , مريول" className="search-input" />
-                <button type="submit" className="search-submit-btn"><HiOutlineSearch size={20} /></button>
+                <input type="text" name="search" placeholder="..سكرب , لابكوت , مريول" className="search-input" aria-label="بحث في الجوال" />
+                <button type="submit" className="search-submit-btn" aria-label="تأكيد البحث"><HiOutlineSearch size={20} /></button>
               </form>
           </div>
         </div>
@@ -111,8 +112,7 @@ export default function Header() {
       <div className={`side-drawer ${isMenuOpen ? "open" : ""}`}>
         <div className="drawer-header">
           <h3>الأقسام</h3>
-          {/* زر الإغلاق: شفاف وأبيض ونظيف */}
-          <button className="close-drawer" onClick={() => setIsMenuOpen(false)}>
+          <button className="close-drawer" onClick={() => setIsMenuOpen(false)} aria-label="إغلاق القائمة">
             <HiX size={26} />
           </button>
         </div>
