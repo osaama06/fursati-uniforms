@@ -1,18 +1,17 @@
-/* الألوان الأساسية المطلوبة */
 .main-header {
-background: #0D0628;
-background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%);  border-bottom: 1px solid rgba(242, 133, 109, 0.2);
+  background: #ffffff;
+  border-bottom: 1px solid rgba(242, 133, 109, 0.2);
   position: sticky;
   top: 0;
   z-index: 1000;
   padding: 10px 0;
-    background-image: linear-gradient(aliceblue);
 }
 
 .header-container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 15px;
+  position: relative;
 }
 
 .header-row {
@@ -23,7 +22,6 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
   gap: 20px;
 }
 
-/* لون اللوجو والأيقونات المرجاني */
 .logo {
   font-size: 24px;
   font-weight: 800;
@@ -40,27 +38,22 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
   align-items: center;
 }
 
-.right-section {
+.right-section, .left-section {
   display: flex;
   align-items: center;
   gap: 15px;
 }
 
-.left-section {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-/* السيرش بار */
-.search-section {
+.search-section.desktop-only {
   flex: 1;
   max-width: 600px;
+  display: block;
 }
 
 .search-wrapper {
   position: relative;
   display: flex;
+  width: 100%;
 }
 
 .search-input {
@@ -68,8 +61,7 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
   padding: 10px 45px 10px 15px;
   border-radius: 50px;
   border: 1px solid #0d0628;
-  background-image: linear-gradient(aliceblue);
-  
+  background-color: aliceblue;
   color: #000000;
   outline: none;
 }
@@ -84,8 +76,31 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
   color: #0d0628;
 }
 
-.cart-link { position: relative; }
+.mobile-search-dropdown {
+  position: absolute;
+  top: 70px;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  padding: 10px 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  display: none;
+}
 
+.mobile-search-dropdown.show {
+  display: block;
+}
+
+@media (min-width: 1025px) {
+  .mobile-search-btn { display: none !important; }
+}
+
+@media (max-width: 1024px) {
+  .search-section.desktop-only { display: none !important; }
+  .mobile-search-btn { display: flex; }
+}
+
+.cart-link { position: relative; }
 .cart-badge {
   position: absolute;
   top: -8px;
@@ -102,7 +117,6 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
   font-weight: bold;
 }
 
-/* المنيو الجانبي */
 .side-drawer {
   position: fixed;
   top: 0;
@@ -113,9 +127,7 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
   z-index: 2000;
   transition: 0.3s ease;
 }
-
 .side-drawer.open { right: 0; }
-
 .drawer-overlay {
   position: fixed;
   top: 0;
@@ -126,7 +138,6 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
   z-index: 1500;
   display: none;
 }
-
 .drawer-overlay.active { display: block; }
 
 .drawer-header {
@@ -138,28 +149,12 @@ background: linear-gradient(90deg,rgba(13, 6, 40, 1) 0%, rgba(3, 74, 166, 1) 50%
   align-items: center;
 }
 
-.drawer-content { padding: 20px; }
-.drawer-content a {
-  display: block;
-  padding: 12px 0;
-  color: #333;
-  text-decoration: none;
-  border-bottom: 1px solid #eee;
-}
-
-.close-drawer { background: none; border: none; color: #ffffff; cursor: pointer; }
-
-/* الموبايل */
-@media (max-width: 768px) {
-  .search-section { display: none; }
-  .mobile-search-btn { display: block; }
-  .search-section.show-mobile {
-    display: block;
-    position: absolute;
-    top: 70px;
-    left: 0;
-    width: 100%;
-    background-image: linear-gradient(aliceblue);
-    padding: 10px 20px;
-  }
+/* زر الإغلاق: أبيض وشفاف وبسيط جداً */
+.close-drawer {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  padding: 0;
 }
