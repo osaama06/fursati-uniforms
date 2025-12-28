@@ -1,26 +1,4 @@
-.ultra-footer {
-  background: #ffffff;
-  border-top: 1px solid #f1f5f9;
-  direction: rtl;
-  margin-top: 80px;
-}
 
-.trust-bar {
-  display: flex;
-  justify-content: center;
-  gap: 50px;
-  padding: 25px 0;
-  border-bottom: 1px solid #f1f5f9;
-  color: #64748b;
-}
-
-.trust-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
 
 .footer-container {
   max-width: 1200px;

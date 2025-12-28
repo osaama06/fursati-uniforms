@@ -1,0 +1,91 @@
+.skeleton-wrapper {
+  max-width: 1400px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.skeleton-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.pulse {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes loading-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* تفاصيل العناصر */
+.skeleton-main-image {
+  width: 100%;
+  aspect-ratio: 1/1;
+  margin-bottom: 20px;
+}
+
+.skeleton-thumbs {
+  display: flex;
+  gap: 10px;
+}
+
+.skeleton-thumb {
+  width: 80px;
+  height: 80px;
+}
+
+.skeleton-title {
+  width: 70%;
+  height: 40px;
+  margin-bottom: 20px;
+}
+
+.skeleton-price {
+  width: 30%;
+  height: 30px;
+  margin-bottom: 30px;
+}
+
+.skeleton-line {
+  width: 100%;
+  height: 15px;
+  margin-bottom: 10px;
+}
+
+.skeleton-line.short { width: 60%; }
+
+.skeleton-label {
+  width: 100px;
+  height: 20px;
+  margin: 30px 0 15px;
+}
+
+.skeleton-swatches {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.skeleton-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.skeleton-button {
+  width: 100%;
+  height: 55px;
+  border-radius: 50px;
+}
+
+/* استجابة الجوال */
+@media (max-width: 768px) {
+  .skeleton-container {
+    grid-template-columns: 1fr;
+  }
+}

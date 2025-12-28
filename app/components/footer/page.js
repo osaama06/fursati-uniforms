@@ -15,21 +15,7 @@ import "@/styles/components/footer.css";
 
 export default function Footer() {
   return (
-    <footer className="ultra-footer" dir="rtl">
-      <div className="trust-bar">
-        <div className="trust-item">
-          <Truck size={20} strokeWidth={1.5} aria-hidden="true" />
-          <span>شحن سريع لكل المدن</span>
-        </div>
-        <div className="trust-item">
-          <RotateCcw size={20} strokeWidth={1.5} aria-hidden="true" />
-          <span>استبدال واسترجاع مرن</span>
-        </div>
-        <div className="trust-item">
-          <ShieldCheck size={20} strokeWidth={1.5} aria-hidden="true" />
-          <span>منتجات أصلية 100%</span>
-        </div>
-      </div>
+
 
       <div className="footer-container">
         <div className="footer-layout">
