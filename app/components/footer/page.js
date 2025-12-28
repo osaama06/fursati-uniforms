@@ -15,8 +15,7 @@ import "@/styles/components/footer.css";
 
 export default function Footer() {
   return (
-
-
+    <footer className="ultra-footer" dir="rtl">
       <div className="footer-container">
         <div className="footer-layout">
           
