@@ -1,5 +1,5 @@
 .checkoutPage {
-  max-width: 1200px;
+  max-width: 1150px;
   margin: 2rem auto;
   padding: 0 1rem;
 }
@@ -7,114 +7,156 @@
 .checkoutHeading {
   font-weight: 900;
   margin-bottom: 2rem;
-  font-size: 2rem;
+  font-size: 1.8rem;
+  color: #1a202c;
 }
 
+/* الحاوية الأساسية: Flexbox للجوال و Grid للكمبيوتر */
 .checkoutContent {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  gap: 2rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column-reverse; /* ملخص الطلب يظهر فوق في الجوال لتذكير العميل بالسعر */
+  gap: 1.5rem;
 }
 
 .checkoutFormSection, .checkoutCart {
   background: #fff;
-  padding: 2rem;
-  border-radius: 24px;
+  padding: 1.5rem;
+  border-radius: 20px;
   border: 1px solid #f1f5f9;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
 }
 
 .sectionTitle {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
+  font-weight: 800;
   margin-bottom: 1.5rem;
-  border-bottom: 2px solid #f1f5f9;
-  padding-bottom: 0.5rem;
+  color: #2d3748;
 }
 
 .checkoutFormGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr; /* حقل واحد لكل سطر في الجوال */
   gap: 1.2rem;
 }
 
 .inputGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .inputGroup label {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: bold;
   color: #4a5568;
 }
 
 .checkoutInput {
-  padding: 12px;
+  padding: 12px 15px;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 1rem;
+  border-radius: 12px;
+  font-size: 16px; /* يمنع الزووم في هواتف آيفون */
+  background: #fff;
+  transition: border-color 0.2s;
+}
+
+.checkoutInput:focus {
+  outline: none;
+  border-color: #00c2cb;
 }
 
 .checkoutButton {
   margin-top: 2rem;
   width: 100%;
-  padding: 1.2rem;
+  padding: 1.1rem;
   background: #00c2cb;
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 15px;
   font-weight: bold;
   font-size: 1.1rem;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: transform 0.2s;
+}
+
+.checkoutButton:active {
+  transform: scale(0.98);
 }
 
 .checkoutButton:disabled {
   background: #cbd5e0;
+  cursor: not-allowed;
+}
+
+/* تصميم ملخص المنتجات */
+.cartItemsList {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
 }
 
 .checkoutCartItem {
   display: flex;
   justify-content: space-between;
-  padding: 1rem 0;
-  border-bottom: 1px solid #f8fafc;
+  align-items: center;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #f7fafc;
 }
 
 .itemName {
   display: block;
-  font-weight: bold;
+  font-weight: 700;
+  font-size: 0.95rem;
 }
 
 .itemQty {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #718096;
 }
 
+.itemPrice {
+  font-weight: bold;
+}
+
 .orderSummary {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 2px dashed #edf2f7;
+  background: #f8fafc;
+  padding: 1.2rem;
+  border-radius: 15px;
 }
 
 .summaryRow {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.95rem;
 }
 
 .totalRow {
   display: flex;
   justify-content: space-between;
   font-weight: 900;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
   color: #00c2cb;
 }
 
-@media (max-width: 768px) {
+/* --- الشاشات الكبيرة (الكمبيوتر والتابلت بالعرض) --- */
+@media (min-width: 992px) {
   .checkoutContent {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    flex-direction: row;
+    gap: 2rem;
+  }
+
+  .checkoutFormGrid {
+    grid-template-columns: 1fr 1fr; /* حقلين في السطر */
+  }
+
+  .checkoutCart {
+    position: sticky;
+    top: 20px;
   }
 }

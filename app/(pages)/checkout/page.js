@@ -8,7 +8,6 @@ export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
   const router = useRouter();
   
-  // نفس الـ State واللوجيك حقك بالضبط
   const [form, setForm] = useState({
     address: '',
     city: '',
@@ -31,8 +30,6 @@ export default function CheckoutPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('auth_token');
-
-      console.log("🚀 البيانات المرسلة:", { ...form, cartItems });
       const response = await fetch('/api/create-order', {
         method: 'POST',
         headers: {
@@ -59,33 +56,35 @@ export default function CheckoutPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div dir="rtl" className={styles.checkoutPage} style={{ textAlign: 'center', padding: '5rem' }}>
-        <h2>سلتك فارغة</h2>
-        <button onClick={() => router.push('/')} className={styles.checkoutButton}>العودة للتسوق</button>
+      <div dir="rtl" className={styles.checkoutPage} style={{ textAlign: 'center', padding: '100px 20px' }}>
+        <h2 style={{ marginBottom: '20px' }}>سلتك فارغة حالياً</h2>
+        <button onClick={() => router.push('/')} className={styles.checkoutButton} style={{ maxWidth: '200px' }}>
+          العودة للتسوق
+        </button>
       </div>
     );
   }
 
   return (
     <div dir="rtl" className={styles.checkoutPage}>
-      <h1 className={styles.checkoutHeading}>إتمام عملية الدفع</h1>
+      <h1 className={styles.checkoutHeading}>إتمام الشراء</h1>
       
       <div className={styles.checkoutContent}>
-        {/* قسم العنوان - نفس الـ Inputs حقتك */}
+        {/* النصف الأول: معلومات الشحن */}
         <div className={styles.checkoutFormSection}>
-          <h2 className={styles.sectionTitle}>📦 معلومات الشحن</h2>
+          <h2 className={styles.sectionTitle}>📦 عنوان الشحن</h2>
           <div className={styles.checkoutFormGrid}>
             <div className={styles.inputGroup}>
-              <label>العنوان بالتفصيل</label>
-              <input name="address" placeholder="اسم الشارع، رقم المنزل..." onChange={handleChange} className={styles.checkoutInput} />
+              <label>العنوان</label>
+              <input name="address" placeholder="اسم الشارع، رقم المنزل" onChange={handleChange} className={styles.checkoutInput} required />
             </div>
             <div className={styles.inputGroup}>
               <label>المدينة</label>
-              <input name="city" placeholder="مثال: الرياض" onChange={handleChange} className={styles.checkoutInput} />
+              <input name="city" placeholder="الرياض، جدة..." onChange={handleChange} className={styles.checkoutInput} required />
             </div>
             <div className={styles.inputGroup}>
               <label>المنطقة</label>
-              <input name="state" placeholder="مثال: المنطقة الشرقية" onChange={handleChange} className={styles.checkoutInput} />
+              <input name="state" placeholder="المنطقة" onChange={handleChange} className={styles.checkoutInput} />
             </div>
             <div className={styles.inputGroup}>
               <label>الرمز البريدي</label>
@@ -93,18 +92,18 @@ export default function CheckoutPage() {
             </div>
             <div className={styles.inputGroup}>
               <label>الدولة</label>
-              <input name="country" value="المملكة العربية السعودية" readOnly className={styles.checkoutInput} style={{ background: '#f8fafc' }} />
+              <input name="country" value="المملكة العربية السعودية" readOnly className={styles.checkoutInput} style={{ background: '#f1f5f9' }} />
             </div>
           </div>
           
           <button onClick={handleOrder} disabled={loading} className={styles.checkoutButton}>
-            {loading ? '⏳ جارٍ معالجة طلبك...' : `تأكيد الطلب (${totalPrice.toFixed(2)} ${cartItems[0]?.currency})`}
+            {loading ? '⏳ جارٍ الإرسال...' : `تأكيد الطلب بقيمة ${totalPrice.toFixed(2)} ${cartItems[0]?.currency}`}
           </button>
         </div>
 
-        {/* قسم ملخص السلة */}
+        {/* النصف الثاني: ملخص الطلب */}
         <div className={styles.checkoutCart}>
-          <h2 className={styles.sectionTitle}>🛒 ملخص الطلب</h2>
+          <h2 className={styles.sectionTitle}>🛒 ملخص الطلب ({cartItems.length})</h2>
           <div className={styles.cartItemsList}>
             {cartItems.map((item) => (
               <div key={item.id} className={styles.checkoutCartItem}>
@@ -124,7 +123,7 @@ export default function CheckoutPage() {
             </div>
             <div className={styles.summaryRow}>
               <span>الشحن:</span>
-              <span style={{ color: '#0ca678' }}>مجاني</span>
+              <span style={{ color: '#0ca678', fontWeight: 'bold' }}>مجاني</span>
             </div>
             <div className={styles.totalRow}>
               <span>الإجمالي الكلي:</span>
