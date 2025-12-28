@@ -148,10 +148,25 @@
   align-items: center;
   margin-top: 40px;
 }
+copyright-text {
+  color: #555 !important;
+  font-size: 13px;
+}
 
-.copyright-text {
-  font-size: 0.85rem;
-  color: #94a3b8;
+.payment-methods-clean span {
+  color: #333 !important;
+  font-weight: 600;
+}
+
+.brand-philosophy {
+  color: #444 !important;
+}
+/* ترتيب عناوين الفوتر */
+.nav-col h3 {
+  font-size: 18px;
+  color: #0d0628;
+  margin-bottom: 15px;
+  font-weight: 700;
 }
 
 .payment-methods-clean {
