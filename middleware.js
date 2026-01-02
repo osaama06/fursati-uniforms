@@ -1,4 +1,3 @@
-// middleware.js
 import { NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 
@@ -20,11 +19,9 @@ export function middleware(request) {
     return NextResponse.next()
   } catch {
     const res = NextResponse.redirect(new URL('/login', request.url))
-    res.cookies.delete('token')
+    res.cookies.delete('token') // حذف التوكن إذا انتهت صلاحيته
     return res
   }
 }
 
-export const config = {
-  matcher: ['/account/:path*', '/checkout/:path*', '/orders/:path*']
-}
+export const config = { matcher: ['/account/:path*', '/checkout/:path*', '/orders/:path*'] }
