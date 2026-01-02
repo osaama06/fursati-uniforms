@@ -80,16 +80,16 @@ export async function POST(request) {
       }
     })
 
-    // 5️⃣ حفظ Cookie بطريقة صحيحة
+    // 5️⃣ حفظ Cookie بطريقة Production-ready
     response.cookies.set('token', customToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      httpOnly: true,        // لا يمكن الوصول من JS
+      secure: true,          // 🔥 مهم جدًا على Vercel (Production HTTPS)
+      sameSite: 'lax',       // يسمح بالطلبات العادية
       maxAge: 60 * 60 * 24 * 7, // 7 أيام
-      path: '/'
+      path: '/',             // متاح لكل الموقع
     })
 
-    console.log('🍪 تم حفظ Token في Cookie')
+    console.log('🍪 تم حفظ Token في Cookie بنجاح')
     console.log('📤 Token length:', customToken.length)
 
     return response
