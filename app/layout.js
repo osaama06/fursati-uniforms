@@ -1,5 +1,6 @@
 // app/layout.js
 import { CartProvider } from "./context/CartContext";
+import { Toaster } from "react-hot-toast";
 import { Geist, Geist_Mono, Tajawal } from "next/font/google";
 import Header from "./components/header/page";
 import "./globals.css";
@@ -28,35 +29,35 @@ const geistMono = Geist_Mono({
 // ✅ Metadata الأساسية (سيتم override في الصفحات)
 export const metadata = {
   metadataBase: new URL('https://fursatiuniforms.com'),
-  
+
   title: {
     default: 'Fursati -متجر فرصتي للزي الموحد',
     template: '%s | Fursati', // لصفحات فرعية
   },
-  
+
   description: 'متجر فرصتي المتخصص في بيع الزي المدرسي والطبي الموحد بجودة عالية وأسعار منافسة',
-  
+
   // Icons
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
-  
 
-  
+
+
   // Theme Color
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
     { media: '(prefers-color-scheme: dark)', color: '#251f35' },
   ],
-  
+
   // Viewport
   viewport: {
     width: 'device-width',
     initialScale: 1,
     maximumScale: 5,
   },
-  
+
   // Additional Meta Tags
   other: {
     'mobile-web-app-capable': 'yes',
@@ -76,13 +77,13 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://fursatiuniforms.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
+
         {/* ✅ Additional SEO */}
         <meta name="format-detection" content="telephone=no" />
         <meta name="geo.region" content="SA" />
         <meta name="geo.placename" content="sakaka" />
       </head>
-      
+
       <body className={tajawal.className}>
         {/* ✅ Google Analytics (إذا موجود) */}
         {process.env.NEXT_PUBLIC_GA_ID && (
@@ -105,7 +106,7 @@ export default function RootLayout({ children }) {
             />
           </>
         )}
-        
+
         {/* ✅ Facebook Pixel (اختياري) */}
         {process.env.NEXT_PUBLIC_FB_PIXEL_ID && (
           <script
@@ -125,12 +126,13 @@ export default function RootLayout({ children }) {
             }}
           />
         )}
-        
+
         <CartProvider>
           <Header />
           {/* <Navbar /> */}
           <main>{children}</main>
           <Footer />
+          <Toaster position="top-center" />
         </CartProvider>
       </body>
     </html>

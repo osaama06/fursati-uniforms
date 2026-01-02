@@ -10,7 +10,8 @@
 /* الهيدر: يحتوي على العنوان والرابط */
 .slider-header {
   display: flex;
-  justify-content: space-between; /* يوزع العنوان يمين والرابط يسار */
+  justify-content: space-between;
+  /* يوزع العنوان يمين والرابط يسار */
   align-items: center;
   padding: 0 20px;
   margin-bottom: 15px;
@@ -20,7 +21,8 @@
 .slider-title {
   font-size: 22px;
   font-weight: 800;
-  color: #1a1a1a;
+  color: #1B365D;
+  /* Navy Blue */
   margin: 0;
   position: relative;
 }
@@ -30,19 +32,20 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #555; /* لون هادئ */
+  color: #1B365D;
+  /* Navy Blue */
   text-decoration: none;
   font-size: 14px;
   font-weight: 600;
   transition: all 0.3s ease;
-  padding: 5px 10px;
+  padding: 5px 12px;
   border-radius: 8px;
-  background-color: #f9f9f9; /* خلفية خفيفة للزر */
+  background-color: #f0f9ff;
 }
 
 .view-all-link:hover {
-  color: #000;
-  background-color: #f0f0f0;
+  color: #162c4b;
+  background-color: #e0f2fe;
 }
 
 /* حركة السهم عند التمرير */
@@ -51,7 +54,8 @@
 }
 
 .view-all-link:hover svg {
-  transform: translateX(-3px); /* السهم يتحرك لليسار قليلاً */
+  transform: translateX(-3px);
+  /* السهم يتحرك لليسار قليلاً */
 }
 
 /* منطقة السلايدر (المنتجات) */
@@ -62,7 +66,7 @@
   scroll-behavior: smooth;
   padding: 10px 20px;
   /* إخفاء السكرول بار */
-  scrollbar-width: none; 
+  scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
@@ -70,7 +74,7 @@
   display: none;
 }
 
-.slider > * {
+.slider>* {
   flex: 0 0 auto;
 }
 
@@ -79,12 +83,30 @@
   .slider-title {
     font-size: 18px;
   }
-  
+
   .view-all-link {
     font-size: 13px;
   }
 
   .product-card {
-    min-width: 160px; /* تحسين العرض على الجوال */
+    min-width: 160px;
+    /* تحسين العرض على الجوال */
   }
+}
+
+/* Animation for smooth loading */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slider-container {
+  animation: fadeIn 0.6s ease-out forwards;
 }

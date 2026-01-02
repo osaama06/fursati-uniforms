@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import '@/styles/pages/account.css';
 
-const secret = process.env.JWT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987';
+// تأكد أن هذا المتغير مطابق تماماً لما كان في الكود القديم
+const secret = process.env.JWT_SECRET;
 
-// 1. دالة جلب بيانات العميل (للتأكد من الاسم)
 async function getCustomerData(email) {
   const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString("base64");
   try {
@@ -20,7 +20,6 @@ async function getCustomerData(email) {
   } catch (error) { return null; }
 }
 
-// 2. دالة جلب الطلبات الفعلية (آخر 3 فقط)
 async function getRecentOrders(email) {
   const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString("base64");
   try {
@@ -32,7 +31,6 @@ async function getRecentOrders(email) {
   } catch (error) { return []; }
 }
 
-// 3. قاموس ترجمة الحالات
 const statusTranslation = {
   'pending': { label: 'قيد الانتظار', class: 'pending' },
   'processing': { label: 'قيد التنفيذ', class: 'processing' },
@@ -44,36 +42,42 @@ const statusTranslation = {
 };
 
 export default async function AccountPage() {
+  // استخدام نفس لوجيك الكوكيز القديم
   const cookieStore = cookies();
   const token = cookieStore.get('token')?.value;
 
-  if (!token) redirect('/login');
+  if (!token) {
+    redirect('/login');
+  }
 
   let decoded;
   try {
+    // استخدمنا السيرفر سيكرت الصافي بدون فالباك لضمان عدم التضارب
     decoded = jwt.verify(token, secret);
-  } catch (error) { redirect('/login'); }
+  } catch (error) {
+    console.error("JWT Verification Error:", error.message);
+    redirect('/login');
+  }
 
-  // جلب البيانات الحقيقية فقط
+  // جلب البيانات مع الحفاظ على الأداء
   const [customerInfo, recentOrders] = await Promise.all([
     getCustomerData(decoded.email),
     getRecentOrders(decoded.email)
   ]);
 
-  // نفس الطريقة اللي كانت شغالة عندك في إظهار الاسم
   const finalName = customerInfo 
     ? `${customerInfo.first_name} ${customerInfo.last_name}`.trim() || customerInfo.username
-    : decoded.name || decoded.email.split('@')[0];
+    : decoded.name || decoded.username || decoded.email.split('@')[0];
 
   return (
     <main className="account-main" dir="rtl">
+      {/* اليو اي الجديد اللي عجبك بدون أي تغيير */}
       <header className="account-hero-card">
         <div className="profile-flex">
           <div className="avatar-section">
             <div className="avatar-circle">{finalName.charAt(0).toUpperCase()}</div>
           </div>
           <div className="welcome-text">
-            {/* عرض الاسم والإيميل المضمونين */}
             <h1>يا هلا، {finalName} 👋</h1>
             <p>{decoded.email}</p>
             <div className="user-meta-pills">

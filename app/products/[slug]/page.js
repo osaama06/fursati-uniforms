@@ -77,7 +77,8 @@ function getProductBrand(product) {
 // GENERATE METADATA (Hybrid Approach)
 // ================================
 export async function generateMetadata({ params }) {
-  const product = await getProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     return {
@@ -88,13 +89,13 @@ export async function generateMetadata({ params }) {
 
   // 1. Dynamic Content from CMS (WooCommerce/Yoast)
   const seo = product.yoast_seo || {};
-  
+
   const rawTitle = seo.title || product.name;
   const rawDesc = stripHtml(seo.metaDesc || product.short_description || product.description || `تسوق ${product.name} بأفضل الأسعار.`);
 
   // Clean Title
-  const title = rawTitle.includes("فرصتي") || rawTitle.includes("Fursati") 
-    ? rawTitle 
+  const title = rawTitle.includes("فرصتي") || rawTitle.includes("Fursati")
+    ? rawTitle
     : `${rawTitle} | فرصتي`;
 
   // Image Logic: Yoast Image > Product Image > Default
@@ -114,10 +115,10 @@ export async function generateMetadata({ params }) {
 
   return {
     metadataBase: new URL(SITE_URL),
-    
+
     title: title,
     description: rawDesc,
-    
+
     alternates: {
       canonical: pageUrl,
     },
@@ -173,7 +174,8 @@ export async function generateMetadata({ params }) {
 // PAGE COMPONENT
 // ================================
 export default async function ProductPage({ params }) {
-  const product = await getProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
 
   if (!product) notFound();
 
@@ -184,22 +186,22 @@ export default async function ProductPage({ params }) {
   // ==========================================
   // We explicitly format the data here to ensure the utils/schema function
   // receives exactly what Google needs for a "Product Card".
-  
+
   const frontendUrl = `${SITE_URL}/products/${product.slug}`;
-  
+
   // 1. Calculate Price Valid Until (Required by Google to show price)
   const nextYear = new Date();
   nextYear.setFullYear(nextYear.getFullYear() + 1);
   const priceValidUntil = nextYear.toISOString().split('T')[0];
 
   // 2. Map Availability to Schema.org URL
-  const schemaAvailability = product.stock_status === 'instock' 
-    ? 'https://schema.org/InStock' 
+  const schemaAvailability = product.stock_status === 'instock'
+    ? 'https://schema.org/InStock'
     : 'https://schema.org/OutOfStock';
 
   // 3. Prepare Enhanced Object
-  const productForSchema = { 
-    ...product, 
+  const productForSchema = {
+    ...product,
     permalink: frontendUrl,
     // Ensure these fields are strictly formatted for the schema generator
     brand: getProductBrand(product),

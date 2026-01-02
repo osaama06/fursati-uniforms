@@ -1,4 +1,3 @@
-//my-orders/route
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
@@ -6,7 +5,8 @@ import jwt from 'jsonwebtoken';
 const secret = process.env.JWT_SECRET;
 
 export async function GET() {
-  const cookieStore = cookies();
+  // التعديل الجوهري لـ Next.js 15: إضافة await
+  const cookieStore = await cookies(); 
   const token = cookieStore.get('token')?.value;
 
   if (!token) {
@@ -15,15 +15,15 @@ export async function GET() {
 
   try {
     const decoded = jwt.verify(token, secret);
-    console.log('decoded token:', decoded);
-
-    const customerId = decoded?.customer_id || decoded?.data?.user?.id;
+    
+    // تأكد من الـ Path الخاص بالـ ID في التوكن
+    // الكود القديم كان يبحث في مسارين، أبقيت عليهما لضمان التوافق
+    const customerId = decoded?.customer_id || decoded?.data?.user?.id || decoded?.id;
 
     if (!customerId) {
       return NextResponse.json({ error: 'معرف العميل غير موجود' }, { status: 400 });
     }
 
-    // إضافة timestamp لمنع الـ caching
     const timestamp = new Date().getTime();
     const url = `${process.env.WOO_URL}/wp-json/wc/v3/orders?customer=${customerId}&orderby=date&order=desc&per_page=10&_t=${timestamp}`;
 
@@ -34,11 +34,11 @@ export async function GET() {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0',
-        'X-LiteSpeed-Cache': 'no-cache', // خاص بـ LiteSpeed
-        'X-LiteSpeed-Purge': '*', // مسح الـ cache
+        'X-LiteSpeed-Cache': 'no-cache',
+        'X-LiteSpeed-Purge': '*',
         'X-LiteSpeed-Tag': 'no-cache'
       },
-      cache: 'no-store', // منع Next.js من تخزين الاستجابة
+      cache: 'no-store', 
     });
 
     if (!res.ok) {
@@ -48,8 +48,8 @@ export async function GET() {
 
     const orders = await res.json();
 
-    // إضافة headers لمنع تخزين الاستجابة في المتصفح
     const response = NextResponse.json(orders);
+    // الحفاظ على قوة منع الـ Caching لضمان ظهور الطلبات الجديدة فوراً
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');

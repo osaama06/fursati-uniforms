@@ -9,6 +9,7 @@ import { FiShoppingCart } from 'react-icons/fi';
 import { Star, Heart, Share2, Truck, Shield, RotateCcw, Award, Plus, Minus, X, ChevronLeft, ChevronRight } from "lucide-react";
 import ReviewForm from "@/app/components/ReviewForm";
 import ProductSlider from "@/app/components/ProductSlider/page";
+import toast from 'react-hot-toast';
 import '@/styles/pages/ProductPage.css';
 
 export default function ProductContent({ product, variations }) {
@@ -68,8 +69,8 @@ export default function ProductContent({ product, variations }) {
   );
   const sizes = hasSizes
     ? product.attributes.find(attr =>
-        attr.name.toLowerCase().includes("size") || attr.name === "المقاس"
-      ).options
+      attr.name.toLowerCase().includes("size") || attr.name === "المقاس"
+    ).options
     : [];
 
   const hasColors = product.attributes?.some(attr =>
@@ -77,8 +78,8 @@ export default function ProductContent({ product, variations }) {
   );
   const colors = hasColors
     ? product.attributes.find(attr =>
-        attr.name.toLowerCase().includes("color") || attr.name === "اللون"
-      ).options
+      attr.name.toLowerCase().includes("color") || attr.name === "اللون"
+    ).options
     : [];
 
   const handleSizeChange = (size) => {
@@ -96,7 +97,17 @@ export default function ProductContent({ product, variations }) {
 
   const handleAddToCart = () => {
     if (hasSizes && !selectedVariationId) {
-      setShowSizeError(true);
+      toast.error('يرجى اختيار المقاس لإتمام الطلب', {
+        style: {
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+        },
+        iconTheme: {
+          primary: '#fff',
+          secondary: '#333',
+        },
+      });
       return;
     }
 
@@ -112,7 +123,17 @@ export default function ProductContent({ product, variations }) {
       });
     }
 
-    alert(`✅ تمت إضافة ${quantity} قطعة إلى السلة`);
+    toast.success(`تمت إضافة ${quantity} قطعة إلى السلة`, {
+      style: {
+        borderRadius: '10px',
+        background: '#333',
+        color: '#fff',
+      },
+      iconTheme: {
+        primary: '#fff',
+        secondary: '#333',
+      },
+    });
   };
 
   const handleQuantityChange = (change) => {
@@ -123,10 +144,10 @@ export default function ProductContent({ product, variations }) {
     setSubmittingReview(true);
     try {
       const result = await submitReview(reviewData);
-      alert('✅ ' + result.message);
+      toast.success(result.message);
       setShowReviewForm(false);
     } catch (error) {
-      alert('❌ ' + error.message);
+      toast.error(error.message);
     } finally {
       setSubmittingReview(false);
     }
@@ -159,15 +180,17 @@ export default function ProductContent({ product, variations }) {
 
   // Navigation functions للأسهم
   const goToNextImage = () => {
-    if (selectedImage < (product.images?.length || 1) - 1) {
-      setSelectedImage(prev => prev + 1);
-    }
+    setSelectedImage(prev => {
+      const nextIndex = prev + 1;
+      return nextIndex >= (product.images?.length || 1) ? 0 : nextIndex;
+    });
   };
 
   const goToPrevImage = () => {
-    if (selectedImage > 0) {
-      setSelectedImage(prev => prev - 1);
-    }
+    setSelectedImage(prev => {
+      const prevIndex = prev - 1;
+      return prevIndex < 0 ? (product.images?.length || 1) - 1 : prevIndex;
+    });
   };
 
   const calculateDiscount = () => {
@@ -181,7 +204,7 @@ export default function ProductContent({ product, variations }) {
 
   const discount = calculateDiscount();
 
-  
+
 
   return (
     <div className="productContainer">
@@ -194,9 +217,9 @@ export default function ProductContent({ product, variations }) {
         {/* Product Images */}
         <div className="imageSection">
           <div className="mainImageContainer"
-               onTouchStart={handleTouchStart}
-               onTouchMove={handleTouchMove}
-               onTouchEnd={handleTouchEnd}>
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}>
             {product.images && product.images.length > 0 ? (
               <Image
                 src={product.images[selectedImage]?.src || product.images[0]?.src}
@@ -217,16 +240,12 @@ export default function ProductContent({ product, variations }) {
                 <button
                   className="mobileImageNav mobileImageNavPrev"
                   onClick={goToPrevImage}
-                  disabled={selectedImage === 0}
-                  style={{ display: selectedImage === 0 ? 'none' : 'flex' }}
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
                 <button
                   className="mobileImageNav mobileImageNavNext"
                   onClick={goToNextImage}
-                  disabled={selectedImage === (product.images?.length || 1) - 1}
-                  style={{ display: selectedImage === (product.images?.length || 1) - 1 ? 'none' : 'flex' }}
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -301,27 +320,27 @@ export default function ProductContent({ product, variations }) {
             </div>
 
 
-     
+
             <div className="priceSection">
               <span className="currentPrice">
                 {product.sale_price || product.price} <Image
-                          src="/sar.webp"
-                          alt="curentpice"
-                          width={20}
-                          height={20}
-                          className="sarsymbol-img"
-                        /> 
+                  src="/sar.webp"
+                  alt="curentpice"
+                  width={20}
+                  height={20}
+                  className="sarsymbol-img"
+                />
               </span>
               {product.regular_price && product.sale_price && (
                 <>
                   <span className="originalPrice">
                     {product.regular_price} <Image
-                          src="/sar.webp"
-                          alt="originalprice"
-                          width={20}
-                          height={20}
-                          className="sarsymbol-img"
-                        /> 
+                      src="/sar.webp"
+                      alt="originalprice"
+                      width={20}
+                      height={20}
+                      className="sarsymbol-img"
+                    />
                   </span>
                   <span className="discountBadge">
                     -{discount}%
@@ -346,7 +365,7 @@ export default function ProductContent({ product, variations }) {
 
           {hasSizes && (
             <div className="sizeSection">
-              <h3 className="sectionTitle">المقاس: {selectedSize && <span style={{fontWeight: 'normal'}}>{selectedSize}</span>}</h3>
+              <h3 className="sectionTitle">المقاس: {selectedSize && <span style={{ fontWeight: 'normal' }}>{selectedSize}</span>}</h3>
               <div className="sizeGrid">
                 {sizes.map((size) => (
                   <button
@@ -358,9 +377,6 @@ export default function ProductContent({ product, variations }) {
                   </button>
                 ))}
               </div>
-              {showSizeError && (
-                <p className="sizeError">يرجى اختيار المقاس</p>
-              )}
             </div>
           )}
 
@@ -389,13 +405,11 @@ export default function ProductContent({ product, variations }) {
 
           {product.stock_status && (
             <div className="stockStatus">
-              <div className={`stockDot ${
-                product.stock_status === 'instock' ? 'inStock' : 'outOfStock'
-              }`}></div>
-              <span className={`stockText ${
-                product.stock_status === 'instock' ? 'inStock' : 'outOfStock'
-              }`}>
-                {product.stock_status === 'instock' ? 'متوفر في المخزن' : 'غير متوفر'}
+              <div className={`stockDot ${product.stock_status === 'instock' ? 'inStock' : 'outOfStock'
+                }`}></div>
+              <span className={`stockText ${product.stock_status === 'instock' ? 'inStock' : 'outOfStock'
+                }`}>
+                {product.stock_status === 'instock' ? 'متوفر في المخزون' : 'غير متوفر'}
               </span>
               {product.stock_quantity && (
                 <span className="stockQuantity">({product.stock_quantity} قطعة متبقية)</span>
@@ -441,7 +455,7 @@ export default function ProductContent({ product, variations }) {
             </div>
 
             <button onClick={handleAddToCart} className="mobileAddToCartBtn">
-              <FiShoppingCart/> أضف إلى السلة
+              <FiShoppingCart /> أضف إلى السلة
             </button>
           </div>
         </div>
@@ -450,26 +464,26 @@ export default function ProductContent({ product, variations }) {
         <div className="buyBox">
           <div className="buyBoxPrice">
             {product.sale_price || product.price} <Image
-                          src="/sar.webp"
-                          alt="paybox"
-                          width={20}
-                          height={20}
-                          className="sarsymbol-img"
-                        /> 
+              src="/sar.webp"
+              alt="paybox"
+              width={20}
+              height={20}
+              className="sarsymbol-img"
+            />
           </div>
 
           {product.regular_price && product.sale_price && (
-            <div style={{marginBottom: '8px'}}>
-              <span className="originalPrice" style={{fontSize: '14px'}}>
+            <div style={{ marginBottom: '8px' }}>
+              <span className="originalPrice" style={{ fontSize: '14px' }}>
                 {product.regular_price} <Image
-                          src="/sar.webp"
-                          alt="originalprice"
-                          width={20}
-                          height={20}
-                          className="sarsymbol-img"
-                        /> 
+                  src="/sar.webp"
+                  alt="originalprice"
+                  width={20}
+                  height={20}
+                  className="sarsymbol-img"
+                />
               </span>
-              <span className="discountBadge" style={{marginLeft: '8px', fontSize: '12px'}}>
+              <span className="discountBadge" style={{ marginLeft: '8px', fontSize: '12px' }}>
                 -{discount}%
               </span>
             </div>
@@ -481,13 +495,11 @@ export default function ProductContent({ product, variations }) {
           </div>
 
           <div className="buyBoxStock">
-            <div className={`stockDot ${
-              product.stock_status === 'instock' ? 'inStock' : 'outOfStock'
-            }`}></div>
-            <span className={`stockText ${
-              product.stock_status === 'instock' ? 'inStock' : 'outOfStock'
-            }`}>
-              {product.stock_status === 'instock' ? 'متوفر في المخزن' : 'غير متوفر'}
+            <div className={`stockDot ${product.stock_status === 'instock' ? 'inStock' : 'outOfStock'
+              }`}></div>
+            <span className={`stockText ${product.stock_status === 'instock' ? 'inStock' : 'outOfStock'
+              }`}>
+              {product.stock_status === 'instock' ? 'متوفر في المخزون' : 'غير متوفر'}
             </span>
           </div>
 
@@ -510,30 +522,11 @@ export default function ProductContent({ product, variations }) {
             </div>
           </div>
 
-          {hasSizes && (
-            <div className="buyBoxSize">
-              <h4>المقاس:</h4>
-              <div className="sizeGrid">
-                {sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => handleSizeChange(size)}
-                    className={`sizeOption ${selectedSize === size ? 'selected' : ''}`}
-                    style={{fontSize: '12px', padding: '6px 12px'}}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-              {showSizeError && (
-                <p className="sizeError">يرجى اختيار المقاس</p>
-              )}
-            </div>
-          )}
+
 
           <div className="buyBoxActions">
             <button onClick={handleAddToCart} className="buyBoxAddToCart">
-                <FiShoppingCart/> أضف إلى السلة
+              <FiShoppingCart /> أضف إلى السلة
             </button>
           </div>
         </div>
@@ -644,12 +637,7 @@ export default function ProductContent({ product, variations }) {
                       <div key={stars} className="breakdownRow">
                         <span className="breakdownStars">{stars}</span>
                         <Star className="breakdownIcon" />
-                        <div style={{
-                          flex: 1,
-                          backgroundColor: '#e7e7e7',
-                          borderRadius: '4px',
-                          height: '8px'
-                        }}>
+                        <div className="breakdownBarContainer">
                           <div
                             className="breakdownFill"
                             style={{
@@ -676,16 +664,21 @@ export default function ProductContent({ product, variations }) {
                   reviews.map((review) => (
                     <div key={review.id} className="reviewItem">
                       <div className="reviewHeader">
-                        <div>
-                          <div className="reviewerName">
-                            {review.reviewer}
-                            <span className="verifiedBadge">
-                              <Award className="w-3 h-3" />
-                              موثق
-                            </span>
+                        <div className="reviewerInfo">
+                          <div className="reviewerAvatar">
+                            {review.reviewer.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="reviewerMeta">
+                            <div className="reviewerName">
+                              {review.reviewer}
+                              <span className="verifiedBadge">
+                                <Award className="w-3 h-3" />
+                                موثق
+                              </span>
+                            </div>
+                            <span className="reviewDate">{formatDate(review.date_created)}</span>
                           </div>
                         </div>
-                        <span className="reviewDate">{formatDate(review.date_created)}</span>
                       </div>
 
                       <div className="reviewRating">
@@ -703,6 +696,15 @@ export default function ProductContent({ product, variations }) {
                         className="reviewText"
                         dangerouslySetInnerHTML={{ __html: review.review }}
                       />
+
+                      <div className="reviewActions">
+                        <button className="helpfulBtn">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" /></svg>
+                            مفيد؟
+                          </div>
+                        </button>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -746,6 +748,24 @@ export default function ProductContent({ product, variations }) {
                 productName={product.name}
               />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Related Products Skeleton */}
+      {loadingRelated && (
+        <div className="skeleton-slider-container">
+          <div className="skeleton-slider-header">
+            <div className="skeleton-slider-title pulse"></div>
+          </div>
+          <div className="skeleton-slider-cards">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="skeleton-card">
+                <div className="skeleton-card-image pulse"></div>
+                <div className="skeleton-card-title pulse"></div>
+                <div className="skeleton-card-price pulse"></div>
+              </div>
+            ))}
           </div>
         </div>
       )}
