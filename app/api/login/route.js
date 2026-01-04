@@ -58,7 +58,8 @@ export async function POST(request) {
       // تجاهل الخطأ بدون كسر اللوقن
     }
 
-    // 3️⃣ إنشاء JWT
+    // 3️⃣ إنشاء JWT — متماثل مع عمر الكوكي
+    // اجعل JWT صالحاً لمدة 30 يوماً لتطابق قيمة الـ cookie في الإنتاج
     const customToken = jwt.sign(
       {
         customer_id: customerId,
@@ -67,7 +68,7 @@ export async function POST(request) {
         username: data.user_nicename
       },
       secret,
-      { expiresIn: '7d' }
+      { expiresIn: '30d' }
     )
 
     // 4️⃣ إنشاء Response
@@ -81,21 +82,21 @@ export async function POST(request) {
       }
     }
 
-    // 5️⃣ حفظ Cookie (الصيغة الصح)
+    // 5️⃣ حفظ Cookie (التكوين الآمن المتوافق مع Vercel)
     // استخدام cookies() بدلاً من response.cookies لجعلها تعمل بشكل صحيح في Next.js 15
     const cookieStore = await cookies()
 
-    // حساب تاريخ الانتهاء
-    const oneWeek = 7 * 24 * 60 * 60 * 1000
-    const expiresAt = new Date(Date.now() + oneWeek)
+    // حساب تاريخ الانتهاء (30 يوم)
+    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000
+    const expiresAt = new Date(Date.now() + thirtyDaysMs)
 
     cookieStore.set({
       name: 'token',
       value: customToken,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production', // true on Vercel/production
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days in seconds
+      maxAge: 60 * 60 * 24 * 30, // 30 days in seconds
       expires: expiresAt,
       path: '/'
     })
