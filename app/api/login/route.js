@@ -6,55 +6,98 @@ const secret = process.env.JWT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987'
 
 export async function POST(request) {
   try {
-    const { username, password } = await request.json()
+    const body = await request.json()
+    const { username, password } = body
 
-    // التحقق من WordPress
-    const wpRes = await fetch('https://furssati.io/wp-json/jwt-auth/v1/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    })
+    if (!username || !password) {
+      return NextResponse.json(
+        { success: false, message: 'البيانات ناقصة' },
+        { status: 400 }
+      )
+    }
+
+    // 1️⃣ التحقق من WordPress
+    const wpRes = await fetch(
+      'https://furssati.io/wp-json/jwt-auth/v1/token',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      }
+    )
 
     if (!wpRes.ok) {
-      return NextResponse.json({ success: false, message: 'بيانات غير صحيحة' }, { status: 401 })
+      return NextResponse.json(
+        { success: false, message: 'بيانات غير صحيحة' },
+        { status: 401 }
+      )
     }
 
     const data = await wpRes.json()
-    if (!data.token) return NextResponse.json({ success: false, message: 'بيانات غير صحيحة' }, { status: 401 })
 
-    // جلب customer_id من WooCommerce
+    if (!data?.token || !data?.user_email) {
+      return NextResponse.json(
+        { success: false, message: 'فشل التحقق' },
+        { status: 401 }
+      )
+    }
+
+    // 2️⃣ جلب customer_id من WooCommerce
     let customerId = null
-    try {
-      const customerRes = await woocommerceApi.get('customers', { email: data.user_email })
-      if (customerRes.data?.length) customerId = customerRes.data[0].id
-    } catch {}
 
-    // إنشاء JWT مخصص
+    try {
+      const customerRes = await woocommerceApi.get('customers', {
+        email: data.user_email
+      })
+
+      if (Array.isArray(customerRes.data) && customerRes.data.length > 0) {
+        customerId = customerRes.data[0].id
+      }
+    } catch (e) {
+      // تجاهل الخطأ بدون كسر اللوقن
+    }
+
+    // 3️⃣ إنشاء JWT
     const customToken = jwt.sign(
-      { customer_id: customerId, email: data.user_email, name: data.user_display_name, username: data.user_nicename },
+      {
+        customer_id: customerId,
+        email: data.user_email,
+        name: data.user_display_name,
+        username: data.user_nicename
+      },
       secret,
       { expiresIn: '7d' }
     )
 
-    // إعداد Response + HttpOnly cookie
-    const res = NextResponse.json({
+    // 4️⃣ إنشاء Response
+    const response = NextResponse.json({
       success: true,
-      user: { customer_id: customerId, email: data.user_email, name: data.user_display_name }
+      token: customToken,
+      user: {
+        customer_id: customerId,
+        email: data.user_email,
+        name: data.user_display_name
+      }
     })
 
-    res.cookies.set({
+    // 5️⃣ حفظ Cookie (الصيغة الصح)
+    response.cookies.set({
       name: 'token',
       value: customToken,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // مهم على Vercel
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7 // 7 أيام
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/'
     })
 
-    return res
+    return response
 
   } catch (err) {
-    return NextResponse.json({ success: false, message: 'خطأ في الخادم', error: err.message }, { status: 500 })
+    console.error('LOGIN ERROR:', err)
+    return NextResponse.json(
+      { success: false, message: 'خطأ في الخادم' },
+      { status: 500 }
+    )
   }
 }

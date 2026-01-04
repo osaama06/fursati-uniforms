@@ -1,27 +1,24 @@
-import { NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
-
-const secret = process.env.JWT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987'
+import { NextResponse } from 'next/server';
 
 export function middleware(request) {
-  const token = request.cookies.get('token')?.value
-  const { pathname } = request.nextUrl
+  const token = request.cookies.get('token')?.value;
+  const { pathname } = request.nextUrl;
 
-  const protectedRoutes = ['/account', '/checkout', '/orders']
-  const isProtected = protectedRoutes.some(route => pathname.startsWith(route))
+  // 1. القائمة البيضاء (الصفحات التي تحتاج تسجيل دخول)
+  const protectedPaths = ['/account', '/orders', '/checkout'];
 
-  if (!isProtected) return NextResponse.next()
+  const isProtected = protectedPaths.some(path => pathname.startsWith(path));
 
-  if (!token) return NextResponse.redirect(new URL('/login', request.url))
-
-  try {
-    jwt.verify(token, secret)
-    return NextResponse.next()
-  } catch {
-    const res = NextResponse.redirect(new URL('/login', request.url))
-    res.cookies.delete('token') // حذف التوكن إذا انتهت صلاحيته
-    return res
+  if (isProtected && !token) {
+    // إذا حاول يدخل صفحة محمية وهو ما عنده توكن، يرجع للوجن
+    const loginUrl = new URL('/login', request.url);
+    return NextResponse.redirect(loginUrl);
   }
+
+  return NextResponse.next();
 }
 
-export const config = { matcher: ['/account/:path*', '/checkout/:path*', '/orders/:path*'] }
+// تحديد المسارات التي يشتغل عليها الميدلوير لتقليل الضغط
+export const config = {
+  matcher: ['/account/:path*', '/orders/:path*', '/checkout/:path*'],
+};
