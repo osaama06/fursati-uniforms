@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import woocommerceApi from '@/lib/woocommerce'
 
@@ -70,7 +71,7 @@ export async function POST(request) {
     )
 
     // 4️⃣ إنشاء Response
-    const response = NextResponse.json({
+    const responsePayload = {
       success: true,
       token: customToken,
       user: {
@@ -78,20 +79,28 @@ export async function POST(request) {
         email: data.user_email,
         name: data.user_display_name
       }
-    })
+    }
 
     // 5️⃣ حفظ Cookie (الصيغة الصح)
-    response.cookies.set({
+    // استخدام cookies() بدلاً من response.cookies لجعلها تعمل بشكل صحيح في Next.js 15
+    const cookieStore = await cookies()
+
+    // حساب تاريخ الانتهاء
+    const oneWeek = 7 * 24 * 60 * 60 * 1000
+    const expiresAt = new Date(Date.now() + oneWeek)
+
+    cookieStore.set({
       name: 'token',
       value: customToken,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: 60 * 60 * 24 * 7, // 7 days in seconds
+      expires: expiresAt,
       path: '/'
     })
 
-    return response
+    return NextResponse.json(responsePayload)
 
   } catch (err) {
     console.error('LOGIN ERROR:', err)
