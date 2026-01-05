@@ -36,30 +36,20 @@ export async function POST(request) {
 
     const data = await wpRes.json()
 
-    if (!data?.token || !data?.user_email) {
-      return NextResponse.json(
-        { success: false, message: 'فشل التحقق' },
-        { status: 401 }
-      )
-    }
-
     // 2️⃣ جلب customer_id من WooCommerce
     let customerId = null
-
     try {
       const customerRes = await woocommerceApi.get('customers', {
         email: data.user_email
       })
-
       if (Array.isArray(customerRes.data) && customerRes.data.length > 0) {
         customerId = customerRes.data[0].id
       }
     } catch (e) {
-      // تجاهل الخطأ بدون كسر اللوقن
+      console.error('Woo Error:', e.message)
     }
 
-    // 3️⃣ إنشاء JWT — متماثل مع عمر الكوكي
-    // اجعل JWT صالحاً لمدة 30 يوماً لتطابق قيمة الـ cookie في الإنتاج
+    // 3️⃣ إنشاء JWT
     const customToken = jwt.sign(
       {
         customer_id: customerId,
@@ -71,8 +61,8 @@ export async function POST(request) {
       { expiresIn: '30d' }
     )
 
-    // 4️⃣ إنشاء Response
-    const responsePayload = {
+    // 4️⃣ إنشاء Response (لا ترجعه فوراً)
+    const response = NextResponse.json({
       success: true,
       token: customToken,
       user: {
@@ -80,28 +70,26 @@ export async function POST(request) {
         email: data.user_email,
         name: data.user_display_name
       }
-    }
+    })
 
-    // 5️⃣ حفظ Cookie (التكوين الآمن المتوافق مع Vercel)
-    // استخدام cookies() بدلاً من response.cookies لجعلها تعمل بشكل صحيح في Next.js 15
+    // 5️⃣ حفظ Cookie باستخدام الطريقة الأضمن لـ Vercel
+    // في Next 15، يفضل استخدام cookieStore قبل الـ return
     const cookieStore = await cookies()
-
-    // حساب تاريخ الانتهاء (30 يوم)
-    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000
-    const expiresAt = new Date(Date.now() + thirtyDaysMs)
 
     cookieStore.set({
       name: 'token',
       value: customToken,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // true on Vercel/production
+      secure: true, // إجباري true في Vercel لأن الدومين HTTPS
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days in seconds
-      expires: expiresAt,
-      path: '/'
+      maxAge: 60 * 60 * 24 * 30, // 30 يوم
+      path: '/',
     })
 
-    return NextResponse.json(responsePayload)
+    // 6️⃣ الحل الجذري: تأكيد إرسال الكوكي في الـ Headers يدوياً لضمان عدم حذفها
+    response.headers.set('Set-Cookie', cookieStore.toString())
+
+    return response
 
   } catch (err) {
     console.error('LOGIN ERROR:', err)
