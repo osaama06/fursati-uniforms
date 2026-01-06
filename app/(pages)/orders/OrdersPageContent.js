@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -15,7 +14,6 @@ const statusTranslations = {
   'checkout-draft': { label: 'مسودة', color: '#868e96', bg: '#f1f3f5' },
 };
 
-// مكون الهيكل العظمي (Skeleton Component)
 const OrderSkeleton = () => (
   <div style={{
     background: '#fff', 
@@ -51,31 +49,39 @@ export default function OrdersPageContent() {
   const searchParams = useSearchParams();
   const isNew = searchParams.get('new') === 'true';
   const isFetching = useRef(false);
+const fetchOrders = async () => {
+  if (isFetching.current) return;
+  isFetching.current = true;
+  setLoading(true);
+  setError(null);
 
-  const fetchOrders = async () => {
-    if (isFetching.current) return;
-    isFetching.current = true;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch(`/api/my-orders?t=${Date.now()}`, { cache: 'no-store' });
-      const data = await res.json();
-      if (res.ok) setOrders(data);
-      else if (orders.length === 0) setError(data.error || 'فشل جلب الطلبات');
-    } catch (err) {
-      console.error('Fetch error:', err);
-    } finally {
-      setLoading(false);
-      isFetching.current = false;
+  try {
+    const res = await fetch(`/api/my-orders?t=${Date.now()}`, { cache: 'no-store' });
+    const data = await res.json();
+    
+    if (res.ok) {
+      // ✅ تأكد إن data هو array
+      setOrders(Array.isArray(data) ? data : []);
+    } else {
+      setError(data.error || 'فشل جلب الطلبات');
+      setOrders([]); // ✅ حط array فاضي
     }
-  };
+  } catch (err) {
+    console.error('Fetch error:', err);
+    setError('حدث خطأ في الاتصال');
+    setOrders([]); // ✅ حط array فاضي
+  } finally {
+    setLoading(false);
+    isFetching.current = false;
+  }
+};
 
-  useEffect(() => { fetchOrders(); }, [isNew]);
+  useEffect(() => { 
+    fetchOrders(); 
+  }, [isNew]);
 
   return (
     <main style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem', direction: 'rtl' }}>
-      
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
         <h1 style={{ fontSize: '1.8rem', fontWeight: '800', margin: 0 }}>📦 طلباتي</h1>
         <button 
@@ -87,7 +93,6 @@ export default function OrdersPageContent() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {/* عرض الـ Skeleton أثناء التحميل */}
         {loading && orders.length === 0 ? (
           <>
             <OrderSkeleton />
@@ -102,6 +107,7 @@ export default function OrdersPageContent() {
         ) : (
           orders.map((order) => {
             const statusInfo = statusTranslations[order.status] || { label: order.status, color: '#495057', bg: '#f1f3f5' };
+            
             return (
               <div key={order.id} style={{
                 background: '#fff', 
@@ -141,7 +147,7 @@ export default function OrdersPageContent() {
                 </div>
 
                 <Link 
-                  href={`/orders/${order.id}`} 
+                  href={`/orders/${order.id}`} // ✅ مصلحة
                   style={{
                     textDecoration: 'none',
                     color: '#00c2cb',
@@ -156,7 +162,7 @@ export default function OrdersPageContent() {
                   التفاصيل
                 </Link>
               </div>
-            )
+            );
           })
         )}
       </div>

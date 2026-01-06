@@ -1,5 +1,5 @@
+// app/api/login/route.js
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import woocommerceApi from '@/lib/woocommerce'
 
@@ -17,7 +17,6 @@ export async function POST(request) {
       )
     }
 
-    // 1️⃣ Verify with WP JWT endpoint
     const wpRes = await fetch(
       'https://furssati.io/wp-json/jwt-auth/v1/token',
       {
@@ -35,7 +34,7 @@ export async function POST(request) {
     }
 
     const data = await wpRes.json()
-    
+
     if (!data?.token || !data?.user_email) {
       return NextResponse.json(
         { success: false, message: 'فشل التوثيق' },
@@ -43,7 +42,6 @@ export async function POST(request) {
       )
     }
 
-    // 2️⃣ Try to get customer_id from WooCommerce
     let customerId = null
     try {
       const customerRes = await woocommerceApi.get('customers', {
@@ -56,7 +54,6 @@ export async function POST(request) {
       // ignore
     }
 
-    // 3️⃣ Sign internal JWT (30 days)
     const customToken = jwt.sign(
       {
         customer_id: customerId,
@@ -70,7 +67,7 @@ export async function POST(request) {
 
     const responsePayload = {
       success: true,
-      token: customToken, // ✅ أرجع التوكن للـ client
+      token: customToken,
       user: {
         customer_id: customerId,
         email: data.user_email,
@@ -78,23 +75,11 @@ export async function POST(request) {
       }
     }
 
-    // ✅ CRITICAL FIX: إنشاء Response أولاً
+    // ✅ الطريقة الصحيحة
     const response = NextResponse.json(responsePayload, { status: 200 })
 
-    // ✅ إضافة الكوكي للـ Response
+    // ✅ إضافة الكوكي
     response.cookies.set({
-      name: 'token',
-      value: customToken,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      path: '/'
-    })
-
-    // ✅ حفظ في cookieStore أيضاً (للـ middleware)
-    const cookieStore = await cookies()
-    cookieStore.set({
       name: 'token',
       value: customToken,
       httpOnly: true,
@@ -103,6 +88,13 @@ export async function POST(request) {
       maxAge: 60 * 60 * 24 * 30,
       path: '/'
     })
+
+    // ✅ لوق للتشخيص
+    console.log('=== LOGIN DEBUG ===')
+    console.log('Token:', customToken.substring(0, 20) + '...')
+    console.log('NODE_ENV:', process.env.NODE_ENV)
+    console.log('Secure:', process.env.NODE_ENV === 'production')
+    console.log('===================')
 
     return response
 
