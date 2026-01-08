@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -59,7 +60,7 @@ export default function LoginPage() {
         </button>
       </form>
       <p style={{ textAlign: 'center', marginTop: '20px' }}>
-        ليس لديك حساب؟ <a href="/signup" style={{ color: '#0070f3' }}>إنشاء حساب جديد</a>
+        ليس لديك حساب؟ <Link href="/signup" style={{ color: '#0070f3' }}>إنشاء حساب جديد</Link>
       </p>
     </div>
   );
