@@ -1,63 +1,66 @@
-import { NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
-import woocommerceApi from '@/lib/woocommerce'
+import { NextResponse } from 'next/server';
+import { createAppToken } from '@/lib/auth';
 
-const secret = process.env.JWT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987'
+const WP_JWT_URL = process.env.WOO_URL + '/wp-json/jwt-auth/v1/token';
+const WP_API_URL = process.env.WOO_URL + '/wp-json/wc/v3/customers';
 
 export async function POST(request) {
-  const { username, password } = await request.json()
-
   try {
-    const wpRes = await fetch('https://furssati.io/wp-json/jwt-auth/v1/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    })
+    const body = await request.json();
+    const { username, password } = body;
 
-    const data = await wpRes.json()
-
-    if (data.token) {
-      // 🔍 نحصل على customer_id من WooCommerce
-      let customerId = null
-      try {
-        const customerRes = await woocommerceApi.get('customers', {
-          search: data.user_email
-        })
-
-        if (customerRes.data && customerRes.data.length > 0) {
-          customerId = customerRes.data[0].id
-        }
-      } catch (err) {
-        console.warn('⚠️ لم يتم العثور على العميل في WooCommerce:', err.message)
-      }
-
-      // 🛡️ إنشاء توكن خاص يحتوي على customer_id
-      const customToken = jwt.sign(
-        {
-          email: data.user_email,
-          name: data.user_display_name,
-          username: data.user_nicename,
-          wpToken: data.token,
-          customer_id: customerId || null
-        },
-        secret,
-        { expiresIn: '1d' }
-      )
-
-      const response = NextResponse.json({ message: 'تم تسجيل الدخول' })
-      response.cookies.set('token', customToken, {
-        httpOnly: true,
-        path: '/',
-        maxAge: 60 * 60 * 24,
-        secure: process.env.NODE_ENV === 'production'
-      })
-
-      return response
-    } else {
-      return NextResponse.json({ message: 'بيانات غير صحيحة' }, { status: 401 })
+    if (!username || !password) {
+      return NextResponse.json({ error: 'Username and password required' }, { status: 400 });
     }
 
-  } catch (err) {
-    return NextResponse.json({ message: 'خطأ في الخادم', error: err.message }, { status: 500 })
+    const wpAuthResponse = await fetch(WP_JWT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (!wpAuthResponse.ok) {
+      const error = await wpAuthResponse.json();
+      return NextResponse.json({ error: error.message || 'بيانات تسجيل الدخول غير صحيحة' }, { status: 401 });
+    }
+
+    const wpData = await wpAuthResponse.json();
+    const userId = wpData.user_id || wpData.ID;
+    const email = wpData.user_email;
+    const displayName = wpData.user_display_name || wpData.user_nicename;
+
+    let customerId;
+    try {
+      const customerResponse = await fetch(`${WP_API_URL}?email=${encodeURIComponent(email)}`, {
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString('base64')}`,
+        },
+      });
+      if (customerResponse.ok) {
+        const customers = await customerResponse.json();
+        if (customers.length > 0) customerId = customers[0].id;
+      }
+    } catch (error) {
+      console.warn('Failed to fetch customer_id:', error);
+    }
+
+    const appToken = await createAppToken({ userId, email, displayName, customerId });
+
+    const response = NextResponse.json({ success: true, user: { userId, email, displayName, customerId } }, { status: 200 });
+
+    response.cookies.set({
+      name: 'auth_token',
+      value: appToken,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    });
+
+    return response;
+  } catch (error) {
+    console.error('Login error:', error);
+    return NextResponse.json({ error: 'حدث خطأ في الخادم' }, { status: 500 });
   }
 }
