@@ -1,3 +1,4 @@
+// app/(pages)/orders/OrdersPageContent.js
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -49,86 +50,175 @@ export default function OrdersPageContent() {
   const searchParams = useSearchParams();
   const isNew = searchParams.get('new') === 'true';
   const isFetching = useRef(false);
-const fetchOrders = async () => {
-  if (isFetching.current) return;
-  isFetching.current = true;
-  setLoading(true);
-  setError(null);
 
-  try {
-    const res = await fetch(`/api/my-orders?t=${Date.now()}`, { cache: 'no-store' });
-    const data = await res.json();
+  const fetchOrders = async () => {
+    if (isFetching.current) return;
+    isFetching.current = true;
+    setLoading(true);
+    setError(null);
     
-    if (res.ok) {
-      // ✅ تأكد إن data هو array
-      setOrders(Array.isArray(data) ? data : []);
-    } else {
-      setError(data.error || 'فشل جلب الطلبات');
-      setOrders([]); // ✅ حط array فاضي
+    try {
+      // ✅ الإصلاح: استخدام backticks صحيحة
+      const res = await fetch(`/api/my-orders?t=${Date.now()}`, { 
+        cache: 'no-store' 
+      });
+      
+      const data = await res.json();
+      console.log('الطلبات من API:', data);
+      
+      if (res.ok) {
+        // ✅ تأكد إن data هو array
+        setOrders(Array.isArray(data) ? data : []);
+      } else {
+        setError(data.error || 'فشل جلب الطلبات');
+        setOrders([]);
+      }
+    } catch (err) {
+      console.error('Fetch error:', err);
+      setError('حدث خطأ في الاتصال');
+      setOrders([]);
+    } finally {
+      setLoading(false);
+      isFetching.current = false;
     }
-  } catch (err) {
-    console.error('Fetch error:', err);
-    setError('حدث خطأ في الاتصال');
-    setOrders([]); // ✅ حط array فاضي
-  } finally {
-    setLoading(false);
-    isFetching.current = false;
-  }
-};
+  };
 
   useEffect(() => { 
     fetchOrders(); 
   }, [isNew]);
 
   return (
-    <main style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem', direction: 'rtl' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: '800', margin: 0 }}>📦 طلباتي</h1>
+    <main style={{ 
+      maxWidth: '1000px', 
+      margin: '2rem auto', 
+      padding: '0 1rem', 
+      direction: 'rtl' 
+    }}>
+      {/* Header */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: '2.5rem' 
+      }}>
+        <h1 style={{ 
+          fontSize: '1.8rem', 
+          fontWeight: '800', 
+          margin: 0 
+        }}>
+          📦 طلباتي
+        </h1>
         <button 
           onClick={fetchOrders} 
-          style={{ padding: '10px 20px', cursor: 'pointer', borderRadius: '12px', border: '1px solid #ddd', background: '#fff', fontWeight: '600' }}
+          disabled={loading}
+          style={{ 
+            padding: '10px 20px', 
+            cursor: loading ? 'not-allowed' : 'pointer', 
+            borderRadius: '12px', 
+            border: '1px solid #ddd', 
+            background: loading ? '#f5f5f5' : '#fff', 
+            fontWeight: '600',
+            opacity: loading ? 0.6 : 1
+          }}
         >
-          🔄 تحديث
+          {loading ? '⏳ جاري التحديث...' : '🔄 تحديث'}
         </button>
       </div>
 
+      {/* Content */}
       <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {/* Loading State */}
         {loading && orders.length === 0 ? (
           <>
             <OrderSkeleton />
             <OrderSkeleton />
             <OrderSkeleton />
           </>
-        ) : orders.length === 0 && !loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem', background: '#f8f9fa', borderRadius: '15px' }}>
-            <p style={{ color: '#666', marginBottom: '1rem' }}>لا توجد طلبات سابقة حالياً.</p>
-            <Link href="/" style={{ color: '#00c2cb', fontWeight: 'bold', textDecoration: 'none' }}>تصفح المتجر من هنا</Link>
+        ) : 
+        
+        /* Empty State */
+        orders.length === 0 && !loading ? (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '3rem', 
+            background: '#f8f9fa', 
+            borderRadius: '15px' 
+          }}>
+            <p style={{ 
+              color: '#666', 
+              marginBottom: '1rem',
+              fontSize: '1.1rem'
+            }}>
+              لا توجد طلبات سابقة حالياً.
+            </p>
+            <Link 
+              href="/" 
+              style={{ 
+                color: '#00c2cb', 
+                fontWeight: 'bold', 
+                textDecoration: 'none',
+                fontSize: '1rem'
+              }}
+            >
+              تصفح المتجر من هنا →
+            </Link>
           </div>
-        ) : (
+        ) : 
+        
+        /* Orders List */
+        (
           orders.map((order) => {
-            const statusInfo = statusTranslations[order.status] || { label: order.status, color: '#495057', bg: '#f1f3f5' };
+            const statusInfo = statusTranslations[order.status] || { 
+              label: order.status, 
+              color: '#495057', 
+              bg: '#f1f3f5' 
+            };
             
             return (
-              <div key={order.id} style={{
-                background: '#fff', 
-                padding: '1.5rem', 
-                borderRadius: '18px', 
-                border: '1px solid #eee',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
-                flexWrap: 'wrap',
-                gap: '1rem',
-                marginBottom: '1.2rem'
-              }}>
+              <div 
+                key={order.id} 
+                style={{
+                  background: '#fff', 
+                  padding: '1.5rem', 
+                  borderRadius: '18px', 
+                  border: '1px solid #eee',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
+                  marginBottom: '1.2rem',
+                  transition: 'transform 0.2s, box-shadow 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.02)';
+                }}
+              >
+                {/* Order ID & Date */}
                 <div style={{ minWidth: '120px' }}>
-                  <span style={{ fontWeight: '800', display: 'block', fontSize: '1.1rem' }}>#{order.id}</span>
-                  <span style={{ fontSize: '0.85rem', color: '#888' }}>
+                  <span style={{ 
+                    fontWeight: '800', 
+                    display: 'block', 
+                    fontSize: '1.1rem',
+                    color: '#1a1a1a'
+                  }}>
+                    #{order.id}
+                  </span>
+                  <span style={{ 
+                    fontSize: '0.85rem', 
+                    color: '#888' 
+                  }}>
                     {new Date(order.date_created).toLocaleDateString('ar-SA')}
                   </span>
                 </div>
 
+                {/* Status Badge */}
                 <div style={{
                   padding: '6px 16px',
                   borderRadius: '10px',
@@ -142,12 +232,18 @@ const fetchOrders = async () => {
                   {statusInfo.label}
                 </div>
 
-                <div style={{ fontWeight: '800', color: '#1a1a1a' }}>
+                {/* Total Price */}
+                <div style={{ 
+                  fontWeight: '800', 
+                  color: '#1a1a1a',
+                  fontSize: '1.1rem'
+                }}>
                   {order.total} <span style={{ fontSize: '0.8rem' }}>ر.س</span>
                 </div>
 
+                {/* Details Button */}
                 <Link 
-                  href={`/orders/${order.id}`} // ✅ مصلحة
+                  href={`/orders/${order.id}`}
                   style={{
                     textDecoration: 'none',
                     color: '#00c2cb',
@@ -156,10 +252,19 @@ const fetchOrders = async () => {
                     borderRadius: '10px',
                     fontSize: '0.9rem',
                     fontWeight: '700',
-                    border: '1px solid #e0f7f8'
+                    border: '1px solid #e0f7f8',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#00c2cb';
+                    e.currentTarget.style.color = '#fff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#f0fbfc';
+                    e.currentTarget.style.color = '#00c2cb';
                   }}
                 >
-                  التفاصيل
+                  التفاصيل ←
                 </Link>
               </div>
             );
@@ -167,8 +272,17 @@ const fetchOrders = async () => {
         )}
       </div>
 
+      {/* Error Message */}
       {error && orders.length === 0 && (
-        <p style={{ color: '#e03131', textAlign: 'center', marginTop: '2rem', padding: '1rem', background: '#fff5f5', borderRadius: '10px' }}>
+        <p style={{ 
+          color: '#e03131', 
+          textAlign: 'center', 
+          marginTop: '2rem', 
+          padding: '1rem', 
+          background: '#fff5f5', 
+          borderRadius: '10px',
+          fontWeight: '600'
+        }}>
           ⚠️ {error}
         </p>
       )}
