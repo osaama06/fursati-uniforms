@@ -1,67 +1,103 @@
 'use client';
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import { useRouter} from 'next/navigation';
 
 export default function LoginPage() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  async function handleSubmit(e) {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
 
-    const formData = new FormData(e.currentTarget);
-    const username = formData.get('username');
-    const password = formData.get('password');
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
 
-    try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+    const data = await res.json();
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'فشل تسجيل الدخول');
+    if (res.ok) {
+      // ✅ حفظ التوكن في الكوكيز
+      document.cookie = `token=${data.token}; path=/`;
 
-      const redirect = searchParams.get('redirect') || '/orders';
-      router.push(redirect);
-      router.refresh();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      router.push('/account'); // إعادة التوجيه بعد تسجيل الدخول
+    } else {
+      setMessage('❌ فشل تسجيل الدخول: ' + (data.message || ''));
     }
-  }
+  };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '30px' }}>تسجيل الدخول</h1>
-      {error && (
-        <div style={{ padding: '10px', background: '#fee', color: '#c00', marginBottom: '20px', borderRadius: '5px', textAlign: 'center' }}>
-          {error}
-        </div>
-      )}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="username" style={{ display: 'block', marginBottom: '5px' }}>اسم المستخدم أو البريد الإلكتروني</label>
-          <input type="text" id="username" name="username" required style={{ width: '100%', padding: '10px', fontSize: '16px', border: '1px solid #ddd', borderRadius: '5px' }} />
-        </div>
-        <div style={{ marginBottom: '20px' }}>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: '5px' }}>كلمة المرور</label>
-          <input type="password" id="password" name="password" required style={{ width: '100%', padding: '10px', fontSize: '16px', border: '1px solid #ddd', borderRadius: '5px' }} />
-        </div>
-        <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: loading ? '#ccc' : '#0070f3', color: 'white', border: 'none', fontSize: '16px', borderRadius: '5px', cursor: loading ? 'not-allowed' : 'pointer' }}>
-          {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      background: 'linear-gradient(to right, #fceabb, #f8b500)',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      <form onSubmit={handleLogin} style={{
+        backgroundColor: '#fff',
+        padding: '2rem',
+        borderRadius: '12px',
+        boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+        width: '100%',
+        maxWidth: '400px',
+        textAlign: 'center'
+      }}>
+        <h2 style={{ marginBottom: '1.5rem', color: '#333' }}>🔐 تسجيل الدخول</h2>
+
+        <input
+          type="text"
+          placeholder="اسم المستخدم"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            marginBottom: '1rem',
+            borderRadius: '8px',
+            border: '1px solid #ccc',
+            fontSize: '1rem'
+          }}
+        />
+
+        <input
+          type="password"
+          placeholder="كلمة المرور"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            marginBottom: '1.5rem',
+            borderRadius: '8px',
+            border: '1px solid #ccc',
+            fontSize: '1rem'
+          }}
+        />
+
+        <button type="submit" style={{
+          backgroundColor: '#f8b500',
+          color: '#fff',
+          border: 'none',
+          padding: '0.75rem 1.5rem',
+          borderRadius: '8px',
+          fontSize: '1rem',
+          cursor: 'pointer',
+          transition: 'background-color 0.2s ease-in-out'
+        }}
+        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#d49500'}
+        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f8b500'}>
+          دخول
         </button>
+
+        {message && <p style={{ color: 'red', marginTop: '1rem' }}>{message}</p>}
       </form>
-      <p style={{ textAlign: 'center', marginTop: '20px' }}>
-        ليس لديك حساب؟ <Link href="/signup" style={{ color: '#0070f3' }}>إنشاء حساب جديد</Link>
-      </p>
     </div>
   );
 }

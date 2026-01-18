@@ -1,66 +1,104 @@
-import { NextResponse } from 'next/server';
-import { createAppToken } from '@/lib/auth';
+// app/api/login/route.js
+import { NextResponse } from 'next/server'
+import jwt from 'jsonwebtoken'
+import woocommerceApi from '@/lib/woocommerce'
 
-const WP_JWT_URL = process.env.WOO_URL + '/wp-json/jwt-auth/v1/token';
-const WP_API_URL = process.env.WOO_URL + '/wp-json/wc/v3/customers';
+const secret = process.env.JWT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987'
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const { username, password } = body;
+    const { username, password } = await request.json()
 
-    if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password required' }, { status: 400 });
-    }
+    console.log('🔐 محاولة تسجيل دخول:', username)
 
-    const wpAuthResponse = await fetch(WP_JWT_URL, {
+    // 1️⃣ التحقق من WordPress
+    const wpRes = await fetch('https://furssati.io/wp-json/jwt-auth/v1/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
+      body: JSON.stringify({ username, password })
+    })
 
-    if (!wpAuthResponse.ok) {
-      const error = await wpAuthResponse.json();
-      return NextResponse.json({ error: error.message || 'بيانات تسجيل الدخول غير صحيحة' }, { status: 401 });
+    if (!wpRes.ok) {
+      console.log('❌ فشل التحقق من WordPress')
+      return NextResponse.json(
+        { success: false, message: 'بيانات غير صحيحة' },
+        { status: 401 }
+      )
     }
 
-    const wpData = await wpAuthResponse.json();
-    const userId = wpData.user_id || wpData.ID;
-    const email = wpData.user_email;
-    const displayName = wpData.user_display_name || wpData.user_nicename;
+    const data = await wpRes.json()
 
-    let customerId;
+    if (!data.token) {
+      return NextResponse.json(
+        { success: false, message: 'بيانات غير صحيحة' },
+        { status: 401 }
+      )
+    }
+
+    console.log('✅ تم التحقق من WordPress:', data.user_email)
+
+    // 2️⃣ جلب customer_id من WooCommerce
+    let customerId = null
+
     try {
-      const customerResponse = await fetch(`${WP_API_URL}?email=${encodeURIComponent(email)}`, {
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString('base64')}`,
-        },
-      });
-      if (customerResponse.ok) {
-        const customers = await customerResponse.json();
-        if (customers.length > 0) customerId = customers[0].id;
+      const customerRes = await woocommerceApi.get('customers', {
+        email: data.user_email
+      })
+
+      if (customerRes.data && customerRes.data.length > 0) {
+        customerId = customerRes.data[0].id
+        console.log('✅ customer_id:', customerId)
+      } else {
+        console.warn('⚠️ لم يتم العثور على العميل في WooCommerce')
       }
-    } catch (error) {
-      console.warn('Failed to fetch customer_id:', error);
+    } catch (err) {
+      console.warn('⚠️ خطأ في جلب العميل:', err.message)
     }
 
-    const appToken = await createAppToken({ userId, email, displayName, customerId });
+    // 3️⃣ إنشاء توكن مخصص
+    const customToken = jwt.sign(
+      {
+        customer_id: customerId,
+        email: data.user_email,
+        name: data.user_display_name,
+        username: data.user_nicename
+      },
+      secret,
+      { expiresIn: '7d' }
+    )
 
-    const response = NextResponse.json({ success: true, user: { userId, email, displayName, customerId } }, { status: 200 });
+    console.log('✅ تم إنشاء Token - customer_id:', customerId)
 
-    response.cookies.set({
-      name: 'auth_token',
-      value: appToken,
+    // 4️⃣ إنشاء Response
+    const response = NextResponse.json({
+      success: true,
+      token: customToken, // إرجاع Token للفرونت أيضاً
+      user: {
+        customer_id: customerId,
+        email: data.user_email,
+        name: data.user_display_name
+      }
+    })
+
+    // 5️⃣ حفظ Cookie بطريقة صحيحة
+    response.cookies.set('token', customToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    });
+      maxAge: 60 * 60 * 24 * 7, // 7 أيام
+      path: '/'
+    })
 
-    return response;
-  } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json({ error: 'حدث خطأ في الخادم' }, { status: 500 });
+    console.log('🍪 تم حفظ Token في Cookie')
+    console.log('📤 Token length:', customToken.length)
+
+    return response
+
+  } catch (err) {
+    console.error('❌ خطأ في الخادم:', err)
+    return NextResponse.json(
+      { success: false, message: 'خطأ في الخادم', error: err.message },
+      { status: 500 }
+    )
   }
 }
