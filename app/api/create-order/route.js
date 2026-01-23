@@ -16,7 +16,7 @@ export async function POST(req) {
     }
 
     const cookieStore = await cookies();
-    const token = cookieStore.get('auth_token')?.value;
+    const token = cookieStore.get('token')?.value;
 
     if (!token) {
       return NextResponse.json({ error: 'المستخدم غير مسجل الدخول' }, { status: 401 });

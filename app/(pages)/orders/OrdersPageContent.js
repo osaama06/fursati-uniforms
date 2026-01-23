@@ -22,7 +22,7 @@ export default function OrdersPageContent() {
       const timestamp = Date.now() + Math.random();
 
       // ✅ جلب Token من localStorage
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('token');
 
       const res = await fetch(`/api/my-orders?t=${timestamp}`, {
         cache: 'no-store',
