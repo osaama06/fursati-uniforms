@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import '@/styles/pages/account.css';
 
-const secret = process.env.JWT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987';
+const secret = process.env.WT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987';
 
 // 1. دالة جلب بيانات العميل (للتأكد من الاسم)
 async function getCustomerData(email) {
   const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString("base64");
+  
   try {
     const res = await fetch(`https://furssati.io/wp-json/wc/v3/customers?email=${email}`, {
       headers: { Authorization: `Basic ${auth}` },
@@ -17,19 +18,24 @@ async function getCustomerData(email) {
     });
     const data = await res.json();
     return data.length > 0 ? data[0] : null;
-  } catch (error) { return null; }
+  } catch (error) { 
+    return null; 
+  }
 }
 
 // 2. دالة جلب الطلبات الفعلية (آخر 3 فقط)
 async function getRecentOrders(email) {
   const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString("base64");
+  
   try {
     const res = await fetch(`https://furssati.io/wp-json/wc/v3/orders?email=${email}&per_page=3`, {
       headers: { Authorization: `Basic ${auth}` },
       cache: 'no-store'
     });
     return res.ok ? await res.json() : [];
-  } catch (error) { return []; }
+  } catch (error) { 
+    return []; 
+  }
 }
 
 // 3. قاموس ترجمة الحالات
@@ -44,7 +50,7 @@ const statusTranslation = {
 };
 
 export default async function AccountPage() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
 
   if (!token) redirect('/login');
@@ -52,7 +58,9 @@ export default async function AccountPage() {
   let decoded;
   try {
     decoded = jwt.verify(token, secret);
-  } catch (error) { redirect('/login'); }
+  } catch (error) { 
+    redirect('/login'); 
+  }
 
   // جلب البيانات الحقيقية فقط
   const [customerInfo, recentOrders] = await Promise.all([
@@ -73,7 +81,6 @@ export default async function AccountPage() {
             <div className="avatar-circle">{finalName.charAt(0).toUpperCase()}</div>
           </div>
           <div className="welcome-text">
-            {/* عرض الاسم والإيميل المضمونين */}
             <h1>يا هلا، {finalName} 👋</h1>
             <p>{decoded.email}</p>
             <div className="user-meta-pills">

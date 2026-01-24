@@ -1,13 +1,17 @@
-import { cookies } from 'next/headers';
+// app/api/logout/route.js
 import { NextResponse } from 'next/server';
 
-export async function GET(request) {
-  // 1. حذف التوكن من الكوكيز
-  cookies().delete('token');
+export async function POST() {
+  const response = NextResponse.json({ success: true });
+  
+  // حذف الكوكي
+  response.cookies.set('token', '', {  // ✅ اسم الكوكي: token
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/'
+  });
 
-  // 2. الحصول على رابط الموقع (سواء كان لوكال أو دومين حقيقي)
-  const baseURL = new URL(request.url).origin;
-
-  // 3. التحويل لصفحة الدخول فوراً
-  return NextResponse.redirect(`${baseURL}/login`);
+  return response;
 }
