@@ -13,7 +13,7 @@ export default async function OrdersPage() {
   }
 
   return (
-    <Suspense fallback={<div style={{ textAlign: 'center', padding: '2rem' }}>جارٍ تحميل الطلبات...</div>}>
+    <Suspense >
       <OrdersPageContent />
     </Suspense>
   );
