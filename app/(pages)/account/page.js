@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import '@/styles/pages/account.css';
 
+export const dynamic = 'force-dynamic';
+
 const secret = process.env.WT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987';
 
 // 1. دالة جلب بيانات العميل (للتأكد من الاسم)
