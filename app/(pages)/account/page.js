@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import LogoutButton from './LogoutButton';
 import '@/styles/pages/account.css';
 
 export const dynamic = 'force-dynamic';
@@ -99,7 +100,9 @@ export default async function AccountPage() {
             <Link href="/account" className="nav-link active">🏠 لوحة التحكم</Link>
             <Link href="/orders" className="nav-link">📦 طلباتي</Link>
             <Link href="/account/address" className="nav-link">📍 العناوين</Link>
-            <Link href="/api/logout" className="nav-link logout-link">🚪 تسجيل الخروج</Link>
+            {/* <Link href="/api/logout" className="nav-link logout-link">🚪 تسجيل الخروج</Link> */}
+            <LogoutButton />
+
           </nav>
         </aside>
 
