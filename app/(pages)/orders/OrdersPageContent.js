@@ -175,7 +175,7 @@ export default function OrdersPageContent() {
                     border: '1px solid #e0f7f8'
                   }}
                 >
-                  التفاصيل والـ Timeline
+                 تتبع الطلب
                 </Link>
               </div>
             )

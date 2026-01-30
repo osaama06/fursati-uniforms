@@ -121,15 +121,17 @@ export default function BannerSlider() {
           key={index}
           className={`banner-slide ${index === current ? "active" : ""}`}
         >
-          <Image
-            src={src}
-            alt={`Banner ${index + 1}`}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
-            className="banner-image"
-            priority={index === 0}
-            draggable={false}
-          />
+<Image
+  src={src}
+  alt={`Banner ${index + 1}`}
+  fill
+  sizes="100vw"
+  className="banner-image"
+  priority={index === 0}
+  fetchPriority={index === 0 ? "high" : "auto"}
+  draggable={false}
+/>
+
           {/* <div className="banner-overlay"></div> */}
         </div>
       ))}
