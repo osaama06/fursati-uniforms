@@ -1,12 +1,13 @@
 'use client';
 import Image from "next/image";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { IoBagAddOutline } from "react-icons/io5";
 import { useCart } from '../context/CartContext';
 import { useRouter } from 'next/navigation';
 import '@/styles/components/ProductCard.css';
 
-export default function DynamicProductCard({ product }) {
+// Memoize component for better performance
+const DynamicProductCard = memo(function DynamicProductCard({ product }) {
   const [added, setAdded] = useState(false);
   const [selectedSize, setSelectedSize] = useState('');
   const [liked, setLiked] = useState(false);
@@ -28,15 +29,15 @@ export default function DynamicProductCard({ product }) {
       )?.options || []
     : [];
 
-  // حساب نسبة الخصم
-  const calculateDiscount = () => {
+  // حساب نسبة الخصم - memoized
+  const calculateDiscount = useCallback(() => {
     if (product?.regular_price && product?.sale_price) {
       const regular = parseFloat(product.regular_price);
       const sale = parseFloat(product.sale_price);
       return Math.round(((regular - sale) / regular) * 100);
     }
     return 0;
-  };
+  }, [product?.regular_price, product?.sale_price]);
 
   const discount = calculateDiscount();
   const finalPrice = product?.sale_price || product?.price || product?.regular_price;
@@ -47,20 +48,19 @@ export default function DynamicProductCard({ product }) {
   const totalReviews = product?.rating_count || 0;
 
   // فحص إذا كان الجهاز موبايل
-  const checkIsMobile = () => {
+  const checkIsMobile = useCallback(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth <= 768;
     }
     return false;
-  };
+  }, []);
 
   // جميع الـ Callbacks يجب أن تكون هنا قبل أي conditional returns
   const handleModalClose = useCallback(() => {
-    console.log('Closing modal');
     setShowMobileModal(false);
     setShowDesktopModal(false);
     setShowSizeError(false);
-    setSelectedSize(''); // إعادة تعيين المقاس المختار
+    setSelectedSize('');
   }, []);
 
   const handleSizeSelect = useCallback((size, e) => {
@@ -95,7 +95,6 @@ export default function DynamicProductCard({ product }) {
     setAdded(true);
     setTimeout(() => setAdded(false), 3000);
 
-    // إغلاق النافذة المنبثقة إذا كانت مفتوحة
     if (showMobileModal || showDesktopModal) {
       handleModalClose();
     }
@@ -107,30 +106,21 @@ export default function DynamicProductCard({ product }) {
       e.preventDefault();
     }
 
-    // التحقق من حجم الشاشة في الوقت الفعلي
     const isMobile = checkIsMobile();
-    console.log('handleQuickAdd called', { hasSizes, isMobile, mounted });
 
-    // فتح النافذة المناسبة إذا كانت هناك مقاسات
     if (hasSizes && mounted) {
       if (isMobile) {
-        console.log('Opening mobile modal');
         setShowMobileModal(true);
       } else {
-        console.log('Opening desktop modal');
         setShowDesktopModal(true);
       }
       return;
     }
 
-    // إضافة مباشرة للمنتجات بدون مقاسات
-    console.log('Adding directly to cart');
     handleAddToCart(e);
-  }, [hasSizes, mounted, handleAddToCart]);
+  }, [hasSizes, mounted, handleAddToCart, checkIsMobile]);
 
-  // إصلاح إغلاق النافذة بالنقر على الخلفية
   const handleOverlayClick = useCallback((e) => {
-    // التأكد من أن النقر على الخلفية وليس على المحتوى
     if (e.target === e.currentTarget) {
       handleModalClose();
     }
@@ -142,15 +132,12 @@ export default function DynamicProductCard({ product }) {
       e.preventDefault();
     }
     setLiked(!liked);
-    // يمكن إضافة API call هنا لحفظ المفضلة
   }, [liked]);
 
   const handleCardClick = useCallback(() => {
-    // منع الانتقال إذا كانت النافذة مفتوحة
     if (showMobileModal || showDesktopModal) {
       return;
     }
-    // الانتقال إلى صفحة المنتج
     router.push(`/products/${product?.slug}`);
   }, [router, product?.slug, showMobileModal, showDesktopModal]);
 
@@ -173,7 +160,6 @@ export default function DynamicProductCard({ product }) {
     const handleModalOpen = (isOpen) => {
       if (typeof document !== 'undefined') {
         if (isOpen) {
-          // حفظ موقع التمرير الحالي
           const scrollY = window.scrollY;
           document.body.style.position = 'fixed';
           document.body.style.top = `-${scrollY}px`;
@@ -181,7 +167,6 @@ export default function DynamicProductCard({ product }) {
           document.body.style.right = '0';
           document.body.classList.add('modal-open');
         } else {
-          // استعادة موقع التمرير
           const scrollY = document.body.style.top;
           document.body.style.position = '';
           document.body.style.top = '';
@@ -198,7 +183,6 @@ export default function DynamicProductCard({ product }) {
     const isModalOpen = showMobileModal || showDesktopModal;
     handleModalOpen(isModalOpen);
 
-    // تنظيف عند إلغاء التحميل
     return () => {
       if (typeof document !== 'undefined') {
         document.body.style.position = '';
@@ -234,27 +218,27 @@ export default function DynamicProductCard({ product }) {
   // عدم عرض المكون قبل التحميل الكامل للتجنب SSR issues
   if (!mounted) {
     return (
-      <div className="dynamic-product-card skeleton-card">
+      <div className="dynamic-product-card skeleton-card" aria-busy="true" aria-live="polite">
         {/* الصورة skeleton */}
         <div className="image-container">
-          <div className="skeleton-shimmer"></div>
+          <div className="skeleton-shimmer" role="img" aria-label="جاري تحميل صورة المنتج"></div>
         </div>
         
         <div className="card-content">
           {/* التقييمات والزر skeleton */}
           <div className="rating-section">
-            <div className="skeleton-box" style={{ width: '100px', height: '20px' }}></div>
-            <div className="skeleton-circle" style={{ width: '40px', height: '40px' }}></div>
+            <div className="skeleton-box" style={{ width: '100px', height: '20px' }} aria-label="جاري تحميل التقييم"></div>
+            <div className="skeleton-circle" style={{ width: '40px', height: '40px' }} aria-label="جاري تحميل الزر"></div>
           </div>
           
           {/* اسم المنتج skeleton */}
-          <div className="skeleton-box" style={{ width: '100%', height: '20px', marginBottom: '8px' }}></div>
+          <div className="skeleton-box" style={{ width: '100%', height: '20px', marginBottom: '8px' }} aria-label="جاري تحميل اسم المنتج"></div>
           <div className="skeleton-box" style={{ width: '70%', height: '20px', marginBottom: '12px' }}></div>
           
           {/* السعر skeleton */}
           <div className="price-section">
             <div className="price-container">
-              <div className="skeleton-box" style={{ width: '120px', height: '28px' }}></div>
+              <div className="skeleton-box" style={{ width: '120px', height: '28px' }} aria-label="جاري تحميل السعر"></div>
             </div>
           </div>
         </div>
@@ -262,22 +246,28 @@ export default function DynamicProductCard({ product }) {
     );
   }
 
+  // Product image with proper alt text
+  const productImageAlt = product?.name ? `صورة ${product.name}` : 'صورة المنتج';
+  const productImageSrc = product?.images?.[0]?.src || "/placeholder.jpg";
+
   return (
     <>
-      <div
+      <article
         className="dynamic-product-card clickable-card"
         onClick={handleCardClick}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
             handleCardClick();
           }
         }}
+        aria-label={`عرض تفاصيل ${product.name}`}
       >
         {/* شارة الخصم */}
         {discount > 0 && (
-          <div className="discount-badge">
+          <div className="discount-badge" aria-label={`خصم ${discount} بالمئة`}>
             -{discount}%
           </div>
         )}
@@ -287,13 +277,16 @@ export default function DynamicProductCard({ product }) {
           {/* الصورة الرئيسية */}
           <div className="image-wrapper">
             <Image
-              src={product.images?.[0]?.src || "/placeholder.jpg"}
-              alt={product.name || "Product"}
+              src={productImageSrc}
+              alt={productImageAlt}
               width={400}
               height={400}
               className="product-image"
               loading="lazy"
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 260px"
+              quality={85}
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             />
           </div>
         </div>
@@ -303,18 +296,20 @@ export default function DynamicProductCard({ product }) {
           {/* التقييمات والزر المصغر */}
           <div className="rating-section">
             <div className="rating-info">
-              <div className="stars">
-                <span>★</span>
-                <span className="rating-value">{averageRating}   </span>
-                <span className="review-count">  ({totalReviews})</span>
+              <div className="stars" aria-label={`التقييم ${averageRating} من 5 نجوم`}>
+                <span aria-hidden="true">★</span>
+                <span className="rating-value">{averageRating}</span>
+                <span className="review-count">({totalReviews})</span>
               </div>
             </div>
             <button
               className="adding"
               onClick={handleQuickAdd}
               title="إضافة سريعة للسلة"
+              aria-label={`إضافة ${product.name} إلى السلة بسرعة`}
+              type="button"
             >
-              <IoBagAddOutline/>
+              <IoBagAddOutline aria-hidden="true" />
             </button>
           </div>
 
@@ -325,84 +320,97 @@ export default function DynamicProductCard({ product }) {
           <div className="price-section">
             <div className="price-container">
               <div className="current-price">
-                <span className="currency">
-                  {product.regular_price} <Image
+                <span className="currency" aria-label="ريال سعودي">
+                  {finalPrice}{' '}
+                  <Image
                     src="/sar.webp"
-                    alt="Logo"
+                    alt=""
                     width={20}
                     height={20}
                     className="sarsymbol-img"
                     loading="lazy"
-                  /> 
-                </span>  
-                {finalPrice}
+                    aria-hidden="true"
+                  />
+                </span>
               </div>
               {originalPrice && product.sale_price && (
-                <div className="original-price">
-                  {originalPrice}  &#xFDFC;
+                <div className="original-price" aria-label={`السعر الأصلي ${originalPrice} ريال`}>
+                  {originalPrice} &#xFDFC;
                 </div>
               )}
             </div>
           </div>
         </div>
-      </div>
+      </article>
 
       {/* النافذة المنبثقة للموبايل */}
       {showMobileModal && (
-        <div className="mobile-modal-overlay" onClick={handleOverlayClick}>
+        <div className="mobile-modal-overlay" onClick={handleOverlayClick} role="presentation">
           <div
             className="mobile-modal"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-labelledby="mobile-modal-title"
+            aria-describedby="mobile-modal-description"
           >
             {/* مقبض الإغلاق */}
-            <div className="modal-handle" onClick={handleModalClose}></div>
+            <button 
+              className="modal-handle" 
+              onClick={handleModalClose}
+              aria-label="إغلاق النافذة"
+              type="button"
+            ></button>
 
             {/* محتوى النافذة */}
             <div className="modal-content">
               {/* صورة المنتج */}
               <div className="modal-image">
                 <Image
-                  src={product.images?.[0]?.src || "/placeholder.jpg"}
-                  alt={product.name || "Product"}
+                  src={productImageSrc}
+                  alt={productImageAlt}
                   width={120}
                   height={120}
                   className="modal-product-image"
-                  loading="lazy"
-                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                  loading="eager"
+                  sizes="120px"
+                  quality={85}
                 />
               </div>
 
               {/* معلومات المنتج */}
               <div className="modal-info">
                 <h3 id="mobile-modal-title" className="modal-product-name">{product.name}</h3>
+                <p id="mobile-modal-description" className="sr-only">اختر المقاس وأضف المنتج إلى السلة</p>
 
                 {/* السعر */}
                 <div className="modal-price">
-                  <span className="modal-current-price">
-                    {finalPrice} <span className="modal-currency">
+                  <span className="modal-current-price" aria-label={`السعر ${finalPrice} ريال سعودي`}>
+                    {finalPrice}{' '}
+                    <span className="modal-currency">
                       <Image
                         src="/sar.webp"
-                        alt="Logo"
+                        alt=""
                         width={20}
                         height={20}
                         className="sarsymbol-img"
-                        loading="lazy"
+                        loading="eager"
+                        aria-hidden="true"
                       />
                     </span>
                   </span>
                   {originalPrice && product.sale_price && (
-                    <span className="modal-original-price">
-                      {originalPrice}<Image
+                    <span className="modal-original-price" aria-label={`السعر الأصلي ${originalPrice} ريال`}>
+                      {originalPrice}
+                      <Image
                         src="/sar.webp"
-                        alt="Logo"
+                        alt=""
                         width={20}
                         height={20}
                         className="sarsymbol-img"
-                        loading="lazy"
-                      /> 
+                        loading="eager"
+                        aria-hidden="true"
+                      />
                     </span>
                   )}
                 </div>
@@ -411,23 +419,25 @@ export default function DynamicProductCard({ product }) {
                 {hasSizes && (
                   <div className="modal-sizes-section">
                     <div className="modal-sizes-label">
-                      <span>اختر المقاس</span>
-                      {selectedSize && <span className="modal-selected-size">({selectedSize})</span>}
+                      <span id="size-label">اختر المقاس</span>
+                      {selectedSize && <span className="modal-selected-size" aria-live="polite">({selectedSize})</span>}
                     </div>
-                    <div className="modal-sizes-grid">
+                    <div className="modal-sizes-grid" role="group" aria-labelledby="size-label">
                       {sizes.map((size) => (
                         <button
                           key={size}
                           onClick={(e) => handleSizeSelect(size, e)}
                           className={`modal-size-circle ${selectedSize === size ? 'selected' : ''}`}
                           aria-pressed={selectedSize === size}
+                          aria-label={`المقاس ${size}`}
+                          type="button"
                         >
                           {size}
                         </button>
                       ))}
                     </div>
                     {showSizeError && (
-                      <p className="modal-size-error" role="alert">⚠️ يرجى اختيار المقاس</p>
+                      <p className="modal-size-error" role="alert" aria-live="assertive">⚠️ يرجى اختيار المقاس</p>
                     )}
                   </div>
                 )}
@@ -439,8 +449,10 @@ export default function DynamicProductCard({ product }) {
                     onClick={handleAddToCart}
                     disabled={hasSizes && !selectedSize}
                     aria-describedby={showSizeError ? 'modal-size-error' : undefined}
+                    aria-label={added ? 'تمت إضافة المنتج إلى السلة' : 'أضف المنتج إلى السلة'}
+                    type="button"
                   >
-                    <IoBagAddOutline className="modal-cart-icon" />
+                    <IoBagAddOutline className="modal-cart-icon" aria-hidden="true" />
                     <span>{added ? 'تمت الإضافة ✨' : 'أضف إلى السلة'}</span>
                   </button>
                 </div>
@@ -452,19 +464,21 @@ export default function DynamicProductCard({ product }) {
 
       {/* النافذة الجانبية للديسكتوب */}
       {showDesktopModal && (
-        <div className="desktop-modal-overlay" onClick={handleOverlayClick}>
+        <div className="desktop-modal-overlay" onClick={handleOverlayClick} role="presentation">
           <div
             className="desktop-modal"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-labelledby="desktop-modal-title"
+            aria-describedby="desktop-modal-description"
           >
             {/* زر الإغلاق */}
             <button
               className="desktop-modal-close"
               onClick={handleModalClose}
               aria-label="إغلاق النافذة"
+              type="button"
             >
               ×
             </button>
@@ -474,24 +488,26 @@ export default function DynamicProductCard({ product }) {
               {/* صورة المنتج */}
               <div className="desktop-modal-image">
                 <Image
-                  src={product.images?.[0]?.src || "/placeholder.jpg"}
-                  alt={product.name || "Product"}
+                  src={productImageSrc}
+                  alt={productImageAlt}
                   width={200}
                   height={200}
                   className="desktop-modal-product-image"
-                  loading="lazy"
-                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                  loading="eager"
+                  sizes="200px"
+                  quality={85}
                 />
               </div>
 
               {/* معلومات المنتج */}
               <div className="desktop-modal-info">
                 <h3 id="desktop-modal-title" className="desktop-modal-product-name">{product.name}</h3>
+                <p id="desktop-modal-description" className="sr-only">اختر المقاس وأضف المنتج إلى السلة</p>
 
                 {/* التقييمات */}
-                <div className="desktop-modal-rating">
+                <div className="desktop-modal-rating" aria-label={`التقييم ${averageRating} من 5 نجوم بناءً على ${totalReviews} تقييم`}>
                   <div className="stars">
-                    <span>★</span>
+                    <span aria-hidden="true">★</span>
                     <span className="rating-value">{averageRating}</span>
                   </div>
                   <span className="review-count">({totalReviews} تقييم)</span>
@@ -499,28 +515,31 @@ export default function DynamicProductCard({ product }) {
 
                 {/* السعر */}
                 <div className="desktop-modal-price">
-                  <span className="desktop-modal-current-price">
-                    {finalPrice} <span className="desktop-modal-currency">
+                  <span className="desktop-modal-current-price" aria-label={`السعر ${finalPrice} ريال سعودي`}>
+                    {finalPrice}{' '}
+                    <span className="desktop-modal-currency">
                       <Image
                         src="/sar.webp"
-                        alt="Logo"
+                        alt=""
                         width={20}
                         height={20}
                         className="sarsymbol-img"
-                        loading="lazy"
+                        loading="eager"
+                        aria-hidden="true"
                       />
                     </span>
                   </span>
                   {originalPrice && product.sale_price && (
-                    <span className="desktop-modal-original-price">
+                    <span className="desktop-modal-original-price" aria-label={`السعر الأصلي ${originalPrice} ريال`}>
                       {originalPrice}
                       <Image
                         src="/sar.webp"
-                        alt="Logo"
+                        alt=""
                         width={20}
                         height={20}
                         className="sarsymbol-img"
-                        loading="lazy"
+                        loading="eager"
+                        aria-hidden="true"
                       />
                     </span>
                   )}
@@ -530,23 +549,25 @@ export default function DynamicProductCard({ product }) {
                 {hasSizes && (
                   <div className="desktop-modal-sizes-section">
                     <div className="desktop-modal-sizes-label">
-                      <span>اختر المقاس</span>
-                      {selectedSize && <span className="desktop-modal-selected-size">({selectedSize})</span>}
+                      <span id="desktop-size-label">اختر المقاس</span>
+                      {selectedSize && <span className="desktop-modal-selected-size" aria-live="polite">({selectedSize})</span>}
                     </div>
-                    <div className="desktop-modal-sizes-grid">
+                    <div className="desktop-modal-sizes-grid" role="group" aria-labelledby="desktop-size-label">
                       {sizes.map((size) => (
                         <button
                           key={size}
                           onClick={(e) => handleSizeSelect(size, e)}
                           className={`desktop-modal-size-circle ${selectedSize === size ? 'selected' : ''}`}
                           aria-pressed={selectedSize === size}
+                          aria-label={`المقاس ${size}`}
+                          type="button"
                         >
                           {size}
                         </button>
                       ))}
                     </div>
                     {showSizeError && (
-                      <p className="desktop-modal-size-error" role="alert">⚠️ يرجى اختيار المقاس</p>
+                      <p className="desktop-modal-size-error" role="alert" aria-live="assertive">⚠️ يرجى اختيار المقاس</p>
                     )}
                   </div>
                 )}
@@ -558,13 +579,17 @@ export default function DynamicProductCard({ product }) {
                     onClick={handleAddToCart}
                     disabled={hasSizes && !selectedSize}
                     aria-describedby={showSizeError ? 'desktop-modal-size-error' : undefined}
+                    aria-label={added ? 'تمت إضافة المنتج إلى السلة' : 'أضف المنتج إلى السلة'}
+                    type="button"
                   >
-                    <IoBagAddOutline className="desktop-modal-cart-icon" />
+                    <IoBagAddOutline className="desktop-modal-cart-icon" aria-hidden="true" />
                     <span>{added ? 'تمت الإضافة ✨' : 'أضف إلى السلة'}</span>
                   </button>
                   <button
                     className="desktop-modal-view-product"
                     onClick={handleModalProductView}
+                    aria-label={`عرض تفاصيل ${product.name}`}
+                    type="button"
                   >
                     عرض تفاصيل المنتج
                   </button>
@@ -576,4 +601,9 @@ export default function DynamicProductCard({ product }) {
       )}
     </>
   );
-}
+});
+
+// Add display name for debugging
+DynamicProductCard.displayName = 'DynamicProductCard';
+
+export default DynamicProductCard;
