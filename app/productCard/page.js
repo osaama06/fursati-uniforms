@@ -263,6 +263,8 @@ export default function DynamicProductCard({ product }) {
                                           width={20}
                                           height={20}
                                           className="sarsymbol-img"
+                                          loading="lazy"
+                                          
                                         /> 
                 </span></div>
             </div>
@@ -302,6 +304,8 @@ export default function DynamicProductCard({ product }) {
               width={400}
               height={400}
               className="product-image"
+              loading="lazy"
+                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
             />
           </div>
         </div>
@@ -340,6 +344,7 @@ export default function DynamicProductCard({ product }) {
                                             width={20}
                                             height={20}
                                             className="sarsymbol-img"
+                                            loading="lazy"
                                           /> 
                 </span>  
                 {finalPrice}
@@ -377,6 +382,8 @@ export default function DynamicProductCard({ product }) {
                   width={120}
                   height={120}
                   className="modal-product-image"
+                  loading="lazy"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                 />
               </div>
 
@@ -394,6 +401,7 @@ export default function DynamicProductCard({ product }) {
                                           width={20}
                                           height={20}
                                           className="sarsymbol-img"
+                                          loading="lazy"
                                         />
                     </span>
                   </span>
@@ -405,6 +413,7 @@ export default function DynamicProductCard({ product }) {
                                           width={20}
                                           height={20}
                                           className="sarsymbol-img"
+                                          loading="lazy"
                                         /> 
                     </span>
                   )}
@@ -482,6 +491,8 @@ export default function DynamicProductCard({ product }) {
                   width={200}
                   height={200}
                   className="desktop-modal-product-image"
+                  loading="lazy"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                 />
               </div>
 
@@ -508,6 +519,7 @@ export default function DynamicProductCard({ product }) {
                                           width={20}
                                           height={20}
                                           className="sarsymbol-img"
+                                          loading="lazy"
                                         />
                     </span>
                   </span>
@@ -520,6 +532,7 @@ export default function DynamicProductCard({ product }) {
                                           width={20}
                                           height={20}
                                           className="sarsymbol-img"
+                                          loading="lazy"
                                         />
                     </span>
                   )}
