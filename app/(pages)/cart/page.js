@@ -101,7 +101,7 @@ const Cart = () => {
               {totalPrice.toFixed(2)} {cartItems[0]?.currency || 'ر.س'}
             </span>
           </div>
-          <ReusableButton goToCheckout style={{ width: '100%' }}>
+          <ReusableButton goToCheckout  style={{ width: '100%' ,backgroundColor: '#1b365d', color: '#fff'}}>
             تابع إلى الدفع
           </ReusableButton>
         </div>

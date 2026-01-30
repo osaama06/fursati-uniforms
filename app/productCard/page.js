@@ -387,11 +387,25 @@ export default function DynamicProductCard({ product }) {
                 {/* السعر */}
                 <div className="modal-price">
                   <span className="modal-current-price">
-                    {finalPrice} <span className="modal-currency">ر.س</span>
+                    {finalPrice} <span className="modal-currency">
+                      <Image
+                                          src="/sar.webp"
+                                          alt="Logo"
+                                          width={20}
+                                          height={20}
+                                          className="sarsymbol-img"
+                                        />
+                    </span>
                   </span>
                   {originalPrice && product.sale_price && (
                     <span className="modal-original-price">
-                      {originalPrice} ر.س
+                      {originalPrice}<Image
+                                          src="/sar.webp"
+                                          alt="Logo"
+                                          width={20}
+                                          height={20}
+                                          className="sarsymbol-img"
+                                        /> 
                     </span>
                   )}
                 </div>
@@ -487,11 +501,26 @@ export default function DynamicProductCard({ product }) {
                 {/* السعر */}
                 <div className="desktop-modal-price">
                   <span className="desktop-modal-current-price">
-                    {finalPrice} <span className="desktop-modal-currency">ر.س</span>
+                    {finalPrice} <span className="desktop-modal-currency">
+                      <Image
+                                          src="/sar.webp"
+                                          alt="Logo"
+                                          width={20}
+                                          height={20}
+                                          className="sarsymbol-img"
+                                        />
+                    </span>
                   </span>
                   {originalPrice && product.sale_price && (
                     <span className="desktop-modal-original-price">
-                      {originalPrice} ر.س
+                      {originalPrice}
+                      <Image
+                                          src="/sar.webp"
+                                          alt="Logo"
+                                          width={20}
+                                          height={20}
+                                          className="sarsymbol-img"
+                                        />
                     </span>
                   )}
                 </div>
