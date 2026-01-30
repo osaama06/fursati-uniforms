@@ -410,6 +410,23 @@
   pointer-events: none;
 }
 
+.skeleton-card .image-container {
+  height: 300px; /* نفس ارتفاع الكارد الفعلي */
+}
+
+/* Responsive skeleton heights */
+@media (max-width: 768px) {
+  .skeleton-card .image-container {
+    height: 280px; /* تقليل الارتفاع شوي في الموبايل */
+  }
+}
+
+@media (max-width: 480px) {
+  .skeleton-card .image-container {
+    height: 260px; /* أصغر للشاشات الصغيرة جداً */
+  }
+}
+
 .skeleton-shimmer {
   width: 100%;
   height: 100%;

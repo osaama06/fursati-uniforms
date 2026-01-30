@@ -155,41 +155,54 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
     setMounted(true);
   }, []);
 
-  // إصلاح منع التمرير في الخلفية عند فتح النافذة
+  // إصلاح منع التمرير في الخلفية عند فتح النافذة - optimized to prevent forced reflow
   useEffect(() => {
     const handleModalOpen = (isOpen) => {
-      if (typeof document !== 'undefined') {
+      if (typeof window === 'undefined') return;
+      
+      requestAnimationFrame(() => {
         if (isOpen) {
+          // Read phase - قراءة القيم أولاً
           const scrollY = window.scrollY;
+          
+          // Write phase - الكتابة على DOM
           document.body.style.position = 'fixed';
           document.body.style.top = `-${scrollY}px`;
           document.body.style.left = '0';
           document.body.style.right = '0';
           document.body.classList.add('modal-open');
         } else {
+          // Read phase
           const scrollY = document.body.style.top;
+          const scrollValue = scrollY ? parseInt(scrollY || '0') * -1 : 0;
+          
+          // Write phase
           document.body.style.position = '';
           document.body.style.top = '';
           document.body.style.left = '';
           document.body.style.right = '';
           document.body.classList.remove('modal-open');
-          if (scrollY) {
-            window.scrollTo(0, parseInt(scrollY || '0') * -1);
+          
+          // Separate scroll operation
+          if (scrollValue !== 0) {
+            window.scrollTo(0, scrollValue);
           }
         }
-      }
+      });
     };
 
     const isModalOpen = showMobileModal || showDesktopModal;
     handleModalOpen(isModalOpen);
 
     return () => {
-      if (typeof document !== 'undefined') {
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.left = '';
-        document.body.style.right = '';
-        document.body.classList.remove('modal-open');
+      if (typeof window !== 'undefined') {
+        requestAnimationFrame(() => {
+          document.body.style.position = '';
+          document.body.style.top = '';
+          document.body.style.left = '';
+          document.body.style.right = '';
+          document.body.classList.remove('modal-open');
+        });
       }
     };
   }, [showMobileModal, showDesktopModal]);
@@ -285,8 +298,6 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
               loading="lazy"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 260px"
               quality={85}
-              placeholder="blur"
-              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             />
           </div>
         </div>
