@@ -11,54 +11,50 @@ const tajawal = Tajawal({
   subsets: ["arabic"],
   weight: ["400", "500", "700", "800"],
   variable: "--font-tajawal",
-  display: 'swap', // ✅ تحسين الأداء
+  display: 'swap',
+  preload: true, // ✅ Preload الفونت
 });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
   display: 'swap',
+  preload: false, // لو مو مستخدم كثير
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
   display: 'swap',
+  preload: false,
 });
 
-// ✅ Metadata الأساسية (سيتم override في الصفحات)
 export const metadata = {
   metadataBase: new URL('https://fursatiuniforms.com'),
 
   title: {
     default: 'Fursati -متجر فرصتي للزي الموحد',
-    template: '%s | Fursati', // لصفحات فرعية
+    template: '%s | Fursati',
   },
 
   description: 'متجر فرصتي المتخصص في بيع الزي المدرسي والطبي الموحد بجودة عالية وأسعار منافسة',
 
-  // Icons
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
 
-
-
-  // Theme Color
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
     { media: '(prefers-color-scheme: dark)', color: '#251f35' },
   ],
 
-  // Viewport
   viewport: {
     width: 'device-width',
     initialScale: 1,
     maximumScale: 5,
   },
 
-  // Additional Meta Tags
   other: {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
@@ -72,20 +68,43 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ar" dir="rtl" className={`${tajawal.variable} ${geistSans.variable} ${geistMono.variable}`}>
       <head>
-        {/* ✅ Preconnect للأداء */}
-        <link rel="preconnect" href="https://fursatiuniforms.com" />
-        <link rel="dns-prefetch" href="https://fursatiuniforms.com" />
+        {/* ⭐ CRITICAL: Preconnect للدومينات المهمة - بالترتيب الصحيح */}
+        <link rel="preconnect" href="https://furssati.io" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://furssati.io" />
+        
+        {/* Fonts - أقل أهمية */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* Self domain - آخر شي */}
+        <link rel="dns-prefetch" href="https://fursatiuniforms.com" />
 
-        {/* ✅ Additional SEO */}
+        {/* ⭐ Preload أول صورة بانر - استبدل بالرابط الفعلي */}
+        <link
+          rel="preload"
+          as="image"
+          href="https://furssati.io/wp-content/uploads/2025/01/banner-1.jpg"
+          fetchpriority="high"
+          type="image/jpeg"
+        />
+
+        {/* Additional SEO */}
         <meta name="format-detection" content="telephone=no" />
         <meta name="geo.region" content="SA" />
         <meta name="geo.placename" content="sakaka" />
       </head>
 
       <body className={tajawal.className}>
-        {/* ✅ Google Analytics (إذا موجود) */}
+        {/* ⭐ تحسين: نقل Google Analytics لآخر الـ body عشان ما يعطل الـ LCP */}
+        <CartProvider>
+          <Header />
+          {/* <Navbar /> */}
+          <main>{children}</main>
+          <Footer />
+          <Toaster position="top-center" />
+        </CartProvider>
+
+        {/* ⭐ Analytics في آخر الصفحة - ما يعطل الـ rendering */}
         {process.env.NEXT_PUBLIC_GA_ID && (
           <>
             <script
@@ -107,7 +126,7 @@ export default function RootLayout({ children }) {
           </>
         )}
 
-        {/* ✅ Facebook Pixel (اختياري) */}
+        {/* Facebook Pixel - في النهاية كمان */}
         {process.env.NEXT_PUBLIC_FB_PIXEL_ID && (
           <script
             dangerouslySetInnerHTML={{
@@ -126,14 +145,6 @@ export default function RootLayout({ children }) {
             }}
           />
         )}
-
-        <CartProvider>
-          <Header />
-          {/* <Navbar /> */}
-          <main>{children}</main>
-          <Footer />
-          <Toaster position="top-center" />
-        </CartProvider>
       </body>
     </html>
   );

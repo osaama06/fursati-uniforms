@@ -385,11 +385,11 @@
   cursor: pointer;
 }
 
-.clickable-card:hover {
+/* .clickable-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
   border-color: rgba(27, 54, 93, 0.1);
-}
+} */
 
 /* Rating Info */
 .rating-info {
@@ -1256,9 +1256,9 @@ body.modal-open {
 }
 
 /* تأثيرات إضافية عند التحويم */
-.clickable-card:hover .product-image {
+/* .clickable-card:hover .product-image {
   transform: scale(1.05);
-}
+} */
 
 /* تأكد أن الأزرار والعناصر التفاعلية لا تتداخل مع النقر */
 .clickable-card .size-circle,
@@ -1282,9 +1282,9 @@ body.modal-open {
   pointer-events: none;
 }
 
-.clickable-card:hover::after {
+/* .clickable-card:hover::after {
   opacity: 1;
-}
+} */
 
 /* =================== إصلاحات إضافية للحماية =================== */
 
