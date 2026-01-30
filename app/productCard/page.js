@@ -84,7 +84,6 @@ export default function DynamicProductCard({ product }) {
     }
 
     setShowSizeError(false);
-
     addToCart({
       id: product?.id,
       name: product?.name,
@@ -110,7 +109,6 @@ export default function DynamicProductCard({ product }) {
 
     // التحقق من حجم الشاشة في الوقت الفعلي
     const isMobile = checkIsMobile();
-
     console.log('handleQuickAdd called', { hasSizes, isMobile, mounted });
 
     // فتح النافذة المناسبة إذا كانت هناك مقاسات
@@ -236,37 +234,27 @@ export default function DynamicProductCard({ product }) {
   // عدم عرض المكون قبل التحميل الكامل للتجنب SSR issues
   if (!mounted) {
     return (
-      <div className="dynamic-product-card" style={{ opacity: 0.5 }}>
+      <div className="dynamic-product-card skeleton-card">
+        {/* الصورة skeleton */}
         <div className="image-container">
-          <div className="image-wrapper">
-            <div style={{ width: '100%', height: '100%', background: '#f3f4f6' }}></div>
-          </div>
+          <div className="skeleton-shimmer"></div>
         </div>
+        
         <div className="card-content">
+          {/* التقييمات والزر skeleton */}
           <div className="rating-section">
-            <button className="adding"><IoBagAddOutline /></button>
-            <div className="rating-info">
-              <div className="stars">
-                <span>★</span>
-                <span className="rating-value">0</span>
-              </div>
-              <span className="review-count">(0)</span>
-            </div>
+            <div className="skeleton-box" style={{ width: '100px', height: '20px' }}></div>
+            <div className="skeleton-circle" style={{ width: '40px', height: '40px' }}></div>
           </div>
-          <h3 className="product-name">loading...</h3>
+          
+          {/* اسم المنتج skeleton */}
+          <div className="skeleton-box" style={{ width: '100%', height: '20px', marginBottom: '8px' }}></div>
+          <div className="skeleton-box" style={{ width: '70%', height: '20px', marginBottom: '12px' }}></div>
+          
+          {/* السعر skeleton */}
           <div className="price-section">
             <div className="price-container">
-              <div className="current-price">00<span className="currency">
-                                    {product.regular_price} <Image
-                                          src="/sar.webp"
-                                          alt="Logo"
-                                          width={20}
-                                          height={20}
-                                          className="sarsymbol-img"
-                                          loading="lazy"
-                                          
-                                        /> 
-                </span></div>
+              <div className="skeleton-box" style={{ width: '120px', height: '28px' }}></div>
             </div>
           </div>
         </div>
@@ -305,7 +293,7 @@ export default function DynamicProductCard({ product }) {
               height={400}
               className="product-image"
               loading="lazy"
-                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
             />
           </div>
         </div>
@@ -337,15 +325,15 @@ export default function DynamicProductCard({ product }) {
           <div className="price-section">
             <div className="price-container">
               <div className="current-price">
-                 <span className="currency">
-                                      {product.regular_price} <Image
-                                            src="/sar.webp"
-                                            alt="Logo"
-                                            width={20}
-                                            height={20}
-                                            className="sarsymbol-img"
-                                            loading="lazy"
-                                          /> 
+                <span className="currency">
+                  {product.regular_price} <Image
+                    src="/sar.webp"
+                    alt="Logo"
+                    width={20}
+                    height={20}
+                    className="sarsymbol-img"
+                    loading="lazy"
+                  /> 
                 </span>  
                 {finalPrice}
               </div>
@@ -383,7 +371,7 @@ export default function DynamicProductCard({ product }) {
                   height={120}
                   className="modal-product-image"
                   loading="lazy"
-                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                 />
               </div>
 
@@ -396,25 +384,25 @@ export default function DynamicProductCard({ product }) {
                   <span className="modal-current-price">
                     {finalPrice} <span className="modal-currency">
                       <Image
-                                          src="/sar.webp"
-                                          alt="Logo"
-                                          width={20}
-                                          height={20}
-                                          className="sarsymbol-img"
-                                          loading="lazy"
-                                        />
+                        src="/sar.webp"
+                        alt="Logo"
+                        width={20}
+                        height={20}
+                        className="sarsymbol-img"
+                        loading="lazy"
+                      />
                     </span>
                   </span>
                   {originalPrice && product.sale_price && (
                     <span className="modal-original-price">
                       {originalPrice}<Image
-                                          src="/sar.webp"
-                                          alt="Logo"
-                                          width={20}
-                                          height={20}
-                                          className="sarsymbol-img"
-                                          loading="lazy"
-                                        /> 
+                        src="/sar.webp"
+                        alt="Logo"
+                        width={20}
+                        height={20}
+                        className="sarsymbol-img"
+                        loading="lazy"
+                      /> 
                     </span>
                   )}
                 </div>
@@ -492,7 +480,7 @@ export default function DynamicProductCard({ product }) {
                   height={200}
                   className="desktop-modal-product-image"
                   loading="lazy"
-                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                 />
               </div>
 
@@ -514,26 +502,26 @@ export default function DynamicProductCard({ product }) {
                   <span className="desktop-modal-current-price">
                     {finalPrice} <span className="desktop-modal-currency">
                       <Image
-                                          src="/sar.webp"
-                                          alt="Logo"
-                                          width={20}
-                                          height={20}
-                                          className="sarsymbol-img"
-                                          loading="lazy"
-                                        />
+                        src="/sar.webp"
+                        alt="Logo"
+                        width={20}
+                        height={20}
+                        className="sarsymbol-img"
+                        loading="lazy"
+                      />
                     </span>
                   </span>
                   {originalPrice && product.sale_price && (
                     <span className="desktop-modal-original-price">
                       {originalPrice}
                       <Image
-                                          src="/sar.webp"
-                                          alt="Logo"
-                                          width={20}
-                                          height={20}
-                                          className="sarsymbol-img"
-                                          loading="lazy"
-                                        />
+                        src="/sar.webp"
+                        alt="Logo"
+                        width={20}
+                        height={20}
+                        className="sarsymbol-img"
+                        loading="lazy"
+                      />
                     </span>
                   )}
                 </div>
@@ -574,7 +562,6 @@ export default function DynamicProductCard({ product }) {
                     <IoBagAddOutline className="desktop-modal-cart-icon" />
                     <span>{added ? 'تمت الإضافة ✨' : 'أضف إلى السلة'}</span>
                   </button>
-
                   <button
                     className="desktop-modal-view-product"
                     onClick={handleModalProductView}
