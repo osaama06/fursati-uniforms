@@ -46,7 +46,7 @@ export default function Footer() {
               <h3>الدعم</h3>
               <Link href="/return-policy">سياسة الاستبدال و الإرجاع</Link>
               <Link href="/shipping">معلومات الشحن</Link>
-              <Link href="/terms">الخصوصية</Link>
+              <Link href="/privacy">الخصوصية</Link>
             </div>
 
             <div className="nav-col">
