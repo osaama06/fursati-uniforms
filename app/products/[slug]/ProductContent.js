@@ -253,15 +253,13 @@ export default function ProductContent({ product, variations }) {
           <React.Fragment key={cat.id}>
             <span> / </span>
             <span>
-              <Link href={`/(category)/${cat.slug}`}>
+              <Link href={`/${cat.slug}`}>
                 {cat.name}
               </Link>
             </span>
           </React.Fragment>
         ))}
         
-        <span> / </span>
-        <span className="current">{product?.name}</span>
       </nav>
 
       <div className="productGrid">
