@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState, useEffect } from "react";
 import { useCart } from "@/app/context/CartContext";
 import { useReviews } from "@/app/hooks/reviews";
@@ -27,9 +26,8 @@ export default function ProductContent({ product, variations }) {
   const [loadingRelated, setLoadingRelated] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
-  const [imageTransform, setImageTransform] = useState(0);
+  const [breadcrumbCategories, setBreadcrumbCategories] = useState([]);
 
-  // استخدام hook التقييمات
   const {
     reviews,
     reviewStats,
@@ -39,17 +37,63 @@ export default function ProductContent({ product, variations }) {
     formatDate,
   } = useReviews(product.id);
 
+  // جلب breadcrumb hierarchy
+  useEffect(() => {
+    const fetchCategoryHierarchy = async () => {
+      if (!product?.categories?.length) return;
+      
+      try {
+        const categoryIds = product.categories.map(c => c.id).join(',');
+        const res = await fetch(`/api/categories?ids=${categoryIds}`);
+        const allCategories = await res.json();
+        
+        console.log('All Categories from API 👉', allCategories);
+        
+        // ابحث عن آخر category في السلسلة (الأعمق)
+        const deepestCategory = allCategories.reduce((deepest, cat) => {
+          if (!deepest) return cat;
+          // لو parent موجود، معناته هذا ابن (أعمق)
+          return cat.parent > 0 ? cat : deepest;
+        }, null);
+        
+        if (!deepestCategory) return;
+        
+        console.log('Deepest Category 👉', deepestCategory);
+        
+        // ابني السلسلة من تحت لفوق
+        const hierarchy = [];
+        let current = deepestCategory;
+        
+        while (current && current.parent !== 27) {
+          hierarchy.unshift(current);
+          current = allCategories.find(cat => cat.id === current.parent);
+        }
+        
+        // حط الأب الرئيسي (اللي parent-ه 27)
+        if (current) {
+          hierarchy.unshift(current);
+        }
+        
+        console.log('Category Hierarchy 👉', hierarchy);
+        setBreadcrumbCategories(hierarchy);
+        
+      } catch (error) {
+        console.error('Error fetching category hierarchy:', error);
+      }
+    };
+    
+    fetchCategoryHierarchy();
+  }, [product?.categories]);
+
   // جلب المنتجات المتعلقة
   useEffect(() => {
     const fetchRelatedProducts = async () => {
       if (!product.categories?.[0]?.id) return;
-
       setLoadingRelated(true);
       try {
         const response = await fetch(
           `/api/related-products?category=${product.categories[0].id}&exclude=${product.id}&per_page=8`
         );
-
         if (response.ok) {
           const data = await response.json();
           setRelatedProducts(data);
@@ -60,32 +104,32 @@ export default function ProductContent({ product, variations }) {
         setLoadingRelated(false);
       }
     };
-
     fetchRelatedProducts();
   }, [product.id, product.categories]);
 
   const hasSizes = product.attributes?.some(attr =>
     attr.name.toLowerCase().includes("size") || attr.name === "المقاس"
   );
+
   const sizes = hasSizes
     ? product.attributes.find(attr =>
-      attr.name.toLowerCase().includes("size") || attr.name === "المقاس"
-    ).options
+        attr.name.toLowerCase().includes("size") || attr.name === "المقاس"
+      ).options
     : [];
 
   const hasColors = product.attributes?.some(attr =>
     attr.name.toLowerCase().includes("color") || attr.name === "اللون"
   );
+
   const colors = hasColors
     ? product.attributes.find(attr =>
-      attr.name.toLowerCase().includes("color") || attr.name === "اللون"
-    ).options
+        attr.name.toLowerCase().includes("color") || attr.name === "اللون"
+      ).options
     : [];
 
   const handleSizeChange = (size) => {
     setSelectedSize(size);
     setShowSizeError(false);
-
     const match = variations?.find(v =>
       v.attributes.some(attr =>
         (attr.name.toLowerCase().includes("size") || attr.name === "المقاس") &&
@@ -110,9 +154,7 @@ export default function ProductContent({ product, variations }) {
       });
       return;
     }
-
     setShowSizeError(false);
-
     for (let i = 0; i < quantity; i++) {
       addToCart({
         id: selectedVariationId || product.id,
@@ -122,7 +164,6 @@ export default function ProductContent({ product, variations }) {
         size: selectedSize || null,
       });
     }
-
     toast.success(`تمت إضافة ${quantity} قطعة إلى السلة`, {
       style: {
         borderRadius: '10px',
@@ -153,7 +194,6 @@ export default function ProductContent({ product, variations }) {
     }
   };
 
-  // Touch handlers للسلايدر في الجوال
   const handleTouchStart = (e) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
@@ -165,11 +205,9 @@ export default function ProductContent({ product, variations }) {
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
-
     if (isLeftSwipe && selectedImage < (product.images?.length || 1) - 1) {
       setSelectedImage(prev => prev + 1);
     }
@@ -178,7 +216,6 @@ export default function ProductContent({ product, variations }) {
     }
   };
 
-  // Navigation functions للأسهم
   const goToNextImage = () => {
     setSelectedImage(prev => {
       const nextIndex = prev + 1;
@@ -204,13 +241,27 @@ export default function ProductContent({ product, variations }) {
 
   const discount = calculateDiscount();
 
-
-
   return (
     <div className="productContainer">
       {/* Breadcrumb */}
-      <nav className="breadcrumb">
-        <span><Link href={`/`}>الرئيسية</Link></span> / <span><Link href={`/${product.categories?.[0]?.slug}`}>{product.categories?.[0]?.name || 'عام'}</Link> </span>
+      <nav className="breadcrumb" aria-label="breadcrumb">
+        <span>
+          <Link href="/">الرئيسية</Link>
+        </span>
+        
+        {breadcrumbCategories.map((cat) => (
+          <React.Fragment key={cat.id}>
+            <span> / </span>
+            <span>
+              <Link href={`/category/${cat.slug}`}>
+                {cat.name}
+              </Link>
+            </span>
+          </React.Fragment>
+        ))}
+        
+        <span> / </span>
+        <span className="current">{product?.name}</span>
       </nav>
 
       <div className="productGrid">
@@ -233,8 +284,6 @@ export default function ProductContent({ product, variations }) {
                 لا توجد صورة
               </div>
             )}
-
-            {/* Mobile Navigation Arrows */}
             {product.images && product.images.length > 1 && (
               <>
                 <button
@@ -251,7 +300,6 @@ export default function ProductContent({ product, variations }) {
                 </button>
               </>
             )}
-
             <div className="imageOverlayButtons">
               <button
                 onClick={() => setIsWishlisted(!isWishlisted)}
@@ -259,14 +307,12 @@ export default function ProductContent({ product, variations }) {
               >
                 <Heart className="w-4 h-4" fill={isWishlisted ? "currentColor" : "none"} />
               </button>
-
               <button className="overlayButton">
                 <Share2 className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* Mobile Image Dots */}
           {product.images && product.images.length > 1 && (
             <div className="mobileImageDots">
               {product.images.map((_, index) => (
@@ -279,7 +325,6 @@ export default function ProductContent({ product, variations }) {
             </div>
           )}
 
-          {/* Desktop Thumbnails */}
           {product.images && product.images.length > 1 && (
             <div className="thumbnailGrid">
               {product.images.map((img, index) => (
@@ -305,7 +350,6 @@ export default function ProductContent({ product, variations }) {
         <div className="productInfo">
           <div className="productHeader">
             <h1>{product.name}</h1>
-
             <div className="ratingSection">
               <div className="stars">
                 {[...Array(5)].map((_, i) => (
@@ -318,9 +362,6 @@ export default function ProductContent({ product, variations }) {
               </div>
               <span className="reviewCount">({reviewStats.total} تقييم)</span>
             </div>
-
-
-
             <div className="priceSection">
               <span className="currentPrice">
                 {product.sale_price || product.price} <Image
@@ -405,10 +446,8 @@ export default function ProductContent({ product, variations }) {
 
           {product.stock_status && (
             <div className="stockStatus">
-              <div className={`stockDot ${product.stock_status === 'instock' ? 'inStock' : 'outOfStock'
-                }`}></div>
-              <span className={`stockText ${product.stock_status === 'instock' ? 'inStock' : 'outOfStock'
-                }`}>
+              <div className={`stockDot ${product.stock_status === 'instock' ? 'inStock' : 'outOfStock'}`}></div>
+              <span className={`stockText ${product.stock_status === 'instock' ? 'inStock' : 'outOfStock'}`}>
                 {product.stock_status === 'instock' ? 'متوفر في المخزون' : 'غير متوفر'}
               </span>
               {product.stock_quantity && (
@@ -434,7 +473,6 @@ export default function ProductContent({ product, variations }) {
             </div>
           </div>
 
-          {/* Mobile Sticky Action Box */}
           <div className="mobileActionBox">
             <div className="mobileQuantitySection">
               <div className="mobileQuantityControls">
@@ -453,14 +491,12 @@ export default function ProductContent({ product, variations }) {
                 </button>
               </div>
             </div>
-
             <button onClick={handleAddToCart} className="mobileAddToCartBtn">
               <FiShoppingCart /> أضف إلى السلة
             </button>
           </div>
         </div>
 
-        {/* Desktop Buy Box */}
         <div className="buyBox">
           <div className="buyBoxPrice">
             {product.sale_price || product.price} <Image
@@ -471,7 +507,6 @@ export default function ProductContent({ product, variations }) {
               className="sarsymbol-img"
             />
           </div>
-
           {product.regular_price && product.sale_price && (
             <div style={{ marginBottom: '8px' }}>
               <span className="originalPrice" style={{ fontSize: '14px' }}>
@@ -488,21 +523,16 @@ export default function ProductContent({ product, variations }) {
               </span>
             </div>
           )}
-
           <div className="buyBoxShipping">
             <Truck className="w-4 h-4" />
             توصيل مجاني للطلبات فوق 200 ريال
           </div>
-
           <div className="buyBoxStock">
-            <div className={`stockDot ${product.stock_status === 'instock' ? 'inStock' : 'outOfStock'
-              }`}></div>
-            <span className={`stockText ${product.stock_status === 'instock' ? 'inStock' : 'outOfStock'
-              }`}>
+            <div className={`stockDot ${product.stock_status === 'instock' ? 'inStock' : 'outOfStock'}`}></div>
+            <span className={`stockText ${product.stock_status === 'instock' ? 'inStock' : 'outOfStock'}`}>
               {product.stock_status === 'instock' ? 'متوفر في المخزون' : 'غير متوفر'}
             </span>
           </div>
-
           <div className="buyBoxQuantity">
             <h4>الكمية:</h4>
             <div className="quantityControls">
@@ -521,9 +551,6 @@ export default function ProductContent({ product, variations }) {
               </button>
             </div>
           </div>
-
-
-
           <div className="buyBoxActions">
             <button onClick={handleAddToCart} className="buyBoxAddToCart">
               <FiShoppingCart /> أضف إلى السلة
@@ -532,14 +559,14 @@ export default function ProductContent({ product, variations }) {
         </div>
       </div>
 
-      {/* Tabs Section */}
+      {/* Tabs & Reviews & Related Products - same as before */}
       <div className="tabsSection">
         <div className="tabsHeader">
           <button
             onClick={() => setActiveTab('description')}
             className={`tabButton ${activeTab === 'description' ? 'active' : ''}`}
           >
-           تفاصسيل المنتج
+            تفاصيل المنتج
           </button>
           <button
             onClick={() => setActiveTab('specifications')}
@@ -554,7 +581,6 @@ export default function ProductContent({ product, variations }) {
             التقييمات ({reviewStats.total})
           </button>
         </div>
-
         <div className="tabContent">
           {activeTab === 'description' && (
             <div className="descriptionContent">
@@ -569,7 +595,6 @@ export default function ProductContent({ product, variations }) {
               )}
             </div>
           )}
-
           {activeTab === 'specifications' && (
             <div>
               <h3 className="sectionTitle">المواصفات التقنية</h3>
@@ -589,7 +614,6 @@ export default function ProductContent({ product, variations }) {
               )}
             </div>
           )}
-
           {activeTab === 'reviews' && (
             <div>
               <div className="reviewsHeader">
@@ -601,7 +625,6 @@ export default function ProductContent({ product, variations }) {
                   اكتب تقييماً
                 </button>
               </div>
-
               {reviewsError && (
                 <div style={{
                   padding: '16px',
@@ -614,7 +637,6 @@ export default function ProductContent({ product, variations }) {
                   {reviewsError}
                 </div>
               )}
-
               {reviewStats.total > 0 && (
                 <div className="ratingSummary">
                   <div className="summaryHeader">
@@ -631,7 +653,6 @@ export default function ProductContent({ product, variations }) {
                       <div className="summaryText">بناءً على {reviewStats.total} تقييم</div>
                     </div>
                   </div>
-
                   <div className="ratingBreakdown">
                     {[5, 4, 3, 2, 1].map((stars) => (
                       <div key={stars} className="breakdownRow">
@@ -653,7 +674,6 @@ export default function ProductContent({ product, variations }) {
                   </div>
                 </div>
               )}
-
               <div className="reviewsList">
                 {reviewsLoading ? (
                   <div className="loadingReviews">
@@ -680,7 +700,6 @@ export default function ProductContent({ product, variations }) {
                           </div>
                         </div>
                       </div>
-
                       <div className="reviewRating">
                         <div className="reviewStars">
                           {[...Array(5)].map((_, i) => (
@@ -691,12 +710,10 @@ export default function ProductContent({ product, variations }) {
                           ))}
                         </div>
                       </div>
-
                       <div
                         className="reviewText"
                         dangerouslySetInnerHTML={{ __html: review.review }}
                       />
-
                       <div className="reviewActions">
                         <button className="helpfulBtn">
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -725,7 +742,6 @@ export default function ProductContent({ product, variations }) {
         </div>
       </div>
 
-      {/* Review Form Modal */}
       {showReviewForm && (
         <div className="reviewFormOverlay" onClick={(e) => e.target === e.currentTarget && setShowReviewForm(false)}>
           <div className="reviewFormModal">
@@ -752,7 +768,6 @@ export default function ProductContent({ product, variations }) {
         </div>
       )}
 
-      {/* Related Products Skeleton */}
       {loadingRelated && (
         <div className="skeleton-slider-container">
           <div className="skeleton-slider-header">
@@ -770,7 +785,6 @@ export default function ProductContent({ product, variations }) {
         </div>
       )}
 
-      {/* Related Products */}
       {!loadingRelated && relatedProducts.length > 0 && (
         <ProductSlider
           category={{
