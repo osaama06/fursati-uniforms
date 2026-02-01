@@ -539,7 +539,7 @@ export default function ProductContent({ product, variations }) {
             onClick={() => setActiveTab('description')}
             className={`tabButton ${activeTab === 'description' ? 'active' : ''}`}
           >
-            وصف المنتج
+           تفاصسيل المنتج
           </button>
           <button
             onClick={() => setActiveTab('specifications')}
