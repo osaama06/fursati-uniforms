@@ -104,7 +104,7 @@ export default async function AccountPage() {
             <LogoutButton />
 
           </nav>
-        </aside>َََ
+        </aside>
 
         <section className="account-body">
           <div className="content-header">
