@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+// app/hooks/reviews.js
+import { useState, useEffect, useCallback } from 'react';
 
 export function useReviews(productId) {
   const [reviews, setReviews] = useState([]);
@@ -10,8 +11,8 @@ export function useReviews(productId) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // جلب التقييمات من WooCommerce
-  const fetchReviews = async () => {
+  // ⭐ دالة جلب التقييمات
+  const fetchReviews = useCallback(async () => {
     if (!productId) {
       setLoading(false);
       return;
@@ -21,22 +22,27 @@ export function useReviews(productId) {
     setError(null);
 
     try {
-      // جلب التقييمات مع التقييمات المعلقة
-      const response = await fetch(`/api/reviews?product_id=${productId}&per_page=20&include_pending=true`);
+      // ⭐ إضافة timestamp لمنع cache
+      const timestamp = new Date().getTime();
+      const response = await fetch(
+        `/api/reviews?product_id=${productId}&t=${timestamp}`,
+        {
+          cache: 'no-store', // منع cache في Next.js
+        }
+      );
+
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || 'فشل في جلب التقييمات');
       }
 
-      // تحديث البيانات وفقاً لصيغة API الجديد
       setReviews(data.reviews || []);
       setReviewStats(data.stats || {
         total: 0,
         average: 0,
         breakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
       });
-
     } catch (err) {
       console.error('خطأ في جلب التقييمات:', err);
       setError(err.message || 'حدث خطأ في جلب التقييمات');
@@ -49,9 +55,14 @@ export function useReviews(productId) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
 
-  // إرسال تقييم جديد
+  // جلب التقييمات عند التحميل
+  useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
+
+  // ⭐ دالة إرسال التقييم
   const submitReview = async (reviewData) => {
     try {
       const response = await fetch('/api/reviews', {
@@ -74,43 +85,13 @@ export function useReviews(productId) {
         throw new Error(data.error || 'فشل في إرسال التقييم');
       }
 
-      // إضافة التقييم مؤقتاً للقائمة لعرضه فوراً
-      const tempReview = {
-        id: `temp_${Date.now()}`,
-        product_id: productId,
-        rating: reviewData.rating,
-        review: reviewData.comment,
-        reviewer: reviewData.reviewer_name,
-        reviewer_email: reviewData.reviewer_email,
-        date_created: new Date().toISOString(),
-        status: 'pending',
-        verified: false
-      };
-
-      // تحديث القائمة مؤقتاً
-      setReviews(prev => [tempReview, ...prev]);
-
-      // تحديث الإحصائيات
-      const newTotal = reviewStats.total + 1;
-      const newSum = (reviewStats.average * reviewStats.total) + reviewData.rating;
-      const newAverage = newSum / newTotal;
-      const newBreakdown = { ...reviewStats.breakdown };
-      newBreakdown[reviewData.rating] = (newBreakdown[reviewData.rating] || 0) + 1;
-
-      setReviewStats({
-        total: newTotal,
-        average: parseFloat(newAverage.toFixed(1)),
-        breakdown: newBreakdown
-      });
-
-      // إعادة جلب التقييمات بعد 3 ثوان للتحديث الحقيقي
-      setTimeout(fetchReviews, 3000);
+      // ⭐ المهم: تحديث التقييمات فوراً بعد النجاح
+      await fetchReviews();
 
       return {
         success: true,
-        message: data.message || 'تم إرسال التقييم بنجاح'
+        message: data.message || 'تم إرسال تقييمك بنجاح'
       };
-
     } catch (error) {
       console.error('خطأ في إرسال التقييم:', error);
       throw new Error(error.message || 'حدث خطأ في إرسال التقييم');
@@ -120,7 +101,7 @@ export function useReviews(productId) {
   // تنسيق التاريخ
   const formatDate = (dateString) => {
     if (!dateString) return '';
-
+    
     try {
       const date = new Date(dateString);
       const now = new Date();
@@ -149,11 +130,6 @@ export function useReviews(productId) {
     }
   };
 
-  // تشغيل جلب التقييمات عند تحميل المكون
-  useEffect(() => {
-    fetchReviews();
-  }, [productId]);
-
   return {
     reviews,
     reviewStats,
@@ -161,6 +137,6 @@ export function useReviews(productId) {
     error,
     submitReview,
     formatDate,
-    refetch: fetchReviews
+    refetch: fetchReviews, // لو تبي تحدّث يدوياً
   };
 }
