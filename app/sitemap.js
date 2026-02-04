@@ -1,20 +1,18 @@
 // app/sitemap.js
-
 // دالة لجلب المنتجات من WooCommerce
 async function getProducts() {
   const consumerKey = process.env.WOO_CONSUMER_KEY;
   const secretKey = process.env.WOO_SECRET_KEY;
   const auth = Buffer.from(`${consumerKey}:${secretKey}`).toString("base64");
-  
+
   try {
     const res = await fetch(
-      'https://furssati.io/wp-json/wc/v3/products?per_page=100',
+      'https://furssati.io/wp-json/wc/v3/products?per_page=100&status=publish',
       {
         headers: { Authorization: `Basic ${auth}` },
-        next: { revalidate: 3600 } // تحديث كل ساعة
+        next: { revalidate: 3600 }
       }
     );
-    
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
@@ -28,16 +26,15 @@ async function getCategories() {
   const consumerKey = process.env.WOO_CONSUMER_KEY;
   const secretKey = process.env.WOO_SECRET_KEY;
   const auth = Buffer.from(`${consumerKey}:${secretKey}`).toString("base64");
-  
+
   try {
     const res = await fetch(
-      'https://furssati.io/wp-json/wc/v3/products/categories?per_page=100',
+      'https://furssati.io/wp-json/wc/v3/products/categories?per_page=100&hide_empty=true',
       {
         headers: { Authorization: `Basic ${auth}` },
         next: { revalidate: 3600 }
       }
     );
-    
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
@@ -48,11 +45,11 @@ async function getCategories() {
 
 export default async function sitemap() {
   const baseUrl = 'https://fursatiuniforms.com';
-  
+
   // جلب البيانات
   const products = await getProducts();
   const categories = await getCategories();
-  
+
   // الصفحات الثابتة
   const staticPages = [
     {
@@ -80,7 +77,7 @@ export default async function sitemap() {
       priority: 0.5,
     },
   ];
-  
+
   // صفحات المنتجات
   const productPages = products.map((product) => ({
     url: `${baseUrl}/products/${product.slug}`,
@@ -88,15 +85,15 @@ export default async function sitemap() {
     changeFrequency: 'weekly',
     priority: 0.8,
   }));
-  
-  // صفحات الفئات
+
+  // ⭐ صفحات الفئات - بدون /category
   const categoryPages = categories.map((category) => ({
-    url: `${baseUrl}/category/${category.slug}`,
+    url: `${baseUrl}/${category.slug}`,
     lastModified: new Date(),
     changeFrequency: 'daily',
     priority: 0.7,
   }));
-  
+
   // دمج كل الصفحات
   return [...staticPages, ...productPages, ...categoryPages];
 }

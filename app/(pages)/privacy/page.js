@@ -1,4 +1,5 @@
 import "@/styles/pages/info-pages.css";
+export const dynamic = "force-dynamic";
 
 // ---------------------
 // 🟦 Metadata | Privacy Policy

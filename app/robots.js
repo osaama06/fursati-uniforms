@@ -11,6 +11,8 @@ export default function robots() {
           '/_next/',
           '/cart',
           '/checkout',
+          '/account',
+          '/orders',
         ],
       },
       {
@@ -21,10 +23,11 @@ export default function robots() {
           '/admin/',
           '/cart',
           '/checkout',
+          '/account',
         ],
       },
     ],
-    sitemap: 'https://fursatiuniforms/sitemap.xml',
+    sitemap: 'https://fursatiuniforms.com/sitemap.xml',
     host: 'https://fursatiuniforms.com',
   };
 }

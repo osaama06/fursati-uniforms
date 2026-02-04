@@ -1,5 +1,6 @@
 import "@/styles/pages/info-pages.css";
 import { Metadata } from "next";
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "من نحن | فرصتي يونيفورمز",

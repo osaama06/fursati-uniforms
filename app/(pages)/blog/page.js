@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import "@/styles/pages/blog.css";
+export const dynamic = "force-dynamic";
 
 // =========================================================
 // 1) جلب بوستات WordPress
