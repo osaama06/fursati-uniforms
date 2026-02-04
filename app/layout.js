@@ -87,7 +87,7 @@ export default function RootLayout({ children }) {
           fetchpriority="high"
           type="image/jpeg"
         />
-
+        <meta name="google-site-verification" content="XiAUcrB6eUQFXmKOgwCJZ5OOKOzaZyRcNpoNyoHH4h4" />    
         {/* Additional SEO */}
         <meta name="format-detection" content="telephone=no" />
         <meta name="geo.region" content="SA" />
