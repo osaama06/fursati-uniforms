@@ -260,6 +260,7 @@ export default function ProductContent({ product, variations }) {
           </React.Fragment>
         ))}
         
+
       </nav>
 
       <div className="productGrid">
