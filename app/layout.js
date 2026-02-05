@@ -5,7 +5,6 @@ import { Geist, Geist_Mono, Tajawal } from "next/font/google";
 import Header from "./components/header/page";
 import "./globals.css";
 import Footer from "./components/footer/page";
-import { GoogleAnalytics } from 'nextjs-google-analytics'
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
@@ -96,7 +95,21 @@ export default function RootLayout({ children }) {
 
       <body className={tajawal.className}>
         {/* ⭐ تحسين: نقل Google Analytics لآخر الـ body عشان ما يعطل الـ LCP */}
-          <GoogleAnalytics trackPageViews measurementId="G-90YRR71JZ7" />
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-90YRR71JZ7"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-90YRR71JZ7', { page_path: window.location.pathname });
+            `,
+          }}
+        />
+
         <CartProvider>
           <Header />
           {/* <Navbar /> */}
