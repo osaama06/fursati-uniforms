@@ -65,7 +65,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ar" dir="rtl" className={`${tajawal.variable} ${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="ar-SA" dir="rtl" className={`${tajawal.variable} ${geistSans.variable} ${geistMono.variable}`}>
       <head>
         {/* ⭐ CRITICAL: Preconnect للدومينات المهمة - بالترتيب الصحيح */}
         <link rel="preconnect" href="https://furssati.io" crossOrigin="anonymous" />
