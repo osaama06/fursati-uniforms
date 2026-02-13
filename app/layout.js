@@ -3,102 +3,159 @@ import { CartProvider } from "./context/CartContext";
 import { Toaster } from "react-hot-toast";
 import { Geist, Geist_Mono, Tajawal } from "next/font/google";
 import Header from "./components/header/page";
-import "./globals.css";
 import Footer from "./components/footer/page";
+import "./globals.css";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
   weight: ["400", "500", "700", "800"],
   variable: "--font-tajawal",
-  display: 'swap',
-  preload: true, // ✅ Preload الفونت
+  display: "swap",
+  preload: true,
 });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-  display: 'swap',
-  preload: false, // لو مو مستخدم كثير
+  display: "swap",
+  preload: false,
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-  display: 'swap',
+  display: "swap",
   preload: false,
 });
 
+const SITE_URL = "https://fursatiuniforms.com";
+
 export const metadata = {
-  metadataBase: new URL('https://fursatiuniforms.com'),
-
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Fursati -متجر فرصتي للزي الموحد',
-    template: '%s | Fursati',
+    default: "فرصتي | تسوق جميع منتجات الزي الموحد",
+    template: "%s | فرصتي",
   },
-
-  description: 'متجر فرصتي المتخصص في بيع الزي المدرسي والطبي الموحد بجودة عالية وأسعار منافسة',
-
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
-  },
-
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#251f35' },
+  description:
+    "متجر فرصتي للزي الموحد الطبي والمدرسي والعملي في السعودية. جودة عالية وتصاميم عملية بأسعار مناسبة.",
+  
+  
+  keywords: [
+    "فرصتي",
+    "يونيفورم طبي",
+    "زي طبي",
+    "يونيفورم مدرسي",
+    "Scrubs Saudi",
+    "Medical Uniform Saudi",
+    "متجر سعودي",
+    "ملابس زي موحد",
+    "مريول مدرسي",
+    "ملابس عمل",
+    "سديريي",
+    "تطريز",
+    "تفصيل ",
+    "عبايات تخرج",
+    
   ],
 
+  alternates: {
+    canonical: "/",
+    languages: {
+      ar: "/",
+      "x-default": "/",
+    },
+  },
+
+  openGraph: {
+    title: "فرصتي | تسوق جميع منتجات الزي الموحد",
+    description:
+      "متجر فرصتي لليونيفورم الطبي والمدرسي والعملي في السعودية.",
+    url: SITE_URL,
+    siteName: "فرصتي",
+    locale: "ar_SA",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.webp",
+        width: 1200,
+        height: 630,
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "فرصتي | تسوق جميع منتجات الزي الموحد",
+    description:
+      "أفضل متجر يونيفورم طبي ومدرسي في السعودية.",
+    images: ["/og-image.jpg"],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
+
+
+  
+    icons: {
+    icon: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#251f35" },
+  ],
   viewport: {
-    width: 'device-width',
+    width: "device-width",
     initialScale: 1,
     maximumScale: 5,
   },
-
   other: {
-    'mobile-web-app-capable': 'yes',
-    'apple-mobile-web-app-capable': 'yes',
-    'apple-mobile-web-app-status-bar-style': 'default',
-    'apple-mobile-web-app-title': 'Fursati',
-    'application-name': 'Fursati',
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+    "apple-mobile-web-app-title": "فرصتي",
+    "application-name": "فرصتي",
   },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ar-SA" dir="rtl" className={`${tajawal.variable} ${geistSans.variable} ${geistMono.variable}`}>
+    <html
+      lang="ar-SA"
+      dir="rtl"
+      className={`${tajawal.variable} ${geistSans.variable} ${geistMono.variable}`}
+    >
       <head>
-        {/* ⭐ CRITICAL: Preconnect للدومينات المهمة - بالترتيب الصحيح */}
+        <meta charSet="UTF-8" />
+        <meta httpEquiv="content-language" content="ar-SA" />
+
+        {/* Preconnects */}
         <link rel="preconnect" href="https://furssati.io" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://furssati.io" />
-        
-        {/* Fonts - أقل أهمية */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
-        {/* Self domain - آخر شي */}
-        <link rel="dns-prefetch" href="https://fursatiuniforms.com" />
+        <link rel="dns-prefetch" href={SITE_URL} />
 
-        {/* ⭐ Preload أول صورة بانر - استبدل بالرابط الفعلي */}
+        {/* Preload Banner Image */}
         <link
           rel="preload"
           as="image"
-          href="https://furssati.io/wp-content/uploads/2025/01/banner-1.jpg"
+          href="www.fursatiuniforms.com/_next/image?url=https%3A%2F%2Ffurssati.io%2Fwp-content%2Fuploads%2F2025%2F06%2F%D9%81%D8%B1%D8%B5%D8%AA%D9%8A.webp&w=2048&q=75"
           fetchpriority="high"
           type="image/jpeg"
         />
-        <meta name="google-site-verification" content="XiAUcrB6eUQFXmKOgwCJZ5OOKOzaZyRcNpoNyoHH4h4" />    
-        {/* Additional SEO */}
+
+        <meta name="google-site-verification" content="XiAUcrB6eUQFXmKOgwCJZ5OOKOzaZyRcNpoNyoHH4h4" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="geo.region" content="SA" />
         <meta name="geo.placename" content="sakaka" />
       </head>
 
       <body className={tajawal.className}>
-        {/* ⭐ تحسين: نقل Google Analytics لآخر الـ body عشان ما يعطل الـ LCP */}
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-90YRR71JZ7"
-        />
+        {/* Google Analytics */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-90YRR71JZ7"></script>
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -112,19 +169,15 @@ export default function RootLayout({ children }) {
 
         <CartProvider>
           <Header />
-          {/* <Navbar /> */}
           <main>{children}</main>
           <Footer />
           <Toaster position="top-center" />
         </CartProvider>
 
-        {/* ⭐ Analytics في آخر الصفحة - ما يعطل الـ rendering */}
+        {/* Optional: GA ID from env */}
         {process.env.NEXT_PUBLIC_GA_ID && (
           <>
-            <script
-              async
-              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
-            />
+            <script async src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`} />
             <script
               dangerouslySetInnerHTML={{
                 __html: `
@@ -140,7 +193,7 @@ export default function RootLayout({ children }) {
           </>
         )}
 
-        {/* Facebook Pixel - في النهاية كمان */}
+        {/* Facebook Pixel */}
         {process.env.NEXT_PUBLIC_FB_PIXEL_ID && (
           <script
             dangerouslySetInnerHTML={{
