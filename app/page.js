@@ -74,15 +74,23 @@ async function getProductsByCategoryId(categoryId) {
 export const metadata = {
   title: "فرصتي | تسوق جميع منتجات الزي الموحد",
   description:
-    "متجر فرصتي للزي الموحد الطبي والمدرسي. سكراب طبي، مريول مدرسي، لابكوت، زي موحد بجودة عالية وأسعار منافسة.",
-  openGraph: {
-    title: "Fursati | متجر فرصتي للزي الموحد",
-    description: "متجر فرصتي للزي الموحد الطبي والمدرسي بجودة عالية وأسعار منافسة.",
-    url: "https://fursatiuniforms.com",
-    siteName: "Fursati Uniforms",
-    locale: "ar_SA",
-    type: "website",
-  },
+    "متجر فرصتي للزي الموحد الطبي والمدرسي. سكراب طبي، مريول مدرسي، لابكوت، زي موحد بجودة عالية وأسعار مناسبة.",
+openGraph: {
+  title: "فرصتي | متجر الزي الموحد",
+  description: "متجر فرصتي للزي الموحدي.",
+  url: "https://fursatiuniforms.com",
+  siteName: "فرصتي",
+  images: [
+    {
+      url: "/og-image.webp",
+      width: 1200,
+      height: 630,
+    },
+  ],
+  locale: "ar_SA",
+  type: "website",
+},
+
 };
 
 // =============================
@@ -101,13 +109,14 @@ export default async function Home() {
   );
 
   // Schema Config
-  const siteConfig = {
-    name: "Fursati",
-    alternateName: "فرصتي",
-    url: "https://fursatiuniforms.com",
-    logo: "https://fursatiuniforms.com/logo.png",
-    description: "متجر فرصتي للزي الموحد الطبي والمدرسي في السعودية.",
-  };
+const siteConfig = {
+  name: "فرصتي",
+  alternateName: ["Fursati", "Fursati Uniforms"],
+  url: "https://fursatiuniforms.com",
+  logo: "https://fursatiuniforms.com/logo.png",
+  description: "متجر فرصتي للزي الموحد الطبي والمدرسي في السعودية.",
+};
+
 
   const organizationSchema = generateOrganizationSchema(siteConfig);
   const websiteSchema = generateWebsiteSchema(siteConfig);

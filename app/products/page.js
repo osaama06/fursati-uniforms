@@ -60,7 +60,7 @@ export default async function ProductsPage() {
               "@type": "Product",
               name: p.name,
               image: p.images?.[0]?.src || "",
-              url: `https://fursatuniforms.com/product/${p.slug}`,
+              url: `https://fursatiuniforms.com/product/${p.slug}`,
               offers: {
                 "@type": "Offer",
                 price: p.price,

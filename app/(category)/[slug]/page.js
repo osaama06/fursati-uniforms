@@ -12,8 +12,8 @@ import {
 // CONSTANTS (Static Config)
 // ================================
 const SITE_URL = "https://fursatiuniforms.com";
-const SITE_NAME = "Fursati | فرصتي";
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+const SITE_NAME = " فرصتي";
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.webp`;
 
 // ================================
 // Data Fetching
@@ -97,14 +97,15 @@ export async function generateMetadata({ params }) {
     keywords: seo.focuskw || `${category.name}, زي موحد, فرصتي, ملابس ${category.name}`,
     
     alternates: {
-      canonical: pageUrl, // https://fursatiuniforms.com/category/xyz
+      canonical: pageUrl, // https://fursatiuniforms.com/category-slug
     },
 
     openGraph: {
       title: title,
       description: rawDesc,
       url: pageUrl,
-      siteName: "Fursati", // Static
+      siteName: "فرصتي",
+       alternateName: ["Fursati", "Fursati Uniforms"],
       locale: "ar_SA",     // Static
       type: "website",     // Static
       images: [

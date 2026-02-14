@@ -10,8 +10,8 @@ import {
 // CONSTANTS (Static Config)
 // ================================
 const SITE_URL = "https://fursatiuniforms.com";
-const SITE_NAME = "Fursati | فرصتي";
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+const SITE_NAME = " فرصتي";
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.webp`;
 
 // ================================
 // Data Fetching
@@ -70,7 +70,7 @@ function getProductBrand(product) {
     return brandAttr.options[0];
   }
   // Fallback to Site Name
-  return "Fursati";
+  return "فرصتي";
 }
 
 // ================================
@@ -127,9 +127,11 @@ export async function generateMetadata({ params }) {
       title: title,
       description: rawDesc,
       url: pageUrl,
-      siteName: "Fursati", // Static
-      locale: "ar_SA",     // Static
-      type: "website",     // Static
+      siteName: "فرصتي", 
+      alternateName: "Fursati",
+      locale: "ar_SA",     
+      type: "website",
+
       images: [
         {
           url: mainImage,
