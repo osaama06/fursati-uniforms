@@ -10,7 +10,7 @@ import {
 // CONSTANTS (Static Config)
 // ================================
 const SITE_URL = "https://fursatiuniforms.com";
-const SITE_NAME = " فرصتي";
+const SITE_NAME = "فرصتي";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.webp`;
 
 // ================================
@@ -83,90 +83,130 @@ export async function generateMetadata({ params }) {
   if (!product) {
     return {
       title: "المنتج غير موجود | فرصتي",
-      robots: { index: false, follow: true }
+      robots: { index: false, follow: true },
     };
   }
 
-  // 1. Dynamic Content from CMS (WooCommerce/Yoast)
+  // =========================
+  // 1️⃣ Data from Woo / Yoast
+  // =========================
   const seo = product.yoast_seo || {};
 
   const rawTitle = seo.title || product.name;
-  const rawDesc = stripHtml(seo.metaDesc || product.short_description || product.description || `تسوق ${product.name} بأفضل الأسعار.`);
 
-  // Clean Title
-  const title = rawTitle.includes("فرصتي") || rawTitle.includes("Fursati")
-    ? rawTitle
-    : `${rawTitle} | فرصتي`;
+  const rawDesc = stripHtml(
+    seo.metaDesc ||
+      product.short_description ||
+      product.description ||
+      `تسوق ${product.name} بأفضل الأسعار من متجر فرصتي.`
+  );
 
-  // Image Logic: Yoast Image > Product Image > Default
-  const mainImage = seo.opengraphImage || product.images?.[0]?.src || DEFAULT_OG_IMAGE;
+  // Clean title (force brand signal)
+  const title =
+    rawTitle.includes("فرصتي") || rawTitle.includes("Fursati")
+      ? rawTitle
+      : `${rawTitle} | فرصتي`;
 
-  // 2. Construct Frontend URL manually
+  // =========================
+  // 2️⃣ Image Priority
+  // =========================
+  const mainImage =
+    seo.opengraphImage ||
+    product.images?.[0]?.src ||
+    DEFAULT_OG_IMAGE;
+
+  // =========================
+  // 3️⃣ URL
+  // =========================
   const pageUrl = `/products/${product.slug}`;
 
-  // Robots Logic
-  const index = seo.metaRobotsNoindex !== 'noindex';
-  const follow = seo.metaRobotsNofollow !== 'nofollow';
+  // =========================
+  // 4️⃣ Robots Logic
+  // =========================
+  const index = seo.metaRobotsNoindex !== "noindex";
+  const follow = seo.metaRobotsNofollow !== "nofollow";
 
-  // Product Specific Data for Meta Tags
-  const brand = getProductBrand(product);
-  const condition = "new"; // Assuming new products
-  const availability = product.stock_status === "instock" ? "in stock" : "out of stock";
+  // =========================
+  // 5️⃣ Product Data
+  // =========================
+  const condition = "new";
+  const availability =
+    product.stock_status === "instock"
+      ? "in stock"
+      : "out of stock";
 
+  // =========================
+  // ✅ FINAL METADATA
+  // =========================
   return {
     metadataBase: new URL(SITE_URL),
 
-    title: title,
+    title,
     description: rawDesc,
+
+    keywords: [
+      product.name,
+      "فرصتي",
+      "Fursati",
+      "زي طبي",
+      "يونيفورم طبي",
+      "سكراب طبي السعودية",
+    ],
 
     alternates: {
       canonical: pageUrl,
     },
 
+    // ✅ OpenGraph (Product Correct Type)
     openGraph: {
-      title: title,
+      title,
       description: rawDesc,
       url: pageUrl,
-      siteName: "فرصتي", 
-      alternateName: "Fursati",
-      locale: "ar_SA",     
-      type: "website",
-
+      siteName: "فرصتي",
+      locale: "ar_SA",
+      type: "product",
       images: [
         {
           url: mainImage,
-          width: 800,
-          height: 600,
+          width: 1200,
+          height: 630,
           alt: title,
         },
       ],
     },
 
+    // ✅ Twitter
     twitter: {
-      card: "summary_large_image", // Static
-      title: title,
+      card: "summary_large_image",
+      title,
       description: rawDesc,
       images: [mainImage],
     },
 
+    // ✅ Robots
     robots: {
-      index: index,
-      follow: follow,
+      index,
+      follow,
       googleBot: {
-        index: index,
-        follow: follow,
+        index,
+        follow,
         "max-image-preview": "large",
         "max-snippet": -1,
       },
     },
 
-    // Rich Product Meta Tags (Crucial for Google Merchant Center/Shopping)
+    // ✅ Brand + Merchant Signals (VERY IMPORTANT)
     other: {
+      "og:site_name": "فرصتي",
+      "application-name": "فرصتي",
+      "apple-mobile-web-app-title": "فرصتي",
+
       "product:price:amount": product.price,
       "product:price:currency": "SAR",
       "product:availability": availability,
-      "product:brand": brand,
-      "product:retailer_item_id": product.sku || String(product.id),
+      "product:brand": "فرصتي",
+      "product:retailer_item_id":
+        product.sku || String(product.id),
       "product:condition": condition,
     },
   };
