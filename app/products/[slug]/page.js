@@ -164,7 +164,7 @@ export async function generateMetadata({ params }) {
       url: pageUrl,
       siteName: "فرصتي",
       locale: "ar_SA",
-      type: "product",
+      type: "website",
       images: [
         {
           url: mainImage,
