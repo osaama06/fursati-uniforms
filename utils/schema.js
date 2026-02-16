@@ -26,9 +26,11 @@ export function generateProductSchema(product) {
     ),
     sku: product.sku || undefined,
 
-    // ربط المنتج بنفس كيان المنظمة
+    // ✅ FIX: تعريف البراند صريح لجوجل
     brand: {
+      "@type": "Brand",
       "@id": ORG_ID,
+      name: "فرصتي",
     },
 
     offers: {
@@ -133,7 +135,14 @@ export function generateCategorySchema(category, products = []) {
           name: product.name,
           url: `${SITE_URL}/products/${product.slug}`,
           image: product.images?.[0]?.src,
-          brand: { "@id": ORG_ID },
+
+          // ✅ نفس الإصلاح هنا أيضاً
+          brand: {
+            "@type": "Brand",
+            "@id": ORG_ID,
+            name: "فرصتي",
+          },
+
           offers: {
             "@type": "Offer",
             price: parseFloat(product.price),
@@ -163,20 +172,15 @@ export function generateCategoryBreadcrumb(category) {
 }
 
 // ========================================
-// 4. Organization Schema (🔥 الأهم)
+// 4. Organization Schema
 // ========================================
 export function generateOrganizationSchema(config = {}) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": ORG_ID,
-
-    // الاسم الأساسي عربي
     name: "فرصتي",
-
-    // الاسم الإنجليزي كمرادف رسمي
     alternateName: "Fursati",
-
     url: SITE_URL,
     logo: config.logo || `${SITE_URL}/logo.png`,
     description:
@@ -222,54 +226,6 @@ export function generateWebsiteSchema(config = {}) {
         urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
-    },
-  };
-}
-
-// ========================================
-// 6. FAQ Schema
-// ========================================
-export function generateFAQSchema(faqs) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: stripHtml(faq.answer),
-      },
-    })),
-  };
-}
-
-// ========================================
-// 7. Article Schema (FIXED)
-// ========================================
-export function generateArticleSchema(article) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: article.title,
-    description: stripHtml(article.excerpt || article.description),
-    image: article.image || article.featured_image,
-    datePublished: article.date || article.published_at,
-    dateModified: article.modified || article.updated_at,
-
-    author: {
-      "@type": "Organization",
-      name: "فرصتي",
-      "@id": ORG_ID,
-    },
-
-    publisher: {
-      "@id": ORG_ID,
-    },
-
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": `${SITE_URL}/blog/${article.slug}`,
     },
   };
 }

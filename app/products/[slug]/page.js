@@ -265,7 +265,6 @@ export default async function ProductPage({ params }) {
   // Schemas
   const productSchema = generateProductSchema(productForSchema);
   const breadcrumbSchema = generateProductBreadcrumb(productForSchema);
-
   return (
     <>
       {/* Product Schema (JSON-LD) */}
