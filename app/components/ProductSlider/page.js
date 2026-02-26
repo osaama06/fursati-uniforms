@@ -6,7 +6,7 @@ export default function ProductSlider({ category, products }) {
   if (!products?.length) return null;
 
   // تحديد الرابط: إذا كان تصنيفاً حقيقياً نستخدم الـ slug، وإذا كان "الأكثر مبيعاً" نوجهه لصفحة المتجر
-  const categoryLink = category.description ? `/${category.slug}` : "/shop";
+  const categoryLink = category.slug ? `/${category.slug}` : "/shop";
 
   return (
     <section className="slider-container">
