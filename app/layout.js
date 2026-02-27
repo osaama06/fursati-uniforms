@@ -87,7 +87,7 @@ export const metadata = {
     title: "فرصتي | تسوق جميع منتجات الزي الموحد",
     description:
       "أفضل متجر يونيفورم طبي ومدرسي في السعودية.",
-    images: ["/og-image.jpg"],
+    images: ["/og-image.webp"],
   },
 
   robots: {
@@ -138,10 +138,10 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={SITE_URL} />
 
-        {/* ✅ Added for GA performance */}
+        {/* تحسين اتصال Google Analytics */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
 
-        {/* Fixed preload URL */}
+        {/* Preload Banner Image (Fixed URL) */}
         <link
           rel="preload"
           as="image"
@@ -164,24 +164,41 @@ export default function RootLayout({ children }) {
           <Toaster position="top-center" />
         </CartProvider>
 
-        {/* ✅ Google Analytics (Performance Optimized) */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-90YRR71JZ7"
-          strategy="lazyOnload"
-        />
+        {/* Google Analytics - يبدأ بعد أول تفاعل */}
+        <Script id="ga-interaction-loader" strategy="afterInteractive">
+{`
+(function () {
+  let loaded = false;
 
-        <Script id="ga-init" strategy="lazyOnload">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-90YRR71JZ7', {
-              send_page_view: false
-            });
-          `}
+  function loadGA() {
+    if (loaded) return;
+    loaded = true;
+
+    const script = document.createElement('script');
+    script.src = 'https://www.googletagmanager.com/gtag/js?id=G-90YRR71JZ7';
+    script.async = true;
+    document.head.appendChild(script);
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+
+    gtag('js', new Date());
+    gtag('config', 'G-90YRR71JZ7', { send_page_view: true });
+
+    window.removeEventListener('scroll', loadGA);
+    window.removeEventListener('click', loadGA);
+    window.removeEventListener('touchstart', loadGA);
+  }
+
+  window.addEventListener('scroll', loadGA, { once: true });
+  window.addEventListener('click', loadGA, { once: true });
+  window.addEventListener('touchstart', loadGA, { once: true });
+})();
+`}
         </Script>
 
-        {/* Facebook Pixel (unchanged logic) */}
+        {/* Facebook Pixel (كما هو بدون تغيير) */}
         {process.env.NEXT_PUBLIC_FB_PIXEL_ID && (
           <script
             dangerouslySetInnerHTML={{
