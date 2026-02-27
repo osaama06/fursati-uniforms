@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import { Geist, Geist_Mono, Tajawal } from "next/font/google";
 import Header from "./components/header/page";
 import Footer from "./components/footer/page";
+import Script from "next/script";
 import "./globals.css";
 
 const tajawal = Tajawal({
@@ -38,8 +39,7 @@ export const metadata = {
   },
   description:
     "متجر فرصتي للزي الموحد الطبي والمدرسي والعملي في السعودية. جودة عالية وتصاميم عملية بأسعار مناسبة.",
-  
-  
+
   keywords: [
     "فرصتي",
     "يونيفورم طبي",
@@ -55,7 +55,6 @@ export const metadata = {
     "تطريز",
     "تفصيل ",
     "عبايات تخرج",
-    
   ],
 
   alternates: {
@@ -96,21 +95,22 @@ export const metadata = {
     follow: true,
   },
 
-
-  
-    icons: {
+  icons: {
     icon: "/favicon.ico",
     apple: "/favicon.ico",
   },
+
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#251f35" },
   ],
+
   viewport: {
     width: "device-width",
     initialScale: 1,
     maximumScale: 5,
   },
+
   other: {
     "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-capable": "yes",
@@ -138,11 +138,14 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={SITE_URL} />
 
-        {/* Preload Banner Image */}
+        {/* ✅ Added for GA performance */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+
+        {/* Fixed preload URL */}
         <link
           rel="preload"
           as="image"
-          href="www.fursatiuniforms.com/_next/image?url=https%3A%2F%2Ffurssati.io%2Fwp-content%2Fuploads%2F2025%2F06%2F%D9%81%D8%B1%D8%B5%D8%AA%D9%8A.webp&w=2048&q=75"
+          href="https://www.fursatiuniforms.com/_next/image?url=https%3A%2F%2Ffurssati.io%2Fwp-content%2Fuploads%2F2025%2F06%2F%D9%81%D8%B1%D8%B5%D8%AA%D9%8A.webp&w=2048&q=75"
           fetchpriority="high"
           type="image/jpeg"
         />
@@ -154,19 +157,6 @@ export default function RootLayout({ children }) {
       </head>
 
       <body className={tajawal.className}>
-        {/* Google Analytics */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-90YRR71JZ7"></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-90YRR71JZ7', { page_path: window.location.pathname });
-            `,
-          }}
-        />
-
         <CartProvider>
           <Header />
           <main>{children}</main>
@@ -174,26 +164,24 @@ export default function RootLayout({ children }) {
           <Toaster position="top-center" />
         </CartProvider>
 
-        {/* Optional: GA ID from env */}
-        {process.env.NEXT_PUBLIC_GA_ID && (
-          <>
-            <script async src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`} />
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `
-                  window.dataLayer = window.dataLayer || [];
-                  function gtag(){dataLayer.push(arguments);}
-                  gtag('js', new Date());
-                  gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', {
-                    page_path: window.location.pathname,
-                  });
-                `,
-              }}
-            />
-          </>
-        )}
+        {/* ✅ Google Analytics (Performance Optimized) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-90YRR71JZ7"
+          strategy="lazyOnload"
+        />
 
-        {/* Facebook Pixel */}
+        <Script id="ga-init" strategy="lazyOnload">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-90YRR71JZ7', {
+              send_page_view: false
+            });
+          `}
+        </Script>
+
+        {/* Facebook Pixel (unchanged logic) */}
         {process.env.NEXT_PUBLIC_FB_PIXEL_ID && (
           <script
             dangerouslySetInnerHTML={{
