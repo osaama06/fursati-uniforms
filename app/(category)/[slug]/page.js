@@ -173,12 +173,12 @@ export default async function CategoryPage({ params }) {
           <h1 className="category-title">
              {category.name}</h1>
 
-          {category.description && (
+          {/* {category.description && (
             <div
               className="category-description"
               dangerouslySetInnerHTML={{ __html: category.description }}
             />
-          )}
+          )} */}
 
           <div className="category-meta">
             <span className="products-count">{products.length} منتج</span>
