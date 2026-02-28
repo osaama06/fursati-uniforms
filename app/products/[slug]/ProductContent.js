@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from "@/app/context/CartContext";
 import { useReviews } from "@/app/hooks/reviews";
+import SizeGuideTrigger from "@/app/components/Size-guide/SizeGuideTrigger";
 import Image from "next/image";
 import Link from "next/link";
 import { FiShoppingCart } from 'react-icons/fi';
@@ -10,6 +11,7 @@ import ReviewForm from "@/app/components/ReviewForm";
 import ProductSlider from "@/app/components/ProductSlider/page";
 import toast from 'react-hot-toast';
 import '@/styles/pages/ProductPage.css';
+
 
 export default function ProductContent({ product, variations }) {
   const { addToCart } = useCart();
@@ -27,6 +29,7 @@ export default function ProductContent({ product, variations }) {
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [breadcrumbCategories, setBreadcrumbCategories] = useState([]);
+  const [sizeGuideImage, setSizeGuideImage] = useState(null);
 
   const {
     reviews,
@@ -76,6 +79,11 @@ export default function ProductContent({ product, variations }) {
         
         console.log('Category Hierarchy 👉', hierarchy);
         setBreadcrumbCategories(hierarchy);
+
+          // setSizeGuideImage(deepestCategory?.description?.src || null);
+          // استخرج الصورة من الـ HTML description
+const imgMatch = deepestCategory?.description?.match(/<img[^>]+src=["']([^"']+)["']/);
+setSizeGuideImage(imgMatch ? imgMatch[1] : null);
         
       } catch (error) {
         console.error('Error fetching category hierarchy:', error);
@@ -417,6 +425,10 @@ export default function ProductContent({ product, variations }) {
                   </button>
                 ))}
               </div>
+             {sizeGuideImage && (
+             <SizeGuideTrigger image={sizeGuideImage} />
+             )}
+
             </div>
           )}
 
