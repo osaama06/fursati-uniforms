@@ -30,36 +30,43 @@ export default function BannerSlider() {
 
     async function fetchBanners() {
       try {
-        const res = await fetch("https://furssati.io/wp-json/wp/v2/banner?_embed", {
-          cache: "no-store",
-        });
+        const [desktopRes, mobileRes] = await Promise.all([
+          fetch("https://furssati.io/wp-json/wp/v2/banner?_embed", { cache: "no-store" }),
+          fetch("https://furssati.io/wp-json/wp/v2/mobile_banner?_embed", { cache: "no-store" }),
+        ]);
 
-        if (!res.ok) {
+        if (!desktopRes.ok || !mobileRes.ok) {
           throw new Error("فشل في جلب البانرات");
         }
 
-        const data = await res.json();
+        const desktopData = await desktopRes.json();
+        const mobileData = await mobileRes.json();
 
-        const bannerImages = data.map((post) => {
+        const desktopBanners = desktopData.map((post) => {
           const media = post?._embedded?.["wp:featuredmedia"];
-          const desktop = media?.[0]?.source_url || "";
-
-          const mobile =
-            post?.acf?.mobile_banner?.url ||
-            post?.acf?.mobile_banner ||
-            "";
-
           return {
             id: post.id,
-            desktop,
-            mobile,
+            desktop: media?.[0]?.source_url || "",
           };
         });
 
-        console.log("bannerImages:", bannerImages);
+        const mobileBanners = mobileData.map((post) => {
+          const media = post?._embedded?.["wp:featuredmedia"];
+          return {
+            id: post.id,
+            mobile: media?.[0]?.source_url || "",
+          };
+        });
+
+        // الدمج حسب الترتيب
+        const mergedBanners = desktopBanners.map((desktopItem, index) => ({
+          id: desktopItem.id,
+          desktop: desktopItem.desktop,
+          mobile: mobileBanners[index]?.mobile || desktopItem.desktop,
+        }));
 
         if (mounted) {
-          setBanners(bannerImages.filter((item) => item.desktop || item.mobile));
+          setBanners(mergedBanners.filter(item => item.desktop || item.mobile));
           setIsLoading(false);
         }
       } catch (err) {
@@ -95,7 +102,10 @@ export default function BannerSlider() {
   useEffect(() => {
     if (isPaused || banners.length <= 1) return;
 
-    const interval = setInterval(nextSlide, 5000);
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 5000);
+
     return () => clearInterval(interval);
   }, [isPaused, banners.length, nextSlide]);
 
@@ -117,8 +127,11 @@ export default function BannerSlider() {
     const distance = touchStartX.current - touchEndX.current;
     const SWIPE_THRESHOLD = 50;
 
-    if (distance > SWIPE_THRESHOLD) nextSlide();
-    else if (distance < -SWIPE_THRESHOLD) prevSlide();
+    if (distance > SWIPE_THRESHOLD) {
+      nextSlide();
+    } else if (distance < -SWIPE_THRESHOLD) {
+      prevSlide();
+    }
 
     touchStartX.current = null;
     touchEndX.current = null;
