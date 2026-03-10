@@ -1,18 +1,17 @@
-/* --- Main Container --- */
+--- Main Container ---
 .banner-slider {
   position: relative;
   width: 100%;
-  height: 250px; /* Mobile height */
+  height: 520px; /* موبايل طويل */
   overflow: hidden;
   border-radius: 6px;
   background-color: #1a1a1a;
-  /* box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); */
-  user-select: none; /* Prevent text selection during swipe */
+  user-select: none;
 }
 
 @media (min-width: 640px) {
   .banner-slider {
-    height: 350px;
+    height: 380px;
   }
 }
 
@@ -25,10 +24,7 @@
 /* --- Slides --- */
 .banner-slide {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   opacity: 0;
   z-index: 0;
   transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
@@ -41,13 +37,24 @@
 }
 
 .banner-image {
-  object-fit: cover;
   width: 100%;
   height: 100%;
+  pointer-events: none;
 }
 
+/* ديسكتوب */
+.desktop-image {
+  object-fit: cover;
+  object-position: center center;
+}
 
-/* --- Controls (Glassmorphism Buttons) --- */
+/* موبايل */
+.mobile-image {
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* --- Controls --- */
 .banner-control {
   position: absolute;
   top: 50%;
@@ -66,12 +73,11 @@
   color: white;
   cursor: pointer;
   transition: all 0.3s ease;
-  opacity: 0; /* Hidden by default, shown on hover/touch */
+  opacity: 0;
 }
 
-/* Show controls on hover or if focused */
 .banner-slider:hover .banner-control,
-.banner-control:focus {
+.banner-control:focus-visible {
   opacity: 1;
 }
 
@@ -92,30 +98,47 @@
   right: 16px;
 }
 
-/* --- Indicators (Dots) --- */
+@media (max-width: 767px) {
+  .banner-control {
+    width: 38px;
+    height: 38px;
+    opacity: 1;
+  }
+
+  .banner-control.prev {
+    left: 10px;
+  }
+
+  .banner-control.next {
+    right: 10px;
+  }
+}
+
+/* --- Indicators --- */
 .banner-indicators {
-    z-index: 20;
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
-    background: rgb(0 0 0 / 2%);
-    border-radius: 20px;
-    gap: 8px;
-    padding: 8px 12px;
-    display: flex;
-    position: absolute;
-    bottom: 9px;
-    left: 50%;
-    transform: translateX(-50%);
+  z-index: 20;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  background: rgb(0 0 0 / 12%);
+  border-radius: 20px;
+  gap: 8px;
+  padding: 8px 12px;
+  display: flex;
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .banner-dot {
   width: 8px;
   height: 8px;
-  border-radius: 4px;
+  border-radius: 999px;
   border: none;
   background: rgba(255, 255, 255, 0.4);
   cursor: pointer;
   transition: all 0.4s ease;
+  padding: 0;
 }
 
 .banner-dot:hover {
@@ -127,25 +150,31 @@
   background: #ffffff;
 }
 
-/* --- Skeleton Loading (Shimmer) --- */
+/* --- Skeleton Loading --- */
 .banner-skeleton {
   position: relative;
   width: 100%;
-  height: 250px;
+  height: 520px;
   background: #e0e0e0;
   border-radius: 16px;
   overflow: hidden;
 }
 
-@media (min-width: 640px) { .banner-skeleton { height: 350px; } }
-@media (min-width: 768px) { .banner-skeleton { height: 530px; } }
+@media (min-width: 640px) {
+  .banner-skeleton {
+    height: 380px;
+  }
+}
+
+@media (min-width: 768px) {
+  .banner-skeleton {
+    height: 530px;
+  }
+}
 
 .skeleton-shimmer {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,
@@ -157,6 +186,10 @@
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-150%) skewX(-20deg); }
-  100% { transform: translateX(150%) skewX(-20deg); }
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(150%) skewX(-20deg);
+  }
 }
