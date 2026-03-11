@@ -4,16 +4,39 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import "@/styles/components/BannerSlider.css";
 
-
 const ChevronLeft = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" width="24" height="24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={2.5}
+    stroke="currentColor"
+    width="24"
+    height="24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M15.75 19.5L8.25 12l7.5-7.5"
+    />
   </svg>
 );
 
 const ChevronRight = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" width="24" height="24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={2.5}
+    stroke="currentColor"
+    width="24"
+    height="24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M8.25 4.5l7.5 7.5-7.5 7.5"
+    />
   </svg>
 );
 
@@ -24,7 +47,8 @@ export default function BannerSlider() {
   const [isLoading, setIsLoading] = useState(true);
 
   const touchStartX = useRef(null);
-  const touchEndX = useRef(null);
+  const touchMoveX = useRef(null);
+  const isSwiping = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -32,8 +56,12 @@ export default function BannerSlider() {
     async function fetchBanners() {
       try {
         const [desktopRes, mobileRes] = await Promise.all([
-          fetch("https://furssati.io/wp-json/wp/v2/banner?_embed", { cache: "no-store" }),
-          fetch("https://furssati.io/wp-json/wp/v2/mobile_banner?_embed", { cache: "no-store" }),
+          fetch("https://furssati.io/wp-json/wp/v2/banner?_embed", {
+            cache: "no-store",
+          }),
+          fetch("https://furssati.io/wp-json/wp/v2/mobile_banner?_embed", {
+            cache: "no-store",
+          }),
         ]);
 
         if (!desktopRes.ok || !mobileRes.ok) {
@@ -59,19 +87,18 @@ export default function BannerSlider() {
           };
         });
 
-        // الدمج حسب الترتيب
         const mergedBanners = desktopBanners.map((desktopItem, index) => ({
-          id: desktopItem.id,
+          id: desktopItem.id || index,
           desktop: desktopItem.desktop,
           mobile: mobileBanners[index]?.mobile || desktopItem.desktop,
         }));
 
         if (mounted) {
-          setBanners(mergedBanners.filter(item => item.desktop || item.mobile));
+          setBanners(mergedBanners.filter((item) => item.desktop || item.mobile));
           setIsLoading(false);
         }
-      } catch (err) {
-        console.error("فشل في تحميل البانرات:", err);
+      } catch (error) {
+        console.error("فشل في تحميل البانرات:", error);
         if (mounted) {
           setBanners([]);
           setIsLoading(false);
@@ -111,31 +138,42 @@ export default function BannerSlider() {
   }, [isPaused, banners.length, nextSlide]);
 
   const handleTouchStart = (e) => {
-    touchStartX.current = e.targetTouches[0].clientX;
-    touchEndX.current = null;
+    if (banners.length <= 1) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchMoveX.current = e.touches[0].clientX;
+    isSwiping.current = true;
     setIsPaused(true);
   };
 
   const handleTouchMove = (e) => {
-    touchEndX.current = e.targetTouches[0].clientX;
+    if (!isSwiping.current) return;
+    touchMoveX.current = e.touches[0].clientX;
   };
 
   const handleTouchEnd = () => {
+    if (!isSwiping.current) return;
+
+    const startX = touchStartX.current;
+    const endX = touchMoveX.current;
+
+    isSwiping.current = false;
     setIsPaused(false);
 
-    if (touchStartX.current === null || touchEndX.current === null) return;
+    if (startX == null || endX == null) return;
 
-    const distance = touchStartX.current - touchEndX.current;
+    const distance = startX - endX;
     const SWIPE_THRESHOLD = 50;
 
-    if (distance > SWIPE_THRESHOLD) {
+    if (Math.abs(distance) < SWIPE_THRESHOLD) return;
+
+    if (distance > 0) {
       nextSlide();
-    } else if (distance < -SWIPE_THRESHOLD) {
+    } else {
       prevSlide();
     }
 
     touchStartX.current = null;
-    touchEndX.current = null;
+    touchMoveX.current = null;
   };
 
   if (isLoading) {
@@ -163,7 +201,9 @@ export default function BannerSlider() {
         <div
           key={banner.id || index}
           className={`banner-slide ${index === current ? "active" : ""}`}
+          aria-hidden={index !== current}
         >
+          {/* Mobile */}
           <div className="banner-image-mobile">
             <Image
               src={banner.mobile || banner.desktop}
@@ -172,10 +212,12 @@ export default function BannerSlider() {
               sizes="100vw"
               className="banner-image mobile-image"
               priority={index === 0}
+              fetchPriority={index === 0 ? "high" : "auto"}
               draggable={false}
             />
           </div>
 
+          {/* Desktop */}
           <div className="banner-image-desktop">
             <Image
               src={banner.desktop || banner.mobile}
@@ -184,6 +226,7 @@ export default function BannerSlider() {
               sizes="100vw"
               className="banner-image desktop-image"
               priority={index === 0}
+              fetchPriority={index === 0 ? "high" : "auto"}
               draggable={false}
             />
           </div>
@@ -226,6 +269,7 @@ export default function BannerSlider() {
                   goToSlide(index);
                 }}
                 aria-label={`Go to slide ${index + 1}`}
+                aria-current={index === current ? "true" : "false"}
                 type="button"
               />
             ))}
