@@ -1,7 +1,7 @@
 .banner-slider {
   position: relative;
   width: 100%;
-  height: 260px;
+  height: 91vh;
   overflow: hidden;
   border-radius: 6px;
   background-color: #1a1a1a;
@@ -157,7 +157,7 @@
 .banner-skeleton {
   position: relative;
   width: 100%;
-  height: 260px;
+  height: 91vh;
   background: #e0e0e0;
   border-radius: 16px;
   overflow: hidden;
