@@ -272,9 +272,8 @@
 }
 
 .currency {
-  font-size: 16px;
-  color: #6b7280;
-  font-weight: normal;
+    font-size: 24px;
+    font-weight: 700;
 }
 
 .original-price {
@@ -672,9 +671,8 @@ body.modal-open {
 }
 
 .desktop-modal-currency {
-  font-size: 20px;
-  color: #6b7280;
-  font-weight: normal;
+    font-size: 24px;
+    font-weight: 700;
 }
 
 .desktop-modal-original-price {
@@ -1010,9 +1008,8 @@ body.modal-open {
 }
 
 .modal-currency {
-  font-size: 18px;
-  color: #6b7280;
-  font-weight: normal;
+    font-size: 24px;
+    font-weight: 700;
 }
 
 .modal-original-price {
