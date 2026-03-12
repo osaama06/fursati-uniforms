@@ -2,7 +2,44 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import "@/styles/components/BannerSlider.css";
+
+const FRONTEND_ORIGINS = [
+  "https://www.fursatiuniforms.com",
+  "https://fursatiuniforms.com",
+  "http://localhost:3000",
+];
+
+function normalizeBannerLink(url) {
+  if (!url || typeof url !== "string") return "";
+
+  const trimmed = url.trim();
+
+  if (trimmed.startsWith("/")) {
+    return trimmed;
+  }
+
+  const matchedOrigin = FRONTEND_ORIGINS.find((origin) =>
+    trimmed.startsWith(origin)
+  );
+
+  if (matchedOrigin) {
+    return trimmed.replace(matchedOrigin, "") || "/";
+  }
+
+  return trimmed;
+}
+
+function isExternalBannerLink(url) {
+  if (!url || typeof url !== "string") return false;
+
+  const trimmed = url.trim();
+
+  if (trimmed.startsWith("/")) return false;
+
+  return !FRONTEND_ORIGINS.some((origin) => trimmed.startsWith(origin));
+}
 
 const ChevronLeft = () => (
   <svg
@@ -47,8 +84,10 @@ export default function BannerSlider() {
   const [isLoading, setIsLoading] = useState(true);
 
   const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
   const touchMoveX = useRef(null);
   const isSwiping = useRef(false);
+  const suppressClick = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -76,6 +115,7 @@ export default function BannerSlider() {
           return {
             id: post.id,
             desktop: media?.[0]?.source_url || "",
+            link: post?.acf?.banner_link || "",
           };
         });
 
@@ -84,6 +124,7 @@ export default function BannerSlider() {
           return {
             id: post.id,
             mobile: media?.[0]?.source_url || "",
+            link: post?.acf?.banner_link || "",
           };
         });
 
@@ -91,10 +132,13 @@ export default function BannerSlider() {
           id: desktopItem.id || index,
           desktop: desktopItem.desktop,
           mobile: mobileBanners[index]?.mobile || desktopItem.desktop,
+          link: mobileBanners[index]?.link || desktopItem.link || "",
         }));
 
         if (mounted) {
-          setBanners(mergedBanners.filter((item) => item.desktop || item.mobile));
+          setBanners(
+            mergedBanners.filter((item) => item.desktop || item.mobile)
+          );
           setIsLoading(false);
         }
       } catch (error) {
@@ -139,15 +183,28 @@ export default function BannerSlider() {
 
   const handleTouchStart = (e) => {
     if (banners.length <= 1) return;
-    touchStartX.current = e.touches[0].clientX;
-    touchMoveX.current = e.touches[0].clientX;
+
+    const touch = e.touches[0];
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+    touchMoveX.current = touch.clientX;
     isSwiping.current = true;
+    suppressClick.current = false;
     setIsPaused(true);
   };
 
   const handleTouchMove = (e) => {
     if (!isSwiping.current) return;
-    touchMoveX.current = e.touches[0].clientX;
+
+    const touch = e.touches[0];
+    touchMoveX.current = touch.clientX;
+
+    const diffX = Math.abs((touchStartX.current ?? 0) - touch.clientX);
+    const diffY = Math.abs((touchStartY.current ?? 0) - touch.clientY);
+
+    if (diffX > 10 && diffX > diffY) {
+      suppressClick.current = true;
+    }
   };
 
   const handleTouchEnd = () => {
@@ -164,16 +221,40 @@ export default function BannerSlider() {
     const distance = startX - endX;
     const SWIPE_THRESHOLD = 50;
 
-    if (Math.abs(distance) < SWIPE_THRESHOLD) return;
-
-    if (distance > 0) {
-      nextSlide();
-    } else {
-      prevSlide();
+    if (Math.abs(distance) >= SWIPE_THRESHOLD) {
+      if (distance > 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
     }
 
+    setTimeout(() => {
+      suppressClick.current = false;
+    }, 80);
+
     touchStartX.current = null;
+    touchStartY.current = null;
     touchMoveX.current = null;
+  };
+
+  const handleTouchCancel = () => {
+    isSwiping.current = false;
+    setIsPaused(false);
+    touchStartX.current = null;
+    touchStartY.current = null;
+    touchMoveX.current = null;
+
+    setTimeout(() => {
+      suppressClick.current = false;
+    }, 80);
+  };
+
+  const handleBannerClick = (e) => {
+    if (suppressClick.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   };
 
   if (isLoading) {
@@ -194,44 +275,88 @@ export default function BannerSlider() {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
       role="region"
       aria-label="Promotional Banners"
     >
-      {banners.map((banner, index) => (
-        <div
-          key={banner.id || index}
-          className={`banner-slide ${index === current ? "active" : ""}`}
-          aria-hidden={index !== current}
-        >
-          {/* Mobile */}
-          <div className="banner-image-mobile">
-            <Image
-              src={banner.mobile || banner.desktop}
-              alt={`Banner ${index + 1}`}
-              fill
-              sizes="100vw"
-              className="banner-image mobile-image"
-              priority={index === 0}
-              fetchPriority={index === 0 ? "high" : "auto"}
-              draggable={false}
-            />
-          </div>
+      {banners.map((banner, index) => {
+        const rawLink =
+          typeof banner.link === "string" && banner.link.trim()
+            ? banner.link.trim()
+            : "";
 
-          {/* Desktop */}
-          <div className="banner-image-desktop">
-            <Image
-              src={banner.desktop || banner.mobile}
-              alt={`Banner ${index + 1}`}
-              fill
-              sizes="100vw"
-              className="banner-image desktop-image"
-              priority={index === 0}
-              fetchPriority={index === 0 ? "high" : "auto"}
-              draggable={false}
-            />
+        const safeLink = normalizeBannerLink(rawLink);
+        const isExternal = isExternalBannerLink(rawLink);
+
+        const content = (
+          <>
+            <div className="banner-image-mobile">
+              <Image
+                src={banner.mobile || banner.desktop}
+                alt={`Banner ${index + 1}`}
+                fill
+                sizes="100vw"
+                className="banner-image mobile-image"
+                priority={index === 0}
+                fetchPriority={index === 0 ? "high" : "auto"}
+                draggable={false}
+              />
+            </div>
+
+            <div className="banner-image-desktop">
+              <Image
+                src={banner.desktop || banner.mobile}
+                alt={`Banner ${index + 1}`}
+                fill
+                sizes="100vw"
+                className="banner-image desktop-image"
+                priority={index === 0}
+                fetchPriority={index === 0 ? "high" : "auto"}
+                draggable={false}
+              />
+            </div>
+          </>
+        );
+
+        return (
+          <div
+            key={banner.id || index}
+            className={`banner-slide ${index === current ? "active" : ""}`}
+            aria-hidden={index !== current}
+          >
+            {safeLink ? (
+              isExternal ? (
+                <a
+                  href={safeLink}
+                  className="banner-link-wrap"
+                  aria-label={`Open banner ${index + 1}`}
+                  onClick={handleBannerClick}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {content}
+                </a>
+              ) : (
+                <Link
+                  href={safeLink}
+                  className="banner-link-wrap"
+                  aria-label={`Open banner ${index + 1}`}
+                  onClick={handleBannerClick}
+                >
+                  {content}
+                </Link>
+              )
+            ) : (
+              <div
+                className="banner-link-wrap"
+                aria-label={`Banner ${index + 1}`}
+              >
+                {content}
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {banners.length > 1 && (
         <>

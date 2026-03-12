@@ -1,8 +1,7 @@
 :root {
-  --mobile-header-height: 72px; /* عدلها حسب ارتفاع الهيدر الحقيقي */
+  --mobile-header-height: 72px;
 }
 
-/* --- Main Container --- */
 .banner-slider {
   position: relative;
   width: 100%;
@@ -13,29 +12,26 @@
   touch-action: pan-y;
 }
 
-/* Mobile: full remaining viewport under header */
 @media (max-width: 767px) {
   .banner-slider {
-    height: calc(100dvh - var(--mobile-header-height));
+    height: calc(100svh - var(--mobile-header-height));
     min-height: 520px;
+    max-height: calc(100svh - var(--mobile-header-height));
   }
 }
 
-/* Tablet */
 @media (min-width: 768px) and (max-width: 1023px) {
   .banner-slider {
     height: 420px;
   }
 }
 
-/* Desktop */
 @media (min-width: 1024px) {
   .banner-slider {
     height: 530px;
   }
 }
 
-/* --- Slides --- */
 .banner-slide {
   position: absolute;
   inset: 0;
@@ -47,6 +43,14 @@
 .banner-slide.active {
   opacity: 1;
   z-index: 10;
+}
+
+.banner-link-wrap {
+  position: absolute;
+  inset: 0;
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 
 .banner-image-mobile,
@@ -61,20 +65,17 @@
   pointer-events: none;
 }
 
-/* Mobile image: show full image */
 .mobile-image {
   object-fit: contain;
   object-position: center top;
   background: #f3f6fb;
 }
 
-/* Desktop image */
 .desktop-image {
   object-fit: cover;
   object-position: center center;
 }
 
-/* Show mobile by default */
 .banner-image-mobile {
   display: block;
 }
@@ -83,7 +84,6 @@
   display: none;
 }
 
-/* Switch to desktop from tablet and up */
 @media (min-width: 768px) {
   .banner-image-mobile {
     display: none;
@@ -94,7 +94,6 @@
   }
 }
 
-/* --- Controls --- */
 .banner-control {
   position: absolute;
   top: 50%;
@@ -149,7 +148,6 @@
   }
 }
 
-/* --- Indicators --- */
 .banner-indicators {
   z-index: 20;
   backdrop-filter: blur(4px);
@@ -181,7 +179,6 @@
   background: #ffffff;
 }
 
-/* --- Skeleton --- */
 .banner-skeleton {
   position: relative;
   width: 100%;
@@ -192,8 +189,9 @@
 
 @media (max-width: 767px) {
   .banner-skeleton {
-    height: calc(100dvh - var(--mobile-header-height));
+    height: calc(100svh - var(--mobile-header-height));
     min-height: 520px;
+    max-height: calc(100svh - var(--mobile-header-height));
   }
 }
 
