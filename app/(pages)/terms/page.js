@@ -12,7 +12,7 @@ async function getPage() {
   const WP_BASE = process.env.WOO_URL || "https://furssati.io";
 
   const res = await fetch(
-    `${WP_BASE.replace(/\/$/, "")}/wp-json/wp/v2/pages/771`,
+    `${WP_BASE.replace(/\/$/, "")}/wp-json/wp/v2/pages/776`,
 
     { next: { revalidate: 60 } }
   ); 
