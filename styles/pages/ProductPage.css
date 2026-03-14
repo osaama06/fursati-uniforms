@@ -73,6 +73,27 @@
   padding: 12px;
 }
 
+.desktopZoomLens {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 2px solid rgba(27, 54, 93, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  background-repeat: no-repeat;
+  background-size: 220%;
+  z-index: 15;
+  background-color: #fff;
+}
+
+@media (max-width: 1023px) {
+  .desktopZoomLens {
+    display: none !important;
+  }
+}
+
 /* Overlay Buttons */
 .imageOverlayButtons {
 z-index: 5;
@@ -360,8 +381,7 @@ z-index: 5;
 }
 
 /* Features Boxes */
-.featuresBox,
-.shippingInfo {
+.featuresBox {
   background-color: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -376,85 +396,6 @@ z-index: 5;
   color: #1e293b;
 }
 
-/* Shipping */
-.shippingGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.shippingItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  color: #475569;
-}
-
-.shippingIcon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-}
-
-.shippingIcon.green {
-  color: #10b981;
-}
-
-.shippingIcon.blue {
-  color: #3b82f6;
-}
-
-.shippingIcon.purple {
-  color: #8b5cf6;
-}
-
-/* Stock */
-.stockStatus {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 16px 0;
-  font-size: 14px;
-  padding: 8px 12px;
-  background: #f0fdf4;
-  border-radius: 6px;
-  width: fit-content;
-  border: 1px solid #dcfce7;
-}
-
-.stockStatus.out {
-  background: #fef2f2;
-  border-color: #fee2e2;
-}
-
-.stockDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.stockDot.inStock {
-  background-color: #16a34a;
-}
-
-.stockDot.outOfStock {
-  background-color: #ef4444;
-}
-
-.stockText.inStock {
-  color: #15803d;
-  font-weight: 600;
-}
-
-.stockText.outOfStock {
-  color: #b91c1c;
-  font-weight: 600;
-}
-
-.stockQuantity {
-  color: #565959;
-}
 
 /* Mobile Action Box */
 .mobileActionBox {
@@ -539,6 +480,13 @@ z-index: 5;
   margin-bottom: 24px;
   overflow-x: auto;
   white-space: nowrap;
+}
+
+
+.tabContent {
+     padding: 3px 3px 56px 3px;
+    border-bottom: 1px #50423826 solid;
+
 }
 
 .tabButton {
@@ -1306,28 +1254,6 @@ z-index: 5;
     gap: 4px;
   }
 
-  .buyBoxShipping {
-    background: #f0f9ff;
-    padding: 10px 14px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    font-size: 14px;
-    color: #0369a1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid #bae6fd;
-  }
-
-  .buyBoxStock {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 24px;
-    font-size: 15px;
-    font-weight: 500;
-    color: #4a5568;
-  }
 
   .buyBoxQuantity {
     margin-bottom: 24px;
