@@ -41,7 +41,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 0;
-  margin-bottom: 24px;
+  /* margin-bottom: 24px; */
 }
 
 /* Image Section (Mobile Stack) */
