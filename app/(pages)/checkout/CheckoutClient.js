@@ -7,7 +7,7 @@ import styles from '@/styles/pages/checkOut.module.css';
 export default function CheckoutClient() {
   const { cartItems, clearCart } = useCart();
   const router = useRouter();
-  
+
   const [form, setForm] = useState({
     address: '',
     city: '',
@@ -26,7 +26,9 @@ export default function CheckoutClient() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleOrder = async () => {
+  const handleOrder = async (e) => {
+    e.preventDefault();
+
     setLoading(true);
     try {
       const response = await fetch('/api/create-order', {
@@ -66,37 +68,83 @@ export default function CheckoutClient() {
   return (
     <div dir="rtl" className={styles.checkoutPage}>
       <h1 className={styles.checkoutHeading}>إتمام الشراء</h1>
-      
+
       <div className={styles.checkoutContent}>
         {/* النصف الأول: معلومات الشحن */}
         <div className={styles.checkoutFormSection}>
           <h2 className={styles.sectionTitle}>📦 عنوان الشحن</h2>
-          <div className={styles.checkoutFormGrid}>
-            <div className={styles.inputGroup}>
-              <label>العنوان</label>
-              <input name="address" placeholder="اسم الشارع، رقم المنزل" onChange={handleChange} className={styles.checkoutInput} required />
+
+          <form onSubmit={handleOrder}>
+            <div className={styles.checkoutFormGrid}>
+              <div className={styles.inputGroup}>
+                <label htmlFor="address">العنوان</label>
+                <input
+                  id="address"
+                  name="address"
+                  value={form.address}
+                  placeholder="اسم الشارع، رقم المنزل"
+                  onChange={handleChange}
+                  className={styles.checkoutInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label htmlFor="city">المدينة</label>
+                <input
+                  id="city"
+                  name="city"
+                  value={form.city}
+                  placeholder="الرياض، جدة..."
+                  onChange={handleChange}
+                  className={styles.checkoutInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label htmlFor="state">المنطقة</label>
+                <input
+                  id="state"
+                  name="state"
+                  value={form.state}
+                  placeholder="المنطقة"
+                  onChange={handleChange}
+                  className={styles.checkoutInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label htmlFor="postcode">الرمز البريدي</label>
+                <input
+                  id="postcode"
+                  name="postcode"
+                  value={form.postcode}
+                  placeholder="12345"
+                  onChange={handleChange}
+                  className={styles.checkoutInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label htmlFor="country">الدولة</label>
+                <input
+                  id="country"
+                  name="country"
+                  value="المملكة العربية السعودية"
+                  readOnly
+                  className={styles.checkoutInput}
+                  style={{ background: '#f1f5f9' }}
+                />
+              </div>
             </div>
-            <div className={styles.inputGroup}>
-              <label>المدينة</label>
-              <input name="city" placeholder="الرياض، جدة..." onChange={handleChange} className={styles.checkoutInput} required />
-            </div>
-            <div className={styles.inputGroup}>
-              <label>المنطقة</label>
-              <input name="state" placeholder="المنطقة" onChange={handleChange} className={styles.checkoutInput} />
-            </div>
-            <div className={styles.inputGroup}>
-              <label>الرمز البريدي</label>
-              <input name="postcode" placeholder="12345" onChange={handleChange} className={styles.checkoutInput} />
-            </div>
-            <div className={styles.inputGroup}>
-              <label>الدولة</label>
-              <input name="country" value="المملكة العربية السعودية" readOnly className={styles.checkoutInput} style={{ background: '#f1f5f9' }} />
-            </div>
-          </div>
-          
-          <button onClick={handleOrder} disabled={loading} className={styles.checkoutButton}>
-            {loading ? '⏳ جارٍ الإرسال...' : `تأكيد الطلب بقيمة ${totalPrice.toFixed(2)} ${cartItems[0]?.currency}`}
-          </button>
+
+            <button type="submit" disabled={loading} className={styles.checkoutButton}>
+              {loading ? '⏳ جارٍ الإرسال...' : `تأكيد الطلب بقيمة ${totalPrice.toFixed(2)} ${cartItems[0]?.currency}`}
+            </button>
+          </form>
         </div>
 
         {/* النصف الثاني: ملخص الطلب */}
@@ -109,11 +157,13 @@ export default function CheckoutClient() {
                   <span className={styles.itemName}>{item.name}</span>
                   <span className={styles.itemQty}>الكمية: {item.quantity}</span>
                 </div>
-                <span className={styles.itemPrice}>{(item.price * item.quantity).toFixed(2)} {item.currency}</span>
+                <span className={styles.itemPrice}>
+                  {(item.price * item.quantity).toFixed(2)} {item.currency}
+                </span>
               </div>
             ))}
           </div>
-          
+
           <div className={styles.orderSummary}>
             <div className={styles.summaryRow}>
               <span>المجموع الفرعي:</span>
