@@ -75,15 +75,15 @@
 
 .desktopZoomLens {
   position: absolute;
-  width: 180px;
-  height: 180px;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
   border: 2px solid rgba(27, 54, 93, 0.2);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
   pointer-events: none;
   transform: translate(-50%, -50%);
   background-repeat: no-repeat;
-  background-size: 220%;
+  background-size: 620%;
   z-index: 15;
   background-color: #fff;
 }
