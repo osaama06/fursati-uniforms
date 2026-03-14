@@ -162,9 +162,11 @@ useEffect(() => {
     if (hasSizes && !selectedVariationId) {
       toast.error('يرجى اختيار المقاس لإتمام الطلب', {
         style: {
+          height: '98px',
           borderRadius: '10px',
           background: '#333',
           color: '#fff',
+          fontSize: '17px',
         },
         iconTheme: {
           primary: '#fff',
