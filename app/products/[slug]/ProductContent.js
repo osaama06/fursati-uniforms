@@ -374,6 +374,7 @@ const handleToggleWishlist = () => {
   onMouseMove={handleImageMouseMove}
   onMouseLeave={handleImageMouseLeave}
 >
+
             {product.images && product.images.length > 0 ? (
               <Image
                 // src={product.images[selectedImage]?.src || product.images[0]?.src}

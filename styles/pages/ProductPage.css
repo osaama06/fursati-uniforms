@@ -55,6 +55,7 @@
 
 /* Main Image Container (Mobile Square) */
 .mainImageContainer {
+  touch-action: pan-y;
   position: relative;
   aspect-ratio: 1;
   /* Square on mobile */
@@ -1222,7 +1223,7 @@ z-index: 5;
     /* Original 550px */
     gap: 24px;
     /* padding-bottom: 76px; */
-    padding-bottom: 6vh;
+    padding-bottom: 18vh;
   }
 
   /* Image Aspect Ratio */
