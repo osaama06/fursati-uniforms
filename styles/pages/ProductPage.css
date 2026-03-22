@@ -1147,7 +1147,7 @@ z-index: 5;
   /* Image Section Tablet */
   .imageSection {
     flex-direction: row;
-    position: sticky;
+    /* position: sticky; */
     gap: 20px;
     /* Safe gap */
   }
@@ -1221,6 +1221,8 @@ z-index: 5;
     grid-template-columns: 550px 1fr 280px;
     /* Original 550px */
     gap: 24px;
+    /* padding-bottom: 76px; */
+    padding-bottom: 6vh;
   }
 
   /* Image Aspect Ratio */
