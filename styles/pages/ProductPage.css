@@ -55,7 +55,6 @@
 
 /* Main Image Container (Mobile Square) */
 .mainImageContainer {
-  touch-action: pan-y;
   position: relative;
   aspect-ratio: 1;
   /* Square on mobile */

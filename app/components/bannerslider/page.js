@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import "@/styles/components/BannerSlider.css";
@@ -78,10 +78,12 @@ const ChevronRight = () => (
 );
 
 export default function BannerSlider() {
-  const [banners, setBanners] = useState([]);
+  const [desktopBanners, setDesktopBanners] = useState([]);
+  const [mobileBanners, setMobileBanners] = useState([]);
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
@@ -90,15 +92,39 @@ export default function BannerSlider() {
   const suppressClick = useRef(false);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+
+    const updateView = () => {
+      setIsMobile(mediaQuery.matches);
+    };
+
+    updateView();
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", updateView);
+    } else {
+      mediaQuery.addListener(updateView);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener("change", updateView);
+      } else {
+        mediaQuery.removeListener(updateView);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     let mounted = true;
 
     async function fetchBanners() {
       try {
         const [desktopRes, mobileRes] = await Promise.all([
-          fetch("https://furssati.io/wp-json/wp/v2/banner?_embed", {
+          fetch("https://furssati.io/wp-json/wp/v2/banner?_embed&per_page=100", {
             cache: "no-store",
           }),
-          fetch("https://furssati.io/wp-json/wp/v2/mobile_banner?_embed", {
+          fetch("https://furssati.io/wp-json/wp/v2/mobile_banner?_embed&per_page=100", {
             cache: "no-store",
           }),
         ]);
@@ -107,44 +133,43 @@ export default function BannerSlider() {
           throw new Error("فشل في جلب البانرات");
         }
 
-        const desktopData = await desktopRes.json();
-        const mobileData = await mobileRes.json();
+        const [desktopData, mobileData] = await Promise.all([
+          desktopRes.json(),
+          mobileRes.json(),
+        ]);
 
-        const desktopBanners = desktopData.map((post) => {
-          const media = post?._embedded?.["wp:featuredmedia"];
-          return {
-            id: post.id,
-            desktop: media?.[0]?.source_url || "",
-            link: post?.acf?.banner_link || "",
-          };
-        });
+        const formattedDesktop = desktopData
+          .map((post) => {
+            const media = post?._embedded?.["wp:featuredmedia"];
+            return {
+              id: post.id,
+              image: media?.[0]?.source_url || "",
+              link: post?.acf?.banner_link || "",
+            };
+          })
+          .filter((item) => item.image);
 
-        const mobileBanners = mobileData.map((post) => {
-          const media = post?._embedded?.["wp:featuredmedia"];
-          return {
-            id: post.id,
-            mobile: media?.[0]?.source_url || "",
-            link: post?.acf?.banner_link || "",
-          };
-        });
-
-        const mergedBanners = desktopBanners.map((desktopItem, index) => ({
-          id: desktopItem.id || index,
-          desktop: desktopItem.desktop,
-          mobile: mobileBanners[index]?.mobile || desktopItem.desktop,
-          link: mobileBanners[index]?.link || desktopItem.link || "",
-        }));
+        const formattedMobile = mobileData
+          .map((post) => {
+            const media = post?._embedded?.["wp:featuredmedia"];
+            return {
+              id: post.id,
+              image: media?.[0]?.source_url || "",
+              link: post?.acf?.banner_link || "",
+            };
+          })
+          .filter((item) => item.image);
 
         if (mounted) {
-          setBanners(
-            mergedBanners.filter((item) => item.desktop || item.mobile)
-          );
+          setDesktopBanners(formattedDesktop);
+          setMobileBanners(formattedMobile);
           setIsLoading(false);
         }
       } catch (error) {
         console.error("فشل في تحميل البانرات:", error);
         if (mounted) {
-          setBanners([]);
+          setDesktopBanners([]);
+          setMobileBanners([]);
           setIsLoading(false);
         }
       }
@@ -156,6 +181,14 @@ export default function BannerSlider() {
       mounted = false;
     };
   }, []);
+
+  const banners = useMemo(() => {
+    return isMobile ? mobileBanners : desktopBanners;
+  }, [isMobile, mobileBanners, desktopBanners]);
+
+  useEffect(() => {
+    setCurrent(0);
+  }, [isMobile, desktopBanners.length, mobileBanners.length]);
 
   const nextSlide = useCallback(() => {
     if (banners.length <= 1) return;
@@ -289,33 +322,16 @@ export default function BannerSlider() {
         const isExternal = isExternalBannerLink(rawLink);
 
         const content = (
-          <>
-            <div className="banner-image-mobile">
-              <Image
-                src={banner.mobile || banner.desktop}
-                alt={`Banner ${index + 1}`}
-                fill
-                sizes="100vw"
-                className="banner-image mobile-image"
-                priority={index === 0}
-                fetchPriority={index === 0 ? "high" : "auto"}
-                draggable={false}
-              />
-            </div>
-
-            <div className="banner-image-desktop">
-              <Image
-                src={banner.desktop || banner.mobile}
-                alt={`Banner ${index + 1}`}
-                fill
-                sizes="100vw"
-                className="banner-image desktop-image"
-                priority={index === 0}
-                fetchPriority={index === 0 ? "high" : "auto"}
-                draggable={false}
-              />
-            </div>
-          </>
+          <Image
+            src={banner.image}
+            alt={`Banner ${index + 1}`}
+            fill
+            sizes="100vw"
+            className="banner-image"
+            priority={index === 0}
+            fetchPriority={index === 0 ? "high" : "auto"}
+            draggable={false}
+          />
         );
 
         return (
