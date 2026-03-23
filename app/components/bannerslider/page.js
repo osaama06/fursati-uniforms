@@ -149,16 +149,22 @@ export default function BannerSlider() {
           })
           .filter((item) => item.image);
 
-        const formattedMobile = mobileData
-          .map((post) => {
-            const media = post?._embedded?.["wp:featuredmedia"];
-            return {
-              id: post.id,
-              image: media?.[0]?.source_url || "",
-              link: post?.acf?.banner_link || "",
-            };
-          })
-          .filter((item) => item.image);
+const formattedMobile = mobileData
+  .map((post) => {
+    const media = post?._embedded?.["wp:featuredmedia"];
+    const embeddedImage =
+      media?.[0] && !media?.[0]?.code ? media[0].source_url : "";
+
+    const fallbackYoastImage =
+      post?.yoast_head_json?.og_image?.[0]?.url || "";
+
+    return {
+      id: post.id,
+      image: embeddedImage || fallbackYoastImage || "",
+      link: post?.acf?.banner_link || "",
+    };
+  })
+  .filter((item) => item.image);
 
         if (mounted) {
           setDesktopBanners(formattedDesktop);
