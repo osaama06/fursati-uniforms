@@ -310,6 +310,86 @@ z-index: 5;
   padding-bottom: 20px;
 }
 
+.customFieldsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 20px 0;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 20px;
+}
+
+.customFieldBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.customFieldLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.customFieldInput,
+.customFieldTextarea {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  background: #fff;
+  color: #0f172a;
+  font-family: inherit;
+}
+
+.customFieldTextarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.customFieldInput:focus,
+.customFieldTextarea:focus {
+  outline: none;
+  border-color: #1B365D;
+  box-shadow: 0 0 0 3px rgba(27, 54, 93, 0.08);
+}
+
+.customFieldButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.customFieldButton {
+  min-width: 54px;
+  height: 44px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: 0.2s ease;
+}
+
+.customFieldButton:hover {
+  border-color: #1B365D;
+  color: #1B365D;
+  background-color: #f8fafc;
+}
+
+.customFieldButton.active {
+  border-color: #1B365D;
+  background: #1B365D;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(27, 54, 93, 0.25);
+}
+
 .sectionTitle {
   font-size: 14px;
   font-weight: 700;
@@ -339,7 +419,8 @@ z-index: 5;
 
 .sizeOption {
   min-width: 54px;
-  height: 44px;
+  min-width: 38px;
+  height: 37px;
   padding: 0 12px;
   display: flex;
   align-items: center;

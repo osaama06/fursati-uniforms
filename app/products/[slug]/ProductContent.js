@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useCart } from "@/app/context/CartContext";
 import { useReviews } from "@/app/hooks/reviews";
 import SizeGuideTrigger from "@/app/components/Size-guide/SizeGuideTrigger";
@@ -12,15 +12,15 @@ import ProductSlider from "@/app/components/ProductSlider/page";
 import toast from 'react-hot-toast';
 import '@/styles/pages/ProductPage.css';
 
-export default function ProductContent({ product, variations }) {
+export default function ProductContent({ product, variations = [] }) {
   const { addToCart } = useCart();
+
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedSize, setSelectedSize] = useState('');
-  const [selectedVariationId, setSelectedVariationId] = useState(null);
+  const [selectedAttributes, setSelectedAttributes] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [showSizeError, setShowSizeError] = useState(false);
+  const [showAttributeError, setShowAttributeError] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState([]);
@@ -33,6 +33,7 @@ export default function ProductContent({ product, variations }) {
   const [zoomVisible, setZoomVisible] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const [lensPosition, setLensPosition] = useState({ x: 0, y: 0 });
+  const [customFieldValues, setCustomFieldValues] = useState({});
 
   const {
     reviews,
@@ -43,16 +44,39 @@ export default function ProductContent({ product, variations }) {
     formatDate,
   } = useReviews(product.id);
 
+  const customFields = useMemo(() => {
+    const metaValue = product?.meta_data?.find(
+      (item) => item.key === "custom_product_fields_json"
+    )?.value;
+
+    // إذا القيمة فاضية أو مو string نرجع array فاضي مباشرة بدون JSON.parse
+    if (!metaValue || typeof metaValue !== "string" || metaValue.trim() === "") return [];
+
+    try {
+      const parsed = JSON.parse(metaValue);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.error("Invalid custom_product_fields_json:", error);
+      return [];
+    }
+  }, [product?.meta_data]);
+
+  useEffect(() => {
+    setSelectedImage(0);
+    setSelectedAttributes({});
+    setQuantity(1);
+    setShowAttributeError(false);
+    setCustomFieldValues({});
+  }, [product?.id]);
+
   useEffect(() => {
     const fetchCategoryHierarchy = async () => {
       if (!product?.categories?.length) return;
 
       try {
-        const categoryIds = product.categories.map(c => c.id).join(',');
+        const categoryIds = product.categories.map((c) => c.id).join(',');
         const res = await fetch(`/api/categories?ids=${categoryIds}`);
         const allCategories = await res.json();
-
-        console.log('All Categories from API 👉', allCategories);
 
         const deepestCategory = allCategories.reduce((deepest, cat) => {
           if (!deepest) return cat;
@@ -61,21 +85,18 @@ export default function ProductContent({ product, variations }) {
 
         if (!deepestCategory) return;
 
-        console.log('Deepest Category 👉', deepestCategory);
-
         const hierarchy = [];
         let current = deepestCategory;
 
         while (current && current.parent !== 27) {
           hierarchy.unshift(current);
-          current = allCategories.find(cat => cat.id === current.parent);
+          current = allCategories.find((cat) => cat.id === current.parent);
         }
 
         if (current) {
           hierarchy.unshift(current);
         }
 
-        console.log('Category Hierarchy 👉', hierarchy);
         setBreadcrumbCategories(hierarchy);
 
         const imgMatch = deepestCategory?.description?.match(/<img[^>]+src=["']([^"']+)["']/);
@@ -90,12 +111,14 @@ export default function ProductContent({ product, variations }) {
 
   useEffect(() => {
     const fetchRelatedProducts = async () => {
-      if (!product.categories?.[0]?.id) return;
+      if (!product?.categories?.[0]?.id) return;
       setLoadingRelated(true);
+
       try {
         const response = await fetch(
           `/api/related-products?category=${product.categories[0].id}&exclude=${product.id}&per_page=8`
         );
+
         if (response.ok) {
           const data = await response.json();
           setRelatedProducts(data);
@@ -106,97 +129,239 @@ export default function ProductContent({ product, variations }) {
         setLoadingRelated(false);
       }
     };
+
     fetchRelatedProducts();
-  }, [product.id, product.categories]);
+  }, [product?.id, product?.categories]);
 
   useEffect(() => {
-  const checkDesktop = () => {
-    setIsDesktop(window.innerWidth >= 1024);
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+
+    checkDesktop();
+    window.addEventListener("resize", checkDesktop);
+
+    return () => window.removeEventListener("resize", checkDesktop);
+  }, []);
+
+  useEffect(() => {
+    const storedWishlist = JSON.parse(localStorage.getItem("wishlistItems")) || [];
+    const exists = storedWishlist.some((item) => item.id === product.id);
+    setIsWishlisted(exists);
+  }, [product.id]);
+
+  // ─── Normalization helpers ─────────────────────────────────────────────────
+
+  const normalizeText = (value = "") =>
+    String(value)
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .replace(/[-_]/g, "");
+
+  // مفتاح فريد لكل attribute — نستخدم slug أو name فقط (id يرجع 0 للـ custom attributes في WooCommerce)
+  const buildAttrKey = (attr = {}) => {
+    const slug = String(attr?.slug || "").trim();
+    const name = String(attr?.name || "").trim();
+    return slug || name;
   };
 
-  checkDesktop();
-  window.addEventListener("resize", checkDesktop);
+  /**
+   * هل variation attribute معين يمثل نفس product attribute؟
+   * WooCommerce يحفظ في variation.attributes الـ name فقط أحياناً (بدون slug/id).
+   * نقارن بكل الاحتمالات لضمان المطابقة الصحيحة.
+   */
+  const attributeKeysMatch = (productAttr = {}, variationAttr = {}) => {
+    const pSlug = String(productAttr?.slug || "").trim().toLowerCase();
+    const pName = String(productAttr?.name || "").trim().toLowerCase();
+    const vName = String(variationAttr?.name || "").trim().toLowerCase();
+    const vSlug = String(variationAttr?.slug || "").trim().toLowerCase();
 
-  return () => window.removeEventListener("resize", checkDesktop);
-}, []);
+    if (!vName && !vSlug) return false;
 
-useEffect(() => {
-  const storedWishlist = JSON.parse(localStorage.getItem("wishlistItems")) || [];
-  const exists = storedWishlist.some((item) => item.id === product.id);
-  setIsWishlisted(exists);
-}, [product.id]);
+    // مقارنة مباشرة بين slug و name بكل الاتجاهات
+    if (pSlug && vSlug && pSlug === vSlug) return true;
+    if (pSlug && vName && pSlug === vName) return true;
+    if (pName && vName && pName === vName) return true;
+    if (pName && vSlug && pName === vSlug) return true;
 
-  const hasSizes = product.attributes?.some(attr =>
-    attr.name.toLowerCase().includes("size") || attr.name === "المقاس"
-  );
+    // WooCommerce taxonomy attributes تبدأ بـ pa_ في الـ slug
+    // مثال: pa_al-toul يطابق al-toul
+    const pSlugStripped = pSlug.replace(/^pa_/, "");
+    const vNameStripped = vName.replace(/^pa_/, "");
+    const vSlugStripped = vSlug.replace(/^pa_/, "");
 
-  const sizes = hasSizes
-    ? product.attributes.find(attr =>
-        attr.name.toLowerCase().includes("size") || attr.name === "المقاس"
-      ).options
-    : [];
+    if (pSlugStripped && vNameStripped && pSlugStripped === vNameStripped) return true;
+    if (pSlugStripped && vSlugStripped && pSlugStripped === vSlugStripped) return true;
 
-  const hasColors = product.attributes?.some(attr =>
-    attr.name.toLowerCase().includes("color") || attr.name === "اللون"
-  );
+    return false;
+  };
 
-  const colors = hasColors
-    ? product.attributes.find(attr =>
-        attr.name.toLowerCase().includes("color") || attr.name === "اللون"
-      ).options
-    : [];
+  const uniqueValues = (values = []) => {
+    const map = new Map();
 
-  const handleSizeChange = (size) => {
-    setSelectedSize(size);
-    setShowSizeError(false);
-    const match = variations?.find(v =>
-      v.attributes.some(attr =>
-        (attr.name.toLowerCase().includes("size") || attr.name === "المقاس") &&
-        attr.option === size
-      )
+    values.forEach((value) => {
+      const clean = String(value || "").trim();
+      const normalized = normalizeText(clean);
+
+      if (clean && normalized && !map.has(normalized)) {
+        map.set(normalized, clean);
+      }
+    });
+
+    return Array.from(map.values());
+  };
+
+  // ─── Variation attributes ──────────────────────────────────────────────────
+
+  /**
+   * نبني قائمة الـ attributes القابلة للاختيار من مصدر واحد موثوق:
+   * product.attributes التي variation: true.
+   *
+   * الـ options تُجمع من:
+   * 1. attr.options (إن كانت موجودة في product.attributes)
+   * 2. variation.attributes المقابلة (للتأكد من عدم فقدان أي option)
+   */
+  const variationAttributes = useMemo(() => {
+    return (product?.attributes || [])
+      .filter((attr) => attr?.variation)
+      .map((attr) => {
+        const key = buildAttrKey(attr);
+
+        // نجمع options من مصدرين
+        const fromProduct = Array.isArray(attr.options) ? attr.options : [];
+        const fromVariations = (variations || []).flatMap((v) =>
+          (v.attributes || [])
+            .filter((va) => attributeKeysMatch(attr, va))
+            .map((va) => String(va.option || "").trim())
+            .filter(Boolean)
+        );
+
+        return {
+          key,
+          name: String(attr.name || attr.slug || key).trim(),
+          options: uniqueValues([...fromProduct, ...fromVariations]),
+          // نحتفظ بمرجع للـ productAttr الأصلي لاستخدامه في المطابقة لاحقاً
+          _productAttr: attr,
+        };
+      })
+      .filter((item) => item.options.length > 0);
+  }, [product?.attributes, variations]);
+
+  /**
+   * نجد الـ variation المطابقة للخيارات المختارة حالياً.
+   * نستخدم attributeKeysMatch بدلاً من مقارنة الـ key مباشرة
+   * لأن variation.attributes لا تحتوي على id في الغالب.
+   */
+  const selectedVariation = useMemo(() => {
+    if (!variationAttributes.length) return null;
+
+    const hasMissingSelection = variationAttributes.some(
+      (attrDef) => !selectedAttributes[attrDef.key]
     );
-    setSelectedVariationId(match ? match.id : null);
+
+    if (hasMissingSelection) return null;
+
+    return (
+      variations.find((variation) => {
+        return variationAttributes.every((attrDef) => {
+          const variationAttr = (variation.attributes || []).find((va) =>
+            attributeKeysMatch(attrDef._productAttr, va)
+          );
+
+          // إذا الـ variation ما عندها هذا الـ attribute أو قيمته فاضية
+          // يعني WooCommerce ضابطها على "Any" — تمر تلقائياً
+          if (!variationAttr || !variationAttr.option) return true;
+
+          return (
+            normalizeText(variationAttr.option) ===
+            normalizeText(selectedAttributes[attrDef.key])
+          );
+        });
+      }) || null
+    );
+  }, [variationAttributes, variations, selectedAttributes]);
+
+  // ─── Color attribute (non-variation, display only) ─────────────────────────
+
+  const colorAttribute = useMemo(() => {
+    return (product?.attributes || []).find((attr) => {
+      const name = String(attr?.name || "").toLowerCase();
+      return (name.includes("color") || attr?.name === "اللون") && !attr?.variation;
+    });
+  }, [product?.attributes]);
+
+  const colors = colorAttribute?.options || [];
+  const hasColors = colors.length > 0;
+
+  // ─── Handlers ──────────────────────────────────────────────────────────────
+
+  const handleAttributeChange = (key, value) => {
+    setSelectedAttributes((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+    setShowAttributeError(false);
+  };
+
+  const handleCustomFieldChange = (key, value) => {
+    setCustomFieldValues((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
   const handleAddToCart = () => {
-    if (hasSizes && !selectedVariationId) {
-      toast.error('يرجى اختيار المقاس لإتمام الطلب', {
-        style: {
-          height: '98px',
-          borderRadius: '10px',
-          background: '#333',
-          color: '#fff',
-          fontSize: '17px',
-        },
-        iconTheme: {
-          primary: '#fff',
-          secondary: '#333',
-        },
-      });
-      return;
+    setShowAttributeError(false);
+
+    if (variationAttributes.length > 0) {
+      const missingAttribute = variationAttributes.find(
+        (attr) => !selectedAttributes[attr.key]
+      );
+
+      if (missingAttribute) {
+        setShowAttributeError(true);
+        toast.error(`اختر ${missingAttribute.name}`);
+        return;
+      }
+
+      if (!selectedVariation) {
+        toast.error("الخيارات المحددة غير متوفرة");
+        return;
+      }
     }
 
-    setShowSizeError(false);
+    for (const field of customFields) {
+      if (field.field_required && !String(customFieldValues[field.field_key] || "").trim()) {
+        toast.error(`يرجى اختيار / تعبئة ${field.field_label}`);
+        return;
+      }
+    }
+
+    const itemPayload = {
+      id: selectedVariation?.id || product.id,
+      productId: product.id,
+      variationId: selectedVariation?.id || null,
+      name: product.name,
+      price: selectedVariation?.price || product.sale_price || product.price,
+      image: product.images?.[0]?.src,
+      selectedAttributes,
+      customFields: customFieldValues,
+    };
 
     for (let i = 0; i < quantity; i++) {
-      addToCart({
-        id: selectedVariationId || product.id,
-        name: product.name,
-        price: product.price,
-        image: product.images?.[0]?.src,
-        size: selectedSize || null,
-      });
+      addToCart(itemPayload);
     }
 
     toast.success(`تمت إضافة ${quantity} قطعة إلى السلة`, {
       style: {
         borderRadius: '10px',
         background: '#333',
-        color: '#fff',
+        color: '#2bbf64',
       },
       iconTheme: {
-        primary: '#fff',
-        secondary: '#333',
+        primary: '#2bbf64',
+        secondary: '#ffffff',
       },
     });
   };
@@ -207,6 +372,7 @@ useEffect(() => {
 
   const handleReviewSubmit = async (reviewData) => {
     setSubmittingReview(true);
+
     try {
       const result = await submitReview(reviewData);
       toast.success(result.message);
@@ -227,111 +393,112 @@ useEffect(() => {
     setTouchEnd(e.targetTouches[0].clientX);
   };
 
-const handleTouchEnd = () => {
-  if (!touchStart || !touchEnd) return;
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
 
-  const distance = touchStart - touchEnd;
-  const isLeftSwipe = distance > 50;
-  const isRightSwipe = distance < -50;
-  const lastIndex = (product.images?.length || 1) - 1;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    const lastIndex = (product.images?.length || 1) - 1;
 
-  if (isLeftSwipe && selectedImage > 0) {
-    setSelectedImage((prev) => prev - 1);
-  }
+    if (isLeftSwipe && selectedImage > 0) {
+      setSelectedImage((prev) => prev - 1);
+    }
 
-  if (isRightSwipe && selectedImage < lastIndex) {
-    setSelectedImage((prev) => prev + 1);
-  }
+    if (isRightSwipe && selectedImage < lastIndex) {
+      setSelectedImage((prev) => prev + 1);
+    }
 
-  setTouchStart(null);
-  setTouchEnd(null);
-};
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
 
   const goToNextImage = () => {
-    setSelectedImage(prev => {
+    setSelectedImage((prev) => {
       const nextIndex = prev + 1;
       return nextIndex >= (product.images?.length || 1) ? 0 : nextIndex;
     });
   };
 
   const goToPrevImage = () => {
-    setSelectedImage(prev => {
+    setSelectedImage((prev) => {
       const prevIndex = prev - 1;
       return prevIndex < 0 ? (product.images?.length || 1) - 1 : prevIndex;
     });
   };
+
   const handleImageMouseMove = (e) => {
-  if (!isDesktop || !currentImage) return;
+    if (!isDesktop || !currentImage) return;
 
-  const rect = e.currentTarget.getBoundingClientRect();
-  const lensSize = 180;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const lensSize = 180;
 
-  let x = e.clientX - rect.left;
-  let y = e.clientY - rect.top;
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
 
-  const percentX = Math.max(0, Math.min(100, (x / rect.width) * 100));
-  const percentY = Math.max(0, Math.min(100, (y / rect.height) * 100));
+    const percentX = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    const percentY = Math.max(0, Math.min(100, (y / rect.height) * 100));
 
-  const clampedX = Math.max(lensSize / 2, Math.min(rect.width - lensSize / 2, x));
-  const clampedY = Math.max(lensSize / 2, Math.min(rect.height - lensSize / 2, y));
+    const clampedX = Math.max(lensSize / 2, Math.min(rect.width - lensSize / 2, x));
+    const clampedY = Math.max(lensSize / 2, Math.min(rect.height - lensSize / 2, y));
 
-  setZoomPosition({ x: percentX, y: percentY });
-  setLensPosition({ x: clampedX, y: clampedY });
-  setZoomVisible(true);
-};
-
-const handleImageMouseLeave = () => {
-  setZoomVisible(false);
-};
-
-const handleShare = async () => {
-  const shareData = {
-    title: product.name,
-    text: `شاهد هذا المنتج: ${product.name}`,
-    url: window.location.href,
+    setZoomPosition({ x: percentX, y: percentY });
+    setLensPosition({ x: clampedX, y: clampedY });
+    setZoomVisible(true);
   };
 
-  try {
-    if (navigator.share) {
-      await navigator.share(shareData);
-      return;
-    }
+  const handleImageMouseLeave = () => {
+    setZoomVisible(false);
+  };
 
-    await navigator.clipboard.writeText(window.location.href);
-    toast.success("تم نسخ رابط المنتج");
-  } catch (error) {
-    if (error.name !== "AbortError") {
-      toast.error("تعذر مشاركة المنتج");
-    }
-  }
-};
-
-const handleToggleWishlist = () => {
-  const storedWishlist = JSON.parse(localStorage.getItem("wishlistItems")) || [];
-  const exists = storedWishlist.some((item) => item.id === product.id);
-
-  let updatedWishlist = [];
-
-  if (exists) {
-    updatedWishlist = storedWishlist.filter((item) => item.id !== product.id);
-    setIsWishlisted(false);
-    toast.success("تمت إزالة المنتج من المفضلة");
-  } else {
-    const wishlistProduct = {
-      id: product.id,
-      name: product.name,
-      price: product.sale_price || product.price,
-      image: product.images?.[0]?.src || "",
-      slug: product.slug || "",
+  const handleShare = async () => {
+    const shareData = {
+      title: product.name,
+      text: `شاهد هذا المنتج: ${product.name}`,
+      url: window.location.href,
     };
 
-    updatedWishlist = [...storedWishlist, wishlistProduct];
-    setIsWishlisted(true);
-    toast.success("تمت إضافة المنتج إلى المفضلة");
-  }
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
 
-  localStorage.setItem("wishlistItems", JSON.stringify(updatedWishlist));
-};
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("تم نسخ رابط المنتج");
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        toast.error("تعذر مشاركة المنتج");
+      }
+    }
+  };
+
+  const handleToggleWishlist = () => {
+    const storedWishlist = JSON.parse(localStorage.getItem("wishlistItems")) || [];
+    const exists = storedWishlist.some((item) => item.id === product.id);
+
+    let updatedWishlist = [];
+
+    if (exists) {
+      updatedWishlist = storedWishlist.filter((item) => item.id !== product.id);
+      setIsWishlisted(false);
+      toast.success("تمت إزالة المنتج من المفضلة");
+    } else {
+      const wishlistProduct = {
+        id: product.id,
+        name: product.name,
+        price: product.sale_price || product.price,
+        image: product.images?.[0]?.src || "",
+        slug: product.slug || "",
+      };
+
+      updatedWishlist = [...storedWishlist, wishlistProduct];
+      setIsWishlisted(true);
+      toast.success("تمت إضافة المنتج إلى المفضلة");
+    }
+
+    localStorage.setItem("wishlistItems", JSON.stringify(updatedWishlist));
+  };
 
   const calculateDiscount = () => {
     if (product.regular_price && product.sale_price) {
@@ -344,6 +511,8 @@ const handleToggleWishlist = () => {
 
   const discount = calculateDiscount();
   const currentImage = product.images?.[selectedImage]?.src || product.images?.[0]?.src || "";
+
+  // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="productContainer">
@@ -366,18 +535,16 @@ const handleToggleWishlist = () => {
 
       <div className="productGrid">
         <div className="imageSection">
-<div
-  className="mainImageContainer"
-  onTouchStart={handleTouchStart}
-  onTouchMove={handleTouchMove}
-  onTouchEnd={handleTouchEnd}
-  onMouseMove={handleImageMouseMove}
-  onMouseLeave={handleImageMouseLeave}
->
-
+          <div
+            className="mainImageContainer"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseMove={handleImageMouseMove}
+            onMouseLeave={handleImageMouseLeave}
+          >
             {product.images && product.images.length > 0 ? (
               <Image
-                // src={product.images[selectedImage]?.src || product.images[0]?.src}
                 src={currentImage}
                 alt={product.name}
                 width={600}
@@ -397,29 +564,32 @@ const handleToggleWishlist = () => {
                 لا توجد صورة
               </div>
             )}
+
             {isDesktop && zoomVisible && currentImage && (
-  <div
-    className="desktopZoomLens"
-    style={{
-      left: `${lensPosition.x}px`,
-      top: `${lensPosition.y}px`,
-      backgroundImage: `url(${currentImage})`,
-      backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
-    }}
-  />
-)}
+              <div
+                className="desktopZoomLens"
+                style={{
+                  left: `${lensPosition.x}px`,
+                  top: `${lensPosition.y}px`,
+                  backgroundImage: `url(${currentImage})`,
+                  backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                }}
+              />
+            )}
 
             {product.images && product.images.length > 1 && (
               <>
                 <button
                   className="mobileImageNav mobileImageNavPrev"
                   onClick={goToPrevImage}
+                  type="button"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
                 <button
                   className="mobileImageNav mobileImageNavNext"
                   onClick={goToNextImage}
+                  type="button"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -427,14 +597,14 @@ const handleToggleWishlist = () => {
             )}
 
             <div className="imageOverlayButtons">
-       
-           <button
-             onClick={handleToggleWishlist}
-             className={`overlayButton ${isWishlisted ? 'liked' : ''}`}
-             type="button"
-               >
+              <button
+                onClick={handleToggleWishlist}
+                className={`overlayButton ${isWishlisted ? 'liked' : ''}`}
+                type="button"
+              >
                 <Heart className="w-4 h-4" fill={isWishlisted ? "currentColor" : "none"} />
               </button>
+
               <button className="overlayButton" onClick={handleShare} type="button">
                 <Share2 className="w-4 h-4" />
               </button>
@@ -448,6 +618,7 @@ const handleToggleWishlist = () => {
                   key={index}
                   onClick={() => setSelectedImage(index)}
                   className={`imageDot ${selectedImage === index ? 'active' : ''}`}
+                  type="button"
                 />
               ))}
             </div>
@@ -460,6 +631,7 @@ const handleToggleWishlist = () => {
                   key={index}
                   onClick={() => setSelectedImage(index)}
                   className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
+                  type="button"
                 >
                   <Image
                     src={img.src}
@@ -493,7 +665,7 @@ const handleToggleWishlist = () => {
 
             <div className="priceSection">
               <span className="currentPrice">
-                {product.sale_price || product.price}
+                {selectedVariation?.price || product.sale_price || product.price}
                 <Image
                   src="/sar.webp"
                   alt="curentpice"
@@ -534,27 +706,108 @@ const handleToggleWishlist = () => {
             </div>
           )}
 
-          {hasSizes && (
-            <div className="sizeSection">
+          {variationAttributes.map((attr) => (
+            <div className="sizeSection" key={attr.key}>
               <h3 className="sectionTitle">
-                المقاس: {selectedSize && <span style={{ fontWeight: 'normal' }}>{selectedSize}</span>}
+                {attr.name}:{" "}
+                {selectedAttributes[attr.key] && (
+                  <span style={{ fontWeight: 'normal' }}>
+                    {selectedAttributes[attr.key]}
+                  </span>
+                )}
               </h3>
 
               <div className="sizeGrid">
-                {sizes.map((size) => (
+                {attr.options.map((option) => (
                   <button
-                    key={size}
-                    onClick={() => handleSizeChange(size)}
-                    className={`sizeOption ${selectedSize === size ? 'selected' : ''}`}
+                    key={option}
+                    onClick={() => handleAttributeChange(attr.key, option)}
+                    className={`sizeOption ${selectedAttributes[attr.key] === option ? 'selected' : ''}`}
+                    type="button"
                   >
-                    {size}
+                    {option}
                   </button>
                 ))}
               </div>
+            </div>
+          ))}
 
-              {sizeGuideImage && (
-                <SizeGuideTrigger image={sizeGuideImage} />
-              )}
+          {variationAttributes.length > 0 && showAttributeError && (
+            <p style={{ color: "red", marginTop: "10px", fontSize: "14px" }}>
+              يرجى اختيار جميع الخيارات المطلوبة
+            </p>
+          )}
+
+          {sizeGuideImage && (
+            <SizeGuideTrigger image={sizeGuideImage} />
+          )}
+
+          {customFields.length > 0 && (
+            <div className="customFieldsSection">
+              {customFields.map((field, index) => {
+                const value = customFieldValues[field.field_key] || "";
+                const options = Array.isArray(field.field_options)
+                  ? field.field_options
+                  : [];
+
+                return (
+                  <div className="customFieldBlock" key={field.field_key || index}>
+                    <label className="customFieldLabel">
+                      {field.field_label}
+                      {field.field_required ? " *" : ""}
+                    </label>
+
+                    {field.field_type === "buttons" && (
+                      <div className="customFieldButtons">
+                        {options.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            className={`customFieldButton ${value === option ? "active" : ""}`}
+                            onClick={() => handleCustomFieldChange(field.field_key, option)}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {field.field_type === "select" && (
+                      <select
+                        className="customFieldInput"
+                        value={value}
+                        onChange={(e) => handleCustomFieldChange(field.field_key, e.target.value)}
+                      >
+                        <option value="">اختر {field.field_label}</option>
+                        {options.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                    {field.field_type === "textarea" && (
+                      <textarea
+                        className="customFieldTextarea"
+                        placeholder={field.field_placeholder || ""}
+                        value={value}
+                        onChange={(e) => handleCustomFieldChange(field.field_key, e.target.value)}
+                      />
+                    )}
+
+                    {(field.field_type === "text" || field.field_type === "number") && (
+                      <input
+                        className="customFieldInput"
+                        type={field.field_input_type || field.field_type || "text"}
+                        placeholder={field.field_placeholder || ""}
+                        value={value}
+                        onChange={(e) => handleCustomFieldChange(field.field_key, e.target.value)}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -565,27 +818,30 @@ const handleToggleWishlist = () => {
             </div>
           )}
 
-
           <div className="mobileActionBox">
             <div className="mobileQuantitySection">
               <div className="mobileQuantityControls">
                 <button
                   onClick={() => handleQuantityChange(-1)}
                   className="mobileQuantityButton"
+                  type="button"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
+
                 <span className="mobileQuantityValue">{quantity}</span>
+
                 <button
                   onClick={() => handleQuantityChange(1)}
                   className="mobileQuantityButton"
+                  type="button"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            <button onClick={handleAddToCart} className="mobileAddToCartBtn">
+            <button onClick={handleAddToCart} className="mobileAddToCartBtn" type="button">
               <FiShoppingCart /> أضف إلى السلة
             </button>
           </div>
@@ -593,7 +849,7 @@ const handleToggleWishlist = () => {
 
         <div className="buyBox">
           <div className="buyBoxPrice">
-            {product.sale_price || product.price}
+            {selectedVariation?.price || product.sale_price || product.price}
             <Image
               src="/sar.webp"
               alt="paybox"
@@ -627,13 +883,17 @@ const handleToggleWishlist = () => {
               <button
                 onClick={() => handleQuantityChange(-1)}
                 className="quantityButton"
+                type="button"
               >
                 <Minus className="w-3 h-3" />
               </button>
+
               <span className="quantityValue">{quantity}</span>
+
               <button
                 onClick={() => handleQuantityChange(1)}
                 className="quantityButton"
+                type="button"
               >
                 <Plus className="w-3 h-3" />
               </button>
@@ -641,7 +901,7 @@ const handleToggleWishlist = () => {
           </div>
 
           <div className="buyBoxActions">
-            <button onClick={handleAddToCart} className="buyBoxAddToCart">
+            <button onClick={handleAddToCart} className="buyBoxAddToCart" type="button">
               <FiShoppingCart /> أضف إلى السلة
             </button>
           </div>
@@ -653,6 +913,7 @@ const handleToggleWishlist = () => {
           <button
             onClick={() => setActiveTab('description')}
             className={`tabButton ${activeTab === 'description' ? 'active' : ''}`}
+            type="button"
           >
             تفاصيل المنتج
           </button>
@@ -660,6 +921,7 @@ const handleToggleWishlist = () => {
           <button
             onClick={() => setActiveTab('specifications')}
             className={`tabButton ${activeTab === 'specifications' ? 'active' : ''}`}
+            type="button"
           >
             المواصفات التقنية
           </button>
@@ -667,6 +929,7 @@ const handleToggleWishlist = () => {
           <button
             onClick={() => setActiveTab('reviews')}
             className={`tabButton ${activeTab === 'reviews' ? 'active' : ''}`}
+            type="button"
           >
             التقييمات ({reviewStats.total})
           </button>
@@ -714,6 +977,7 @@ const handleToggleWishlist = () => {
                 <button
                   className="writeReviewBtn"
                   onClick={() => setShowReviewForm(true)}
+                  type="button"
                 >
                   اكتب تقييماً
                 </button>
@@ -817,7 +1081,7 @@ const handleToggleWishlist = () => {
                       />
 
                       <div className="reviewActions">
-                        <button className="helpfulBtn">
+                        <button className="helpfulBtn" type="button">
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <svg
                               width="16"
@@ -844,6 +1108,7 @@ const handleToggleWishlist = () => {
                     <button
                       className="writeReviewBtn"
                       onClick={() => setShowReviewForm(true)}
+                      type="button"
                     >
                       اكتب أول تقييم
                     </button>
@@ -867,6 +1132,7 @@ const handleToggleWishlist = () => {
                 className="reviewFormClose"
                 onClick={() => setShowReviewForm(false)}
                 disabled={submittingReview}
+                type="button"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -905,8 +1171,8 @@ const handleToggleWishlist = () => {
       {!loadingRelated && relatedProducts.length > 0 && (
         <ProductSlider
           category={{
-            id: product.categories[0]?.id,
-            slug: product.categories[0]?.slug,
+            id: product.categories?.[0]?.id,
+            slug: product.categories?.[0]?.slug,
             name: `منتجات مشابهة`,
           }}
           products={relatedProducts}
