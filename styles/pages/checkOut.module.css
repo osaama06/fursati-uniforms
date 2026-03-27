@@ -160,3 +160,17 @@
     top: 20px;
   }
 }
+.itemMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.itemMetaTag {
+  font-size: 12px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  padding: 2px 8px;
+  color: #555;
+}

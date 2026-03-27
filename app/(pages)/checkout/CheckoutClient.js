@@ -15,6 +15,7 @@ export default function CheckoutClient() {
     postcode: '',
     country: 'SA',
   });
+
   const [loading, setLoading] = useState(false);
 
   const totalPrice = cartItems.reduce(
@@ -28,14 +29,12 @@ export default function CheckoutClient() {
 
   const handleOrder = async (e) => {
     e.preventDefault();
-
     setLoading(true);
+
     try {
       const response = await fetch('/api/create-order', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, cartItems }),
       });
 
@@ -70,10 +69,10 @@ export default function CheckoutClient() {
       <h1 className={styles.checkoutHeading}>إتمام الشراء</h1>
 
       <div className={styles.checkoutContent}>
+
         {/* النصف الأول: معلومات الشحن */}
         <div className={styles.checkoutFormSection}>
           <h2 className={styles.sectionTitle}>📦 عنوان الشحن</h2>
-
           <form onSubmit={handleOrder}>
             <div className={styles.checkoutFormGrid}>
               <div className={styles.inputGroup}>
@@ -142,7 +141,9 @@ export default function CheckoutClient() {
             </div>
 
             <button type="submit" disabled={loading} className={styles.checkoutButton}>
-              {loading ? '⏳ جارٍ الإرسال...' : `تأكيد الطلب بقيمة ${totalPrice.toFixed(2)} ${cartItems[0]?.currency}`}
+              {loading
+                ? '⏳ جارٍ الإرسال...'
+                : `تأكيد الطلب بقيمة ${totalPrice.toFixed(2)} ${cartItems[0]?.currency}`}
             </button>
           </form>
         </div>
@@ -150,18 +151,53 @@ export default function CheckoutClient() {
         {/* النصف الثاني: ملخص الطلب */}
         <div className={styles.checkoutCart}>
           <h2 className={styles.sectionTitle}>🛒 ملخص الطلب ({cartItems.length})</h2>
+
           <div className={styles.cartItemsList}>
-            {cartItems.map((item) => (
-              <div key={item.id} className={styles.checkoutCartItem}>
-                <div className={styles.itemInfo}>
-                  <span className={styles.itemName}>{item.name}</span>
-                  <span className={styles.itemQty}>الكمية: {item.quantity}</span>
+            {cartItems.map((item, index) => {
+              const attributes = item.selectedAttributes || {};
+              const customFields = item.customFields || {};
+              const hasAttributes = Object.keys(attributes).length > 0;
+              const hasCustomFields = Object.keys(customFields).length > 0;
+
+              return (
+                <div key={`${item.id}-${index}`} className={styles.checkoutCartItem}>
+                  <div className={styles.itemInfo}>
+                    <span className={styles.itemName}>{item.name}</span>
+                    <span className={styles.itemQty}>الكمية: {item.quantity}</span>
+
+                    {/* عرض الـ attributes المختارة (مثال: المقاس، الطول) */}
+                    {hasAttributes && (
+                      <div className={styles.itemMeta}>
+                        {Object.entries(attributes).map(([key, value]) => (
+                          <span key={key} className={styles.itemMetaTag}>
+                            {key}: {value}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* عرض الـ custom fields بالـ label الواضح */}
+                    {hasCustomFields && (
+                      <div className={styles.itemMeta}>
+                        {Object.entries(customFields).map(([key, field]) => {
+                          const label = field?.label || key;
+                          const value = field?.value ?? field;
+                          return value ? (
+                            <span key={key} className={styles.itemMetaTag}>
+                              {label}: {value}
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <span className={styles.itemPrice}>
+                    {(item.price * item.quantity).toFixed(2)} {item.currency}
+                  </span>
                 </div>
-                <span className={styles.itemPrice}>
-                  {(item.price * item.quantity).toFixed(2)} {item.currency}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className={styles.orderSummary}>
@@ -179,6 +215,7 @@ export default function CheckoutClient() {
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );

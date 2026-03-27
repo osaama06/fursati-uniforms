@@ -338,6 +338,19 @@ export default function ProductContent({ product, variations = [] }) {
       }
     }
 
+    // نبني customFields بشكل يحتفظ بالـ label الواضح بجانب القيمة
+    // { student_name: { label: "الاسم", value: "محمد" } }
+    const customFieldsWithLabels = {};
+    customFields.forEach((field) => {
+      const value = customFieldValues[field.field_key];
+      if (value !== undefined && value !== "") {
+        customFieldsWithLabels[field.field_key] = {
+          label: field.field_label,
+          value: String(value),
+        };
+      }
+    });
+
     const itemPayload = {
       id: selectedVariation?.id || product.id,
       productId: product.id,
@@ -346,7 +359,7 @@ export default function ProductContent({ product, variations = [] }) {
       price: selectedVariation?.price || product.sale_price || product.price,
       image: product.images?.[0]?.src,
       selectedAttributes,
-      customFields: customFieldValues,
+      customFields: customFieldsWithLabels,
     };
 
     for (let i = 0; i < quantity; i++) {
@@ -357,11 +370,11 @@ export default function ProductContent({ product, variations = [] }) {
       style: {
         borderRadius: '10px',
         background: '#333',
-        color: '#2bbf64',
+        color: '#fff',
       },
       iconTheme: {
-        primary: '#2bbf64',
-        secondary: '#ffffff',
+        primary: '#fff',
+        secondary: '#333',
       },
     });
   };
