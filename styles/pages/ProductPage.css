@@ -1417,3 +1417,148 @@ z-index: 5;
     transform: translateY(0);
   }
 }
+
+
+/* ===== Radio Options with Price ===== */
+/* أضف هذا في آخر ملف ProductPage.css */
+
+.customFieldRadioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.customFieldRadioOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: right;
+  width: 100%;
+  font-size: 14px;
+}
+
+.customFieldRadioOption:hover {
+  border-color: #b0b0b0;
+  background: #fafafa;
+}
+
+.customFieldRadioOption.active {
+  border-color: #222;
+  background: #f5f5f5;
+}
+
+.radioOptionLabel {
+  font-weight: 500;
+  color: #222;
+}
+
+.customFieldRadioOption.active .radioOptionLabel {
+  color: #111;
+}
+
+.radioOptionPrice {
+  font-size: 13px;
+  font-weight: 600;
+  color: #c0392b;
+  background: #fdf0ef;
+  padding: 2px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.radioOptionPriceFree {
+  font-size: 12px;
+  color: #27ae60;
+  background: #eafaf1;
+  padding: 2px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* ===== Checkbox Options with Price ===== */
+
+.customFieldCheckboxGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.customFieldCheckboxOption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: right;
+  width: 100%;
+  font-size: 14px;
+}
+
+.customFieldCheckboxOption:hover {
+  border-color: #b0b0b0;
+  background: #fafafa;
+}
+
+.customFieldCheckboxOption.active {
+  border-color: #222;
+  background: #f5f5f5;
+}
+
+.checkboxIndicator {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border: 1.5px solid #ccc;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: #fff;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.customFieldCheckboxOption.active .checkboxIndicator {
+  background: #222;
+  border-color: #222;
+}
+
+.checkboxOptionLabel {
+  flex: 1;
+  font-weight: 500;
+  color: #222;
+  text-align: right;
+}
+
+.checkboxOptionPrice {
+  font-size: 13px;
+  font-weight: 600;
+  color: #c0392b;
+  background: #fdf0ef;
+  padding: 2px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.checkboxOptionPriceFree {
+  font-size: 12px;
+  color: #27ae60;
+  background: #eafaf1;
+  padding: 2px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}

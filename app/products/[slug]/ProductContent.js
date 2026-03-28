@@ -61,6 +61,33 @@ export default function ProductContent({ product, variations = [] }) {
     }
   }, [product?.meta_data]);
 
+  // السعر الإضافي من الـ radio والـ checkbox fields التي عندها price
+  const extraPrice = useMemo(() => {
+    return customFields.reduce((total, field) => {
+      const options = Array.isArray(field.field_options) ? field.field_options : [];
+
+      if (field.field_type === "radio") {
+        const selected = customFieldValues[field.field_key];
+        if (!selected) return total;
+        const match = options.find((opt) => opt.label === selected);
+        return total + (Number(match?.price) || 0);
+      }
+
+      if (field.field_type === "checkbox") {
+        // customFieldValues[key] هنا array من الـ labels المختارة
+        const selected = customFieldValues[field.field_key];
+        if (!Array.isArray(selected) || selected.length === 0) return total;
+        const addedPrice = selected.reduce((sum, label) => {
+          const match = options.find((opt) => opt.label === label);
+          return sum + (Number(match?.price) || 0);
+        }, 0);
+        return total + addedPrice;
+      }
+
+      return total;
+    }, 0);
+  }, [customFields, customFieldValues]);
+
   useEffect(() => {
     setSelectedImage(0);
     setSelectedAttributes({});
@@ -311,6 +338,20 @@ export default function ProductContent({ product, variations = [] }) {
     }));
   };
 
+  // handler خاص للـ checkbox — يضيف أو يحذف من الـ array
+  const handleCheckboxChange = (key, label) => {
+    setCustomFieldValues((prev) => {
+      const current = Array.isArray(prev[key]) ? prev[key] : [];
+      const exists = current.includes(label);
+      return {
+        ...prev,
+        [key]: exists
+          ? current.filter((l) => l !== label)
+          : [...current, label],
+      };
+    });
+  };
+
   const handleAddToCart = () => {
     setShowAttributeError(false);
 
@@ -332,22 +373,49 @@ export default function ProductContent({ product, variations = [] }) {
     }
 
     for (const field of customFields) {
-      if (field.field_required && !String(customFieldValues[field.field_key] || "").trim()) {
+      if (!field.field_required) continue;
+      const val = customFieldValues[field.field_key];
+      const isEmpty =
+        field.field_type === "checkbox"
+          ? !Array.isArray(val) || val.length === 0
+          : !String(val || "").trim();
+      if (isEmpty) {
         toast.error(`يرجى اختيار / تعبئة ${field.field_label}`);
         return;
       }
     }
 
-    // نبني customFields بشكل يحتفظ بالـ label الواضح بجانب القيمة
-    // { student_name: { label: "الاسم", value: "محمد" } }
+    // نبني customFields بشكل يحتفظ بالـ label والـ value والـ price
     const customFieldsWithLabels = {};
     customFields.forEach((field) => {
       const value = customFieldValues[field.field_key];
-      if (value !== undefined && value !== "") {
+      const options = Array.isArray(field.field_options) ? field.field_options : [];
+
+      if (field.field_type === "checkbox") {
+        // value هنا array من الـ labels المختارة
+        if (!Array.isArray(value) || value.length === 0) return;
+        const totalPrice = value.reduce((sum, label) => {
+          const match = options.find((opt) => opt.label === label);
+          return sum + (Number(match?.price) || 0);
+        }, 0);
         customFieldsWithLabels[field.field_key] = {
+          label: field.field_label,
+          value: value.join(" / "),
+          price: totalPrice,
+        };
+        return;
+      }
+
+      if (value !== undefined && String(value).trim() !== "") {
+        const entry = {
           label: field.field_label,
           value: String(value),
         };
+        if (field.field_type === "radio") {
+          const match = options.find((opt) => (opt.label || opt) === value);
+          entry.price = Number(match?.price) || 0;
+        }
+        customFieldsWithLabels[field.field_key] = entry;
       }
     });
 
@@ -356,7 +424,7 @@ export default function ProductContent({ product, variations = [] }) {
       productId: product.id,
       variationId: selectedVariation?.id || null,
       name: product.name,
-      price: selectedVariation?.price || product.sale_price || product.price,
+      price: (parseFloat(selectedVariation?.price || product.sale_price || product.price || 0) + extraPrice).toFixed(2),
       image: product.images?.[0]?.src,
       selectedAttributes,
       customFields: customFieldsWithLabels,
@@ -678,7 +746,7 @@ export default function ProductContent({ product, variations = [] }) {
 
             <div className="priceSection">
               <span className="currentPrice">
-                {selectedVariation?.price || product.sale_price || product.price}
+                {(parseFloat(selectedVariation?.price || product.sale_price || product.price || 0) + extraPrice).toFixed(2)}
                 <Image
                   src="/sar.webp"
                   alt="curentpice"
@@ -785,6 +853,62 @@ export default function ProductContent({ product, variations = [] }) {
                       </div>
                     )}
 
+                    {field.field_type === "radio" && (
+                      <div className="customFieldRadioGroup">
+                        {options.map((option) => {
+                          const optLabel = option.label || option;
+                          const optPrice = Number(option.price) || 0;
+                          const isSelected = value === optLabel;
+                          return (
+                            <button
+                              key={optLabel}
+                              type="button"
+                              className={`customFieldRadioOption ${isSelected ? "active" : ""}`}
+                              onClick={() => handleCustomFieldChange(field.field_key, optLabel)}
+                            >
+                              <span className="radioOptionLabel">{optLabel}</span>
+                              {optPrice > 0 && (
+                                <span className="radioOptionPrice">+{optPrice} ر.س</span>
+                              )}
+                              {optPrice === 0 && (
+                                <span className="radioOptionPriceFree">مجاناً</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {field.field_type === "checkbox" && (
+                      <div className="customFieldCheckboxGroup">
+                        {options.map((option) => {
+                          const optLabel = option.label || option;
+                          const optPrice = Number(option.price) || 0;
+                          const selectedArr = Array.isArray(value) ? value : [];
+                          const isChecked = selectedArr.includes(optLabel);
+                          return (
+                            <button
+                              key={optLabel}
+                              type="button"
+                              className={`customFieldCheckboxOption ${isChecked ? "active" : ""}`}
+                              onClick={() => handleCheckboxChange(field.field_key, optLabel)}
+                            >
+                              <span className="checkboxIndicator">
+                                {isChecked ? "✓" : ""}
+                              </span>
+                              <span className="checkboxOptionLabel">{optLabel}</span>
+                              {optPrice > 0 && (
+                                <span className="checkboxOptionPrice">+{optPrice} ر.س</span>
+                              )}
+                              {optPrice === 0 && (
+                                <span className="checkboxOptionPriceFree">مجاناً</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     {field.field_type === "select" && (
                       <select
                         className="customFieldInput"
@@ -862,7 +986,7 @@ export default function ProductContent({ product, variations = [] }) {
 
         <div className="buyBox">
           <div className="buyBoxPrice">
-            {selectedVariation?.price || product.sale_price || product.price}
+            {(parseFloat(selectedVariation?.price || product.sale_price || product.price || 0) + extraPrice).toFixed(2)}
             <Image
               src="/sar.webp"
               alt="paybox"

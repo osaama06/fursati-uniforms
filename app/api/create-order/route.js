@@ -41,16 +41,20 @@ export async function POST(req) {
         }
       });
 
-      // الـ custom fields — كل entry شكلها { label, value }
-      // مثال: { student_name: { label: "الاسم", value: "محمد" } }
+      // الـ custom fields — كل entry شكلها { label, value, price? }
       const customFields = item.customFields || {};
       Object.entries(customFields).forEach(([key, field]) => {
         const label = field?.label || key;
         const value = field?.value ?? field;
+        const price = field?.price;
         if (value) {
+          // إذا عندها سعر إضافي نوضحه في الـ meta
+          const displayValue = price > 0
+            ? `${String(value)} (+${price} ر.س)`
+            : String(value);
           meta_data.push({
-            key: label,    // يظهر في داشبورد WooCommerce كـ "الاسم"
-            value: String(value),
+            key: label,
+            value: displayValue,
           });
         }
       });
