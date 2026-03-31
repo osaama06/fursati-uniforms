@@ -14,7 +14,7 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
   const [showSizeError, setShowSizeError] = useState(false);
   const [showMobileModal, setShowMobileModal] = useState(false);
   const [showDesktopModal, setShowDesktopModal] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  // ✅ تم حذف mounted state
   const { addToCart } = useCart();
   const router = useRouter();
 
@@ -47,15 +47,7 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
   const averageRating = product?.average_rating || 0;
   const totalReviews = product?.rating_count || 0;
 
-  // فحص إذا كان الجهاز موبايل
-  const checkIsMobile = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth <= 768;
-    }
-    return false;
-  }, []);
-
-  // جميع الـ Callbacks يجب أن تكون هنا قبل أي conditional returns
+  // جميع الـ Callbacks
   const handleModalClose = useCallback(() => {
     setShowMobileModal(false);
     setShowDesktopModal(false);
@@ -106,9 +98,9 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
       e.preventDefault();
     }
 
-    const isMobile = checkIsMobile();
-
-    if (hasSizes && mounted) {
+    if (hasSizes) {
+      // ✅ نستخدم window مباشرة بدون mounted — آمن لأن هذا client component
+      const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
       if (isMobile) {
         setShowMobileModal(true);
       } else {
@@ -118,7 +110,7 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
     }
 
     handleAddToCart(e);
-  }, [hasSizes, mounted, handleAddToCart, checkIsMobile]);
+  }, [hasSizes, handleAddToCart]);
 
   const handleOverlayClick = useCallback((e) => {
     if (e.target === e.currentTarget) {
@@ -150,40 +142,29 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
     router.push(`/products/${product?.slug}`);
   }, [router, product?.slug, handleModalClose]);
 
-  // التأكد من تحميل المكون
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // ✅ تم حذف useEffect الخاص بـ mounted
 
-  // إصلاح منع التمرير في الخلفية عند فتح النافذة - optimized to prevent forced reflow
+  // إصلاح منع التمرير في الخلفية عند فتح النافذة
   useEffect(() => {
     const handleModalOpen = (isOpen) => {
       if (typeof window === 'undefined') return;
       
       requestAnimationFrame(() => {
         if (isOpen) {
-          // Read phase - قراءة القيم أولاً
           const scrollY = window.scrollY;
-          
-          // Write phase - الكتابة على DOM
           document.body.style.position = 'fixed';
           document.body.style.top = `-${scrollY}px`;
           document.body.style.left = '0';
           document.body.style.right = '0';
           document.body.classList.add('modal-open');
         } else {
-          // Read phase
           const scrollY = document.body.style.top;
           const scrollValue = scrollY ? parseInt(scrollY || '0') * -1 : 0;
-          
-          // Write phase
           document.body.style.position = '';
           document.body.style.top = '';
           document.body.style.left = '';
           document.body.style.right = '';
           document.body.classList.remove('modal-open');
-          
-          // Separate scroll operation
           if (scrollValue !== 0) {
             window.scrollTo(0, scrollValue);
           }
@@ -228,38 +209,8 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
     return <div className="no-product">لا توجد بيانات للمنتج</div>;
   }
 
-  // عدم عرض المكون قبل التحميل الكامل للتجنب SSR issues
-  if (!mounted) {
-    return (
-      <div className="dynamic-product-card skeleton-card" aria-busy="true" aria-live="polite">
-        {/* الصورة skeleton */}
-        <div className="image-container">
-          <div className="skeleton-shimmer" role="img" aria-label="جاري تحميل صورة المنتج"></div>
-        </div>
-        
-        <div className="card-content">
-          {/* التقييمات والزر skeleton */}
-          <div className="rating-section">
-            <div className="skeleton-box" style={{ width: '100px', height: '20px' }} aria-label="جاري تحميل التقييم"></div>
-            <div className="skeleton-circle" style={{ width: '40px', height: '40px' }} aria-label="جاري تحميل الزر"></div>
-          </div>
-          
-          {/* اسم المنتج skeleton */}
-          <div className="skeleton-box" style={{ width: '100%', height: '20px', marginBottom: '8px' }} aria-label="جاري تحميل اسم المنتج"></div>
-          <div className="skeleton-box" style={{ width: '70%', height: '20px', marginBottom: '12px' }}></div>
-          
-          {/* السعر skeleton */}
-          <div className="price-section">
-            <div className="price-container">
-              <div className="skeleton-box" style={{ width: '120px', height: '28px' }} aria-label="جاري تحميل السعر"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // ✅ تم حذف if (!mounted) skeleton كامل — المنتج يُعرض مباشرة في الـ HTML
 
-  // Product image with proper alt text
   const productImageAlt = product?.name ? `صورة ${product.name}` : 'صورة المنتج';
   const productImageSrc = product?.images?.[0]?.src || "/placeholder.jpg";
 
@@ -287,7 +238,6 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
 
         {/* حاوية الصورة */}
         <div className="image-container">
-          {/* الصورة الرئيسية */}
           <div className="image-wrapper">
             <Image
               src={productImageSrc}
@@ -365,7 +315,6 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
             aria-labelledby="mobile-modal-title"
             aria-describedby="mobile-modal-description"
           >
-            {/* مقبض الإغلاق */}
             <button 
               className="modal-handle" 
               onClick={handleModalClose}
@@ -373,9 +322,7 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
               type="button"
             ></button>
 
-            {/* محتوى النافذة */}
             <div className="modal-content">
-              {/* صورة المنتج */}
               <div className="modal-image">
                 <Image
                   src={productImageSrc}
@@ -389,12 +336,10 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
                 />
               </div>
 
-              {/* معلومات المنتج */}
               <div className="modal-info">
                 <h3 id="mobile-modal-title" className="modal-product-name">{product.name}</h3>
                 <p id="mobile-modal-description" className="sr-only">اختر المقاس وأضف المنتج إلى السلة</p>
 
-                {/* السعر */}
                 <div className="modal-price">
                   <span className="modal-current-price" aria-label={`السعر ${finalPrice} ريال سعودي`}>
                     {finalPrice}{' '}
@@ -426,7 +371,6 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
                   )}
                 </div>
 
-                {/* المقاسات */}
                 {hasSizes && (
                   <div className="modal-sizes-section">
                     <div className="modal-sizes-label">
@@ -453,7 +397,6 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
                   </div>
                 )}
 
-                {/* أزرار التحكم */}
                 <div className="modal-actions">
                   <button
                     className={`modal-add-to-cart-btn ${added ? 'added' : ''} ${(hasSizes && !selectedSize) ? 'disabled' : ''}`}
@@ -484,7 +427,6 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
             aria-labelledby="desktop-modal-title"
             aria-describedby="desktop-modal-description"
           >
-            {/* زر الإغلاق */}
             <button
               className="desktop-modal-close"
               onClick={handleModalClose}
@@ -494,9 +436,7 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
               ×
             </button>
 
-            {/* محتوى النافذة */}
             <div className="desktop-modal-content">
-              {/* صورة المنتج */}
               <div className="desktop-modal-image">
                 <Image
                   src={productImageSrc}
@@ -510,12 +450,10 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
                 />
               </div>
 
-              {/* معلومات المنتج */}
               <div className="desktop-modal-info">
                 <h3 id="desktop-modal-title" className="desktop-modal-product-name">{product.name}</h3>
                 <p id="desktop-modal-description" className="sr-only">اختر المقاس وأضف المنتج إلى السلة</p>
 
-                {/* التقييمات */}
                 <div className="desktop-modal-rating" aria-label={`التقييم ${averageRating} من 5 نجوم بناءً على ${totalReviews} تقييم`}>
                   <div className="stars">
                     <span aria-hidden="true">★</span>
@@ -524,7 +462,6 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
                   <span className="review-count">({totalReviews} تقييم)</span>
                 </div>
 
-                {/* السعر */}
                 <div className="desktop-modal-price">
                   <span className="desktop-modal-current-price" aria-label={`السعر ${finalPrice} ريال سعودي`}>
                     {finalPrice}{' '}
@@ -556,7 +493,6 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
                   )}
                 </div>
 
-                {/* المقاسات */}
                 {hasSizes && (
                   <div className="desktop-modal-sizes-section">
                     <div className="desktop-modal-sizes-label">
@@ -583,7 +519,6 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
                   </div>
                 )}
 
-                {/* أزرار التحكم */}
                 <div className="desktop-modal-actions">
                   <button
                     className={`desktop-modal-add-to-cart-btn ${added ? 'added' : ''} ${(hasSizes && !selectedSize) ? 'disabled' : ''}`}
@@ -614,7 +549,6 @@ const DynamicProductCard = memo(function DynamicProductCard({ product }) {
   );
 });
 
-// Add display name for debugging
 DynamicProductCard.displayName = 'DynamicProductCard';
 
 export default DynamicProductCard;

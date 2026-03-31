@@ -122,9 +122,11 @@ export async function generateMetadata({ params }) {
 
   // =========================
   // 4️⃣ Robots Logic
-  // =========================
-  const index = seo.metaRobotsNoindex !== "noindex";
-  const follow = seo.metaRobotsNofollow !== "nofollow";
+  // // =========================
+  // const index = seo.metaRobotsNoindex !== "noindex";
+  // const follow = seo.metaRobotsNofollow !== "nofollow";
+  const index = true;
+const follow = true;
 
   // =========================
   // 5️⃣ Product Data

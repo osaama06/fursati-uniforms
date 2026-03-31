@@ -1313,7 +1313,7 @@ export default function ProductContent({ product, variations = [] }) {
             name: `منتجات مشابهة`,
           }}
           products={relatedProducts}
-        />
+        />f
       )}
     </div>
   );
