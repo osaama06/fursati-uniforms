@@ -10,6 +10,8 @@ import { Star, Heart, Share2, Award, Plus, Minus, X, ChevronLeft, ChevronRight }
 import ReviewForm from "@/app/components/ReviewForm";
 import ProductSlider from "@/app/components/ProductSlider/page";
 import toast from 'react-hot-toast';
+import { useWishlist } from '@/app/context/WishlistContext';
+
 import '@/styles/pages/ProductPage.css';
 
 export default function ProductContent({ product, variations = [] }) {
@@ -172,9 +174,8 @@ export default function ProductContent({ product, variations = [] }) {
   }, []);
 
   useEffect(() => {
-    const storedWishlist = JSON.parse(localStorage.getItem("wishlistItems")) || [];
-    const exists = storedWishlist.some((item) => item.id === product.id);
-    setIsWishlisted(exists);
+     setIsWishlisted(isInWishlist(product.id));
+
   }, [product.id]);
 
   // ─── Normalization helpers ─────────────────────────────────────────────────
@@ -186,8 +187,7 @@ export default function ProductContent({ product, variations = [] }) {
       .replace(/\s+/g, "")
       .replace(/[-_]/g, "");
 
-  // مفتاح فريد لكل attribute — نستخدم 
-  //  أو name فقط (id يرجع 0 للـ custom attributes في WooCommerce)
+  // مفتاح فريد لكل attribute — نستخدم slug أو name فقط (id يرجع 0 للـ custom attributes في WooCommerce)
   const buildAttrKey = (attr = {}) => {
     const slug = String(attr?.slug || "").trim();
     const name = String(attr?.name || "").trim();
@@ -554,33 +554,19 @@ export default function ProductContent({ product, variations = [] }) {
       }
     }
   };
-
   const handleToggleWishlist = () => {
-    const storedWishlist = JSON.parse(localStorage.getItem("wishlistItems")) || [];
-    const exists = storedWishlist.some((item) => item.id === product.id);
+  if (isInWishlist(product.id)) {
+    removeFromWishlist(product.id);
+    setIsWishlisted(false);
+    toast.success('تمت إزالة المنتج من المفضلة');
+  } else {
+    addToWishlist(product);
+    setIsWishlisted(true);
+    toast.success('تمت إضافة المنتج إلى المفضلة');
+  }
+};
 
-    let updatedWishlist = [];
 
-    if (exists) {
-      updatedWishlist = storedWishlist.filter((item) => item.id !== product.id);
-      setIsWishlisted(false);
-      toast.success("تمت إزالة المنتج من المفضلة");
-    } else {
-      const wishlistProduct = {
-        id: product.id,
-        name: product.name,
-        price: product.sale_price || product.price,
-        image: product.images?.[0]?.src || "",
-        slug: product.slug || "",
-      };
-
-      updatedWishlist = [...storedWishlist, wishlistProduct];
-      setIsWishlisted(true);
-      toast.success("تمت إضافة المنتج إلى المفضلة");
-    }
-
-    localStorage.setItem("wishlistItems", JSON.stringify(updatedWishlist));
-  };
 
   const calculateDiscount = () => {
     if (product.regular_price && product.sale_price) {

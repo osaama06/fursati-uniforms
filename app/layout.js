@@ -1,5 +1,6 @@
 // app/layout.js
 import { CartProvider } from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
 import { Toaster } from "react-hot-toast";
 import { Geist, Geist_Mono, Tajawal } from "next/font/google";
 import Header from "./components/header/page";
@@ -39,7 +40,6 @@ export const metadata = {
   },
   description:
     "متجر فرصتي للزي الموحد الطبي والمدرسي والعملي في السعودية. جودة عالية وتصاميم عملية بأسعار مناسبة.",
-
   keywords: [
     "فرصتي",
     "يونيفورم طبي",
@@ -56,7 +56,6 @@ export const metadata = {
     "تفصيل ",
     "عبايات تخرج",
   ],
-
   alternates: {
     canonical: "/",
     languages: {
@@ -64,7 +63,6 @@ export const metadata = {
       "x-default": "/",
     },
   },
-
   openGraph: {
     title: "فرصتي | تسوق جميع منتجات الزي الموحد",
     description:
@@ -81,36 +79,29 @@ export const metadata = {
       },
     ],
   },
-
   twitter: {
     card: "summary_large_image",
     title: "فرصتي | تسوق جميع منتجات الزي الموحد",
-    description:
-      "أفضل متجر يونيفورم طبي ومدرسي في السعودية.",
+    description: "أفضل متجر يونيفورم طبي ومدرسي في السعودية.",
     images: ["/og-image.webp"],
   },
-
   robots: {
     index: true,
     follow: true,
   },
-
   icons: {
     icon: "/favicon.ico",
     apple: "/favicon.ico",
   },
-
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#251f35" },
   ],
-
   viewport: {
     width: "device-width",
     initialScale: 1,
     maximumScale: 5,
   },
-
   other: {
     "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-capable": "yes",
@@ -130,18 +121,12 @@ export default function RootLayout({ children }) {
       <head>
         <meta charSet="UTF-8" />
         <meta httpEquiv="content-language" content="ar-SA" />
-
-        {/* Preconnects */}
         <link rel="preconnect" href="https://furssati.io" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://furssati.io" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={SITE_URL} />
-
-        {/* تحسين اتصال Google Analytics */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
-
-        {/* Preload Banner Image (Fixed URL) */}
         <link
           rel="preload"
           as="image"
@@ -149,7 +134,6 @@ export default function RootLayout({ children }) {
           fetchpriority="high"
           type="image/jpeg"
         />
-
         <meta name="google-site-verification" content="XiAUcrB6eUQFXmKOgwCJZ5OOKOzaZyRcNpoNyoHH4h4" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="geo.region" content="SA" />
@@ -158,13 +142,14 @@ export default function RootLayout({ children }) {
 
       <body className={tajawal.className}>
         <CartProvider>
-          <Header />
-          <main>{children}</main>
-          <Footer />
-          <Toaster position="top-center" />
+          <WishlistProvider>
+            <Header />
+            <main>{children}</main>
+            <Footer />
+            <Toaster position="top-center" />
+          </WishlistProvider>
         </CartProvider>
 
-        {/* Google Analytics - يبدأ بعد أول تفاعل */}
         <Script id="ga-interaction-loader" strategy="afterInteractive">
 {`
 (function () {
@@ -198,7 +183,6 @@ export default function RootLayout({ children }) {
 `}
         </Script>
 
-        {/* Facebook Pixel (كما هو بدون تغيير) */}
         {process.env.NEXT_PUBLIC_FB_PIXEL_ID && (
           <script
             dangerouslySetInnerHTML={{
