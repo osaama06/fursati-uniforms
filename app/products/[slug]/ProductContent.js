@@ -16,6 +16,7 @@ import '@/styles/pages/ProductPage.css';
 
 export default function ProductContent({ product, variations = [] }) {
   const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist, wishlistItems } = useWishlist();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedAttributes, setSelectedAttributes] = useState({});
@@ -173,11 +174,11 @@ export default function ProductContent({ product, variations = [] }) {
     return () => window.removeEventListener("resize", checkDesktop);
   }, []);
 
-  useEffect(() => {
-     setIsWishlisted(isInWishlist(product.id));
-
-  }, [product.id]);
-
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    setIsWishlisted(isInWishlist(product.id));
+  }
+}, [product.id, wishlistItems]);
   // ─── Normalization helpers ─────────────────────────────────────────────────
 
   const normalizeText = (value = "") =>
