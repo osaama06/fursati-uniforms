@@ -12,6 +12,12 @@ function stripHtml(html) {
   return html.replace(/<[^>]*>/g, "").trim();
 }
 
+// ✅ دالة موحدة لتنسيق السعر — تضمن رقم صحيح دائماً بالريال السعودي
+function formatPrice(price) {
+  const parsed = parseFloat(price);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
 // ========================================
 // 1. Product Schema
 // ========================================
@@ -20,13 +26,17 @@ export function generateProductSchema(product) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    image: product.images?.map((img) => img.src) || [],
+
+    // ✅ يدعم الحالتين: array من URLs أو array من objects
+    image: Array.isArray(product.image)
+      ? product.image
+      : product.images?.map((img) => img.src) || [],
+
     description: stripHtml(
       product.short_description || product.description
     ),
     sku: product.sku || undefined,
 
-    // ✅ FIX: تعريف البراند صريح لجوجل
     brand: {
       "@type": "Brand",
       "@id": ORG_ID,
@@ -36,8 +46,8 @@ export function generateProductSchema(product) {
     offers: {
       "@type": "Offer",
       url: `${SITE_URL}/products/${product.slug}`,
-      priceCurrency: "SAR",
-      price: parseFloat(product.price),
+      priceCurrency: "SAR", // ✅ ريال سعودي دائماً
+      price: formatPrice(product.price), // ✅ لا NaN
       priceValidUntil: new Date(
         new Date().setFullYear(new Date().getFullYear() + 1)
       )
@@ -136,7 +146,6 @@ export function generateCategorySchema(category, products = []) {
           url: `${SITE_URL}/products/${product.slug}`,
           image: product.images?.[0]?.src,
 
-          // ✅ نفس الإصلاح هنا أيضاً
           brand: {
             "@type": "Brand",
             "@id": ORG_ID,
@@ -145,8 +154,8 @@ export function generateCategorySchema(category, products = []) {
 
           offers: {
             "@type": "Offer",
-            price: parseFloat(product.price),
-            priceCurrency: "SAR",
+            price: formatPrice(product.price), // ✅ لا NaN
+            priceCurrency: "SAR", // ✅ ريال سعودي دائماً
             availability:
               product.stock_status === "instock"
                 ? "https://schema.org/InStock"

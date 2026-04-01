@@ -186,7 +186,8 @@ export default function ProductContent({ product, variations = [] }) {
       .replace(/\s+/g, "")
       .replace(/[-_]/g, "");
 
-  // مفتاح فريد لكل attribute — نستخدم slug أو name فقط (id يرجع 0 للـ custom attributes في WooCommerce)
+  // مفتاح فريد لكل attribute — نستخدم 
+  //  أو name فقط (id يرجع 0 للـ custom attributes في WooCommerce)
   const buildAttrKey = (attr = {}) => {
     const slug = String(attr?.slug || "").trim();
     const name = String(attr?.name || "").trim();
@@ -1313,7 +1314,7 @@ export default function ProductContent({ product, variations = [] }) {
             name: `منتجات مشابهة`,
           }}
           products={relatedProducts}
-        />f
+        />
       )}
     </div>
   );

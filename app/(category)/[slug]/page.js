@@ -59,55 +59,52 @@ function stripHtml(html) {
 }
 
 // ================================
-// GENERATE METADATA (Hybrid Approach)
+// GENERATE METADATA
 // ================================
 export async function generateMetadata({ params }) {
   const category = await getCategoryBySlug(params.slug);
 
   if (!category) {
     return {
-      title: "فئة غير موجودة | فرصتي",
+      title: { absolute: "فئة غير موجودة | فرصتي" },
       robots: { index: false, follow: true }
     };
   }
 
-  // 1. Dynamic Content from CMS (WooCommerce/Yoast)
-  // نفضل بيانات Yoast إذا وجدت، وإلا نستخدم بيانات الفئة الافتراضية
   const seo = category.yoast_seo || {};
   
   const rawTitle = seo.title || category.name;
   const rawDesc = stripHtml(seo.metaDesc || category.description || `تسوق أفضل منتجات ${category.name} من متجر فرصتي.`);
   
-  // تنظيف العنوان: إذا لم يحتوي على اسم الموقع، نضيفه
+  // ✅ نبني العنوان يدوياً ونستخدم absolute لمنع layout من إضافة | فرصتي مرة ثانية
   const title = rawTitle.includes("فرصتي") || rawTitle.includes("Fursati") 
     ? rawTitle 
     : `${rawTitle} | فرصتي`;
 
-  // تحديد الصورة: صورة الفئة > صورة Yoast > الصورة الافتراضية
   const categoryImage = category.image?.src || seo.opengraphImage || DEFAULT_OG_IMAGE;
-
-  // 2. Construct Frontend URL manually (To avoid backend domain leaking)
   const pageUrl = `/category/${category.slug}`;
 
   return {
     metadataBase: new URL(SITE_URL),
     
-    title: title,
+    // ✅ absolute يمنع layout template من إضافة | فرصتي مرة ثانية
+    title: { absolute: title },
+
     description: rawDesc,
     keywords: seo.focuskw || `${category.name}, زي موحد, فرصتي, ملابس ${category.name}`,
     
     alternates: {
-      canonical: pageUrl, // https://fursatiuniforms.com/category-slug
+      canonical: pageUrl,
     },
 
     openGraph: {
-      title: title,
+      title,
       description: rawDesc,
       url: pageUrl,
       siteName: "فرصتي",
-       alternateName: ["Fursati", "Fursati Uniforms"],
-      locale: "ar_SA",     // Static
-      type: "website",     // Static
+      alternateName: ["Fursati", "Fursati Uniforms"],
+      locale: "ar_SA",
+      type: "website",
       images: [
         {
           url: categoryImage,
@@ -119,15 +116,15 @@ export async function generateMetadata({ params }) {
     },
 
     twitter: {
-      card: "summary_large_image", // Static
-      title: title,
+      card: "summary_large_image",
+      title,
       description: rawDesc,
       images: [categoryImage],
     },
 
     robots: {
-      index: seo.metaRobotsNoindex !== 'noindex', // Dynamic logic
-      follow: seo.metaRobotsNofollow !== 'nofollow', // Dynamic logic
+      index: true,
+      follow: true,
       googleBot: {
         index: true,
         follow: true,
@@ -148,21 +145,16 @@ export default async function CategoryPage({ params }) {
 
   const products = await getProductsByCategoryId(category.id);
 
-  // Schemas
-  // نمرر الروابط الصحيحة (Frontend URL) لدوال السكيما
   const frontendUrl = `${SITE_URL}/category/${category.slug}`;
   const categorySchema = generateCategorySchema({ ...category, permalink: frontendUrl }, products);
   const breadcrumbSchema = generateCategoryBreadcrumb({ ...category, permalink: frontendUrl });
 
   return (
     <>
-      {/* Category Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={renderSchema(categorySchema)}
       />
-
-      {/* Breadcrumb Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={renderSchema(breadcrumbSchema)}
@@ -170,15 +162,7 @@ export default async function CategoryPage({ params }) {
 
       <main className="products-page">
         <header className="category-header">
-          <h1 className="category-title">
-             {category.name}</h1>
-
-          {/* {category.description && (
-            <div
-              className="category-description"
-              dangerouslySetInnerHTML={{ __html: category.description }}
-            />
-          )} */}
+          <h1 className="category-title">{category.name}</h1>
 
           <div className="category-meta">
             <span className="products-count">{products.length} منتج</span>
