@@ -4,13 +4,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation"; 
 import { HiOutlineSearch, HiOutlineUser, HiOutlineShoppingBag, HiMenu, HiX } from "react-icons/hi";
+import { useCart } from "@/app/context/CartContext";
 import "@/styles/components/Header.css";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [categories, setCategories] = useState([]);
+  const { cartItems } = useCart();
   const router = useRouter();
+
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   useEffect(() => {
     if (isMenuOpen) {
@@ -62,7 +66,6 @@ export default function Header() {
         <div className="header-container">
           <div className="header-row">
             <div className="right-section">
-              {/* حل مشكلة button do not have accessible name */}
               <button className="menu-toggle-btn" onClick={() => setIsMenuOpen(true)} aria-label="فتح القائمة الجانبية">
                 <HiMenu size={28} />
               </button>
@@ -90,20 +93,20 @@ export default function Header() {
               <Link href="/account" className="icon-link" aria-label="حسابي"><HiOutlineUser size={24} /></Link>
               <Link href="/cart" className="icon-link cart-link" aria-label="سلة التسوق">
                 <HiOutlineShoppingBag size={24} />
-                <span className="cart-badge">0</span>
+                {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
               </Link>
             </div>
           </div>
 
           <div className={`mobile-search-dropdown ${isSearchOpen ? "show" : ""}`}>
-             <form className="search-wrapper" onSubmit={(e) => {
-                e.preventDefault();
-                const q = e.target.search.value;
-                if(q.trim()) { router.push(`/search?q=${q}`); setIsSearchOpen(false); }
-              }}>
-                <input type="text" name="search" placeholder="..سكرب , لابكوت , مريول" className="search-input" aria-label="بحث في الجوال" />
-                <button type="submit" className="search-submit-btn" aria-label="تأكيد البحث"><HiOutlineSearch size={20} /></button>
-              </form>
+            <form className="search-wrapper" onSubmit={(e) => {
+              e.preventDefault();
+              const q = e.target.search.value;
+              if(q.trim()) { router.push(`/search?q=${q}`); setIsSearchOpen(false); }
+            }}>
+              <input type="text" name="search" placeholder="..سكرب , لابكوت , مريول" className="search-input" aria-label="بحث في الجوال" />
+              <button type="submit" className="search-submit-btn" aria-label="تأكيد البحث"><HiOutlineSearch size={20} /></button>
+            </form>
           </div>
         </div>
       </header>
