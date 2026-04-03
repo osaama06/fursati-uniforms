@@ -15,20 +15,19 @@
 
 /* شارة الخصم */
 .discount-badge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 20;
-  background: linear-gradient(135deg, #1B365D, #6047a4);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: bold;
-  box-shadow: 0 4px 12px #1B365D;
-  animation: pulse 2s infinite;
+	z-index: 20;
+	color: #fff;
+	background: linear-gradient(135deg, #3e5576, #1b365d);
+	border-radius: 3px;
+	padding: 8px 12px;
+	font-size: 14px;
+	font-weight: bold;
+	animation: 2s infinite pulse;
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	box-shadow: 0 4px 12px #9cbff2;
 }
-
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
