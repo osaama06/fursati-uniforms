@@ -31,16 +31,14 @@ const Cart = () => {
       <div className={styles.cartGrid}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {cartItems.map((item) => {
-            // ✅ لوجيك الرابط: نأخذ السلوغ، وإذا مو موجود نأخذ الاسم ونحوله لسلوغ كاحتياط، أو نأخذ الايدي
-            const finalSlug = item.slug || (item.name ? item.name.toLowerCase().replace(/\s+/g, '-') : item.id);
-            const productLink = `/products/${finalSlug}`;
-            
-            // ✅ لوجيك الصورة اللي ضبط معاك
+            const finalSlug = decodeURIComponent(
+              item.slug || (item.name ? item.name.toLowerCase().replace(/\s+/g, '-') : item.id)
+            );
+            const productLink  = `/products/${finalSlug}`;
             const productImage = item.images?.[0]?.src || item.image || '/placeholder.jpg';
 
             return (
               <div key={item.id} className={styles.orderCard}>
-                {/* الصورة كليكبل */}
                 <div className={styles.imageContainer}>
                   <Link href={productLink}>
                     <Image
@@ -57,18 +55,17 @@ const Cart = () => {
                   <div>
                     <div className={styles.infoTop}>
                       <span className={styles.category}>
-                        {item.categories && item.categories.length > 0 
-                          ? item.categories.map((cat) => cat.name).join(', ') 
+                        {item.categories && item.categories.length > 0
+                          ? item.categories.map((cat) => cat.name).join(', ')
                           : 'منتج'}
                       </span>
                       <button onClick={() => removeFromCart(item.id)} className={styles.removeBtn}>✕</button>
                     </div>
-                    
-                    {/* الاسم كليكبل */}
+
                     <Link href={productLink} className={styles.productLink}>
                       <h3 style={{ margin: '5px 0', fontSize: '1rem' }}>{item.name}</h3>
                     </Link>
-                    
+
                     <div className={styles.priceText}>{item.price} {item.currency || 'ر.س'}</div>
                   </div>
 
@@ -101,7 +98,7 @@ const Cart = () => {
               {totalPrice.toFixed(2)} {cartItems[0]?.currency || 'ر.س'}
             </span>
           </div>
-          <ReusableButton goToCheckout  style={{ width: '100%' ,backgroundColor: '#1b365d', color: '#fff'}}>
+          <ReusableButton goToCheckout style={{ width: '100%', backgroundColor: '#1b365d', color: '#fff' }}>
             تابع إلى الدفع
           </ReusableButton>
         </div>
