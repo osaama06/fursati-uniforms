@@ -21,7 +21,9 @@ async function getProducts() {
     const consumerKey = process.env.WOO_CONSUMER_KEY;
     const secretKey = process.env.WOO_SECRET_KEY;
 
-    const url = `https://furssati.io/wp-json/wc/v3/products?status=publish&per_page=100`;
+    // const url = `https://furssati.io/wp-json/wc/v3/products?status=publish&per_page=100`;
+    const url = `https://furssati.io/wp-json/wc/v3/products?status=publish&per_page=100&_fields=id,name,slug,price,regular_price,sale_price,images,attributes,meta_data,average_rating,rating_count,categories,type,variations`;
+
     const auth = Buffer.from(`${consumerKey}:${secretKey}`).toString("base64");
 
     const res = await fetch(url, {
