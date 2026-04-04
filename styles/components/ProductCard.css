@@ -909,28 +909,7 @@ body.modal-open {
   isolation: isolate;
 }
 
-.mobile-modal {
-  width: 100%;
-  max-width: 500px;
-  background: white;
-  border-radius: 24px 24px 0 0;
-  padding: 0;
-  animation: slideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  max-height: 85vh;
-  z-index: 100000;
-  padding-bottom: 148px;
 
-  /* إصلاح التفاعل */
-  pointer-events: auto;
-  touch-action: manipulation;
-  -webkit-overflow-scrolling: touch;
-
-  /* منع النص من التحديد إلا داخل المحتوى */
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  user-select: text;
-}
 
 .modal-handle {
   width: 40px;
@@ -945,20 +924,49 @@ body.modal-open {
 .modal-handle:hover {
   background: #9ca3af;
 }
+.mobile-modal {
+  width: 100%;
+  max-width: 500px;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  animation: slideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  max-height: 85vh;
+  height: 85vh;
+  z-index: 100000;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-overflow-scrolling: touch;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  display: flex;
+  flex-direction: column;
+  /* حذف padding-bottom: 148px */
+}
 
 .modal-content {
   padding: 24px;
   direction: rtl;
   text-align: right;
-
-  /* إصلاح التفاعل */
   pointer-events: auto;
   position: relative;
   z-index: 1;
-
-  /* تحسين التمرير */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  flex: 1; /* يأخذ كل المساحة المتاحة */
+}
+
+/* زر الإضافة ثابت في الأسفل */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px;
+  background: white;
+  border-top: 1px solid #f0f0f0;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 .modal-image {
