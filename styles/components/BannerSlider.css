@@ -17,6 +17,13 @@
     height: calc(100svh - var(--mobile-header-height));
     min-height: 520px;
     max-height: calc(100svh - var(--mobile-header-height));
+    border-radius: 0;
+    width: 100vw;
+    position: relative;
+    right: 50%;
+    left: 50%;
+    margin-right: -50vw;
+    margin-left: -50vw;
   }
 }
 
@@ -63,9 +70,8 @@
 
 @media (max-width: 767px) {
   .banner-image {
-    object-fit: contain;
-    object-position: center top;
-    background: #f3f6fb;
+    object-fit: cover;
+    object-position: center;
   }
 }
 
@@ -167,6 +173,13 @@
     height: calc(100svh - var(--mobile-header-height));
     min-height: 520px;
     max-height: calc(100svh - var(--mobile-header-height));
+    border-radius: 0;
+    width: 100vw;
+    position: relative;
+    right: 50%;
+    left: 50%;
+    margin-right: -50vw;
+    margin-left: -50vw;
   }
 }
 
