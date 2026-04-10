@@ -251,9 +251,9 @@ export default function CheckoutClient() {
                 />
               </div>
 
-              {/* الرمز البريدي */}
+              {/* الرقم الوطني*/}
               <div className={styles.inputGroup}>
-                <label htmlFor="postcode">الرمز البريدي</label>
+                <label htmlFor="postcode"> الرقم الوطني</label>
                 <input
                   id="postcode" name="postcode" value={form.postcode}
                   placeholder="12345"
