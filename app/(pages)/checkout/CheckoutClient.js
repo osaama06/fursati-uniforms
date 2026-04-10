@@ -256,7 +256,7 @@ export default function CheckoutClient() {
                 <label htmlFor="postcode"> الرقم الوطني</label>
                 <input
                   id="postcode" name="postcode" value={form.postcode}
-                  placeholder="12345"
+                  placeholder="الرقم الوطني المختصر 4 حرف - 4 ارقام"
                   onChange={handleChange}
                   className={styles.checkoutInput}
                 />
