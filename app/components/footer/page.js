@@ -40,6 +40,8 @@ export default function Footer() {
               <Link href="/about-us">من نحن</Link>
               <Link href="/blog">المدونة</Link>
               <Link href="/contact">اتصل بنا</Link>
+               <span>الرقم الضريبي :312662765100003</span>
+
             </div>
             
             <div className="nav-col">
