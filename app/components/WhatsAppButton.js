@@ -42,8 +42,8 @@ export default function WhatsAppButton() {
       <style>{`
         .whatsapp-fab {
           position: fixed;
-          bottom: 24px;
-          left: 24px;
+    bottom: 85px;
+    right: 24px;
           z-index: 9999;
           width: 56px;
           height: 56px;
