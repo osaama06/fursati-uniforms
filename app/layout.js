@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 import { Geist, Geist_Mono, Tajawal } from "next/font/google";
 import Header from "./components/header/page";
 import Footer from "./components/footer/page";
+import WhatsAppButton from "./components/WhatsAppButton";
 import Script from "next/script";
 import "./globals.css";
 
@@ -146,6 +147,7 @@ export default function RootLayout({ children }) {
             <Header />
             <main>{children}</main>
             <Footer />
+            <WhatsAppButton />
             <Toaster position="top-center" />
           </WishlistProvider>
         </CartProvider>

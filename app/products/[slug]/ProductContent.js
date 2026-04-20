@@ -51,6 +51,7 @@ export default function ProductContent({ product, variations = [] }) {
       const parsed = JSON.parse(metaValue);
       return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
+      
       console.error("Invalid custom_product_fields_json:", error);
       return [];
     }
