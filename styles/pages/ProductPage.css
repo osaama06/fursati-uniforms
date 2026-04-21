@@ -57,11 +57,9 @@
 .mainImageContainer {
   position: relative;
   aspect-ratio: 1;
-  /* Square on mobile */
   background-color: #ffffff;
   border-radius: 16px;
   overflow: hidden;
-  /* Soft floaty shadow */
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.02);
 }
@@ -96,7 +94,7 @@
 
 /* Overlay Buttons */
 .imageOverlayButtons {
-z-index: 5;
+  z-index: 5;
   display: flex;
   position: absolute;
   top: 12px;
@@ -132,33 +130,60 @@ z-index: 5;
   border-color: #ff4757;
 }
 
-/* Mobile Image Dots (Visible by Default) */
+/* =========================================
+   MOBILE THUMBNAILS (Horizontal Strip)
+   ========================================= */
+
+/* Hide old dots on mobile — thumbnails replace them */
 .mobileImageDots {
-  display: flex;
-  justify-content: center;
+  display: none !important;
+}
+
+/* Thumbnail grid: horizontal scroll on mobile */
+.thumbnailGrid {
+  display: flex !important;
+  flex-direction: row !important;
   gap: 8px;
-  padding: 12px 0;
+  overflow-x: auto;
+  padding: 4px 2px 8px 2px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  width: 100%;
+  order: 1; /* below main image */
+}
+
+.thumbnailGrid::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.thumbnail {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border: 2px solid #e7e7e7;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
   background: white;
 }
 
-.imageDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #d5d9d9;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+.thumbnail.active {
+  border-color: #1B365D;
+  box-shadow: 0 0 0 2px rgba(27, 54, 93, 0.15);
 }
 
-.imageDot.active {
-  background-color: #1B365D;
-  transform: scale(1.25);
-  width: 24px;
-  border-radius: 4px;
+.thumbnail:hover {
+  border-color: #1B365D;
 }
 
-/* Mobile Image Navigation (Hidden by Default) */
+.thumbnailImage {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+/* Mobile Image Navigation */
 .mobileImageNav {
   position: absolute;
   top: 50%;
@@ -192,11 +217,6 @@ z-index: 5;
   background-color: #fff;
   transform: translateY(-50%) scale(1.1);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-}
-
-/* Thumbnails (Hidden on Mobile) */
-.thumbnailGrid {
-  display: none !important;
 }
 
 /* Product Info */
@@ -418,7 +438,6 @@ z-index: 5;
 }
 
 .sizeOption {
-  min-width: 54px;
   min-width: 38px;
   height: 37px;
   padding: 0 12px;
@@ -476,7 +495,6 @@ z-index: 5;
   margin: 0 0 12px 0;
   color: #1e293b;
 }
-
 
 /* Mobile Action Box */
 .mobileActionBox {
@@ -563,11 +581,9 @@ z-index: 5;
   white-space: nowrap;
 }
 
-
 .tabContent {
-     padding: 3px 3px 56px 3px;
-    border-bottom: 1px #50423826 solid;
-
+  padding: 3px 3px 56px 3px;
+  border-bottom: 1px #50423826 solid;
 }
 
 .tabButton {
@@ -610,13 +626,8 @@ z-index: 5;
   background: #f9fafb;
 }
 
-
 /* =========================================
-   REVIEWS & RATINGS (PREMIUM REDESIGN)
-   ========================================= */
-
-/* =========================================
-   REVIEWS & RATINGS (SKY BLUE PREMIUM REDESIGN)
+   REVIEWS & RATINGS
    ========================================= */
 
 .reviewsHeader {
@@ -643,7 +654,6 @@ z-index: 5;
   width: 60px;
   height: 3px;
   background: #1B365D;
-  /* Navy */
   border-radius: 2px;
 }
 
@@ -665,12 +675,10 @@ z-index: 5;
 
 .writeReviewBtn:hover {
   background-color: #162c4b;
-  /* Darker Navy */
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(27, 54, 93, 0.35);
 }
 
-/* RATING SUMMARY BOX */
 .ratingSummary {
   display: flex;
   gap: 40px;
@@ -698,7 +706,6 @@ z-index: 5;
   font-size: 64px;
   font-weight: 800;
   color: #1B365D;
-  /* Navy */
   line-height: 1;
   margin-bottom: 8px;
 }
@@ -709,7 +716,6 @@ z-index: 5;
   gap: 4px;
   margin-bottom: 8px;
   color: #1B365D;
-  /* Navy */
 }
 
 .summaryStars .star {
@@ -723,7 +729,6 @@ z-index: 5;
   font-weight: 500;
 }
 
-/* BREAKDOWN BARS */
 .ratingBreakdown {
   flex: 1;
   display: flex;
@@ -773,7 +778,6 @@ z-index: 5;
   color: #94a3b8;
 }
 
-/* REVIEW CARDS */
 .reviewsList {
   display: flex;
   flex-direction: column;
@@ -791,7 +795,6 @@ z-index: 5;
 
 .reviewItem:hover {
   border-color: #1B365D;
-  /* Navy Border on hover */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
@@ -812,7 +815,6 @@ z-index: 5;
   width: 48px;
   height: 48px;
   background: #f1f5f9;
-  /* Light Gray */
   color: #1B365D;
   border-radius: 50%;
   display: flex;
@@ -842,7 +844,6 @@ z-index: 5;
   font-size: 12px;
   font-weight: 600;
   color: #0EA5E9;
-  /* Sky Blue */
   background: #E0F2FE;
   padding: 3px 8px;
   border-radius: 20px;
@@ -876,7 +877,6 @@ z-index: 5;
   margin-bottom: 20px;
 }
 
-/* HELPFUL BUTTON */
 .reviewActions {
   display: flex;
   align-items: center;
@@ -926,7 +926,7 @@ z-index: 5;
 }
 
 /* =========================================
-   REVIEW FORM MODAL (NEW)
+   REVIEW FORM MODAL
    ========================================= */
 
 .reviewFormOverlay {
@@ -959,15 +959,8 @@ z-index: 5;
 }
 
 @keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 .reviewFormHeader {
@@ -1164,8 +1157,6 @@ z-index: 5;
   box-shadow: none;
 }
 
-
-/* Responsive adjustments for reviews */
 @media (max-width: 768px) {
   .ratingSummary {
     flex-direction: column;
@@ -1189,21 +1180,13 @@ z-index: 5;
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0);   }
 }
 
 .buyBox {
   display: none;
 }
-
 
 /* =========================================
    2. TABLET STYLES (min-width: 768px)
@@ -1219,69 +1202,47 @@ z-index: 5;
     font-size: 28px;
   }
 
-  /* Product Grid Tablet */
   .productGrid {
     grid-template-columns: 350px 1fr;
     gap: 16px;
   }
 
-  /* Image Section Tablet */
+  /* Thumbnail column on tablet+ */
   .imageSection {
     flex-direction: row;
-    /* position: sticky; */
-    gap: 20px;
-    /* Safe gap */
+    gap: 12px;
   }
 
-  /* Thumbnails Visible */
   .thumbnailGrid {
-    display: flex !important;
-    flex-direction: column;
+    flex-direction: column !important;
+    overflow-x: unset;
+    overflow-y: auto;
+    width: 68px !important;
+    min-width: 68px;
+    max-height: 440px;
+    order: -1; /* right side (RTL = right = visual left) */
+    padding: 0;
     gap: 10px;
-    width: 60px;
-    /* Original width */
-    min-width: 60px;
-    /* Force minimum width */
-    order: -1;
-    flex-shrink: 0;
-    /* PREVENT SQUASHING */
+    scrollbar-width: none;
+  }
+
+  .thumbnailGrid::-webkit-scrollbar {
+    display: none;
   }
 
   .thumbnail {
     width: 65px;
     height: 70px;
-    /* Force Height just in case */
-    aspect-ratio: 1;
-    border: 1px solid #e7e7e7;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    overflow: hidden;
-    background: white;
-  }
-
-  .thumbnail img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    flex-shrink: 0;
   }
 
   .mainImageContainer {
     flex: 1;
     min-width: 0;
-    /* Prevents overflow */
-    margin-left: 0;
     aspect-ratio: 1 !important;
-    /* Square */
     cursor: zoom-in;
   }
 
-  /* HIDE MOBILE DOTS - FORCE */
-  .mobileImageDots {
-    display: none !important;
-  }
-
-  /* SHOW ARROWS */
   .mobileImageNav {
     display: flex !important;
   }
@@ -1296,24 +1257,17 @@ z-index: 5;
    ========================================= */
 
 @media (min-width: 1024px) {
-
-  /* Three Column Layout - Original Widths */
   .productGrid {
     grid-template-columns: 550px 1fr 280px;
-    /* Original 550px */
     gap: 24px;
-    /* padding-bottom: 76px; */
     padding-bottom: 18vh;
   }
 
-  /* Image Aspect Ratio */
   .mainImageContainer {
     aspect-ratio: 1 !important;
-    /* Square */
     height: auto;
   }
 
-  /* Buy Box Visible */
   .buyBox {
     display: block;
     background: #fff;
@@ -1326,7 +1280,6 @@ z-index: 5;
     top: 24px;
   }
 
-  /* ... (Buy Box styles remain same) ... */
   .buyBoxPrice {
     font-size: 36px;
     font-weight: 800;
@@ -1336,7 +1289,6 @@ z-index: 5;
     align-items: center;
     gap: 4px;
   }
-
 
   .buyBoxQuantity {
     margin-bottom: 24px;
@@ -1418,9 +1370,7 @@ z-index: 5;
   }
 }
 
-
 /* ===== Radio Options with Price ===== */
-/* أضف هذا في آخر ملف ProductPage.css */
 
 .customFieldRadioGroup {
   display: flex;
@@ -1562,6 +1512,7 @@ z-index: 5;
   border-radius: 20px;
   white-space: nowrap;
 }
+
 .customFieldMeasurements {
   display: flex;
   flex-wrap: wrap;
@@ -1601,4 +1552,41 @@ z-index: 5;
 .measurementUnit {
   font-size: 12px;
   color: #999;
+}
+
+/* =========================================
+   COLOR SWATCHES (variation-based)
+   ========================================= */
+
+.colorSwatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.colorSwatch {
+  padding: 8px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 24px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.colorSwatch:hover {
+  border-color: #1B365D;
+  color: #1B365D;
+  background: #f8fafc;
+}
+
+.colorSwatch.selected {
+  border-color: #1B365D;
+  background: #1B365D;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(27, 54, 93, 0.25);
+  transform: translateY(-1px);
 }

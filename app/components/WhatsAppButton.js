@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
  
 const WHATSAPP_NUMBER = "+966533812602"; // ← غيّر هذا برقمك
-const WHATSAPP_MESSAGE = "مرحباً، أود الاستفسار عن منتجاتكم"; // الرسالة الافتراضية
+const WHATSAPP_MESSAGE = "ابغى استفسر عن"; // الرسالة الافتراضية
  
 export default function WhatsAppButton() {
   const [visible, setVisible] = useState(false);
