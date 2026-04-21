@@ -25,11 +25,11 @@ export default function Footer() {
               <h2 className="brand-logo">فرصتي<span>.</span></h2>
             </div>
             <p className="brand-philosophy">
-              نحن لا نبيع مجرد أزياء، نحن نصمم الثقة والراحة لترافقك في يومك المهني والدراسي بأعلى معايير الجودة.
+              22 عام من الثقة 22عام من الجودة 22 عام من التميز ومازلنا معكم كمان وكمان 
             </p>
             <div className="social-links-minimal">
-              <a href="#" className="social-icon-btn" aria-label="تيك توك"><Music2 size={18} /></a>
-              <a href="#" className="social-icon-btn" aria-label="انستقرام"><Instagram size={18} /></a>
+              <a href="https://www.tiktok.com/@fursati_uniforms" className="social-icon-btn" aria-label="تيك توك"><Music2 size={18} /></a>
+              <a href="https://www.instagram.com/fursati_uniforms" className="social-icon-btn" aria-label="انستقرام"><Instagram size={18} /></a>
               <a href="#" className="social-icon-btn" aria-label="تويتر"><Twitter size={18} /></a>
             </div>
           </div>
