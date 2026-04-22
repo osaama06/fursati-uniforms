@@ -20,12 +20,13 @@ export default function CheckoutClient() {
 
   const [loadingAddress, setLoadingAddress] = useState(true);
   const [loading, setLoading]               = useState(false);
+  const [paymentMethod, setPaymentMethod]   = useState('cod'); // 'cod' | 'card'
 
   // كوبون
-  const [couponCode, setCouponCode]     = useState('');
+  const [couponCode, setCouponCode]       = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
-  const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discount_type, amount, minimum_amount }
-  const [couponError, setCouponError]   = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError]     = useState('');
 
   // جلب العنوان المحفوظ
   useEffect(() => {
@@ -37,16 +38,16 @@ export default function CheckoutClient() {
         if (data.billing) {
           setForm((prev) => ({
             ...prev,
-            phone:    data.billing.phone    || '',
+            phone:    data.billing.phone     || '',
             address:  data.billing.address_1 || '',
-            city:     data.billing.city     || '',
-            state:    data.billing.state    || '',
+            city:     data.billing.city      || '',
+            state:    data.billing.state     || '',
             postcode: data.billing.postcode  || '',
-            country:  data.billing.country  || 'SA',
+            country:  data.billing.country   || 'SA',
           }));
         }
       } catch {
-        // لو فشل نخلي الفورم فاضي
+        // نخلي الفورم فاضي
       } finally {
         setLoadingAddress(false);
       }
@@ -56,15 +57,12 @@ export default function CheckoutClient() {
 
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
-  // حساب الخصم
   const calcDiscount = () => {
     if (!appliedCoupon) return 0;
-    if (appliedCoupon.discount_type === 'percent') {
+    if (appliedCoupon.discount_type === 'percent')
       return (subtotal * appliedCoupon.amount) / 100;
-    }
-    if (appliedCoupon.discount_type === 'fixed_cart') {
+    if (appliedCoupon.discount_type === 'fixed_cart')
       return Math.min(appliedCoupon.amount, subtotal);
-    }
     return 0;
   };
 
@@ -73,12 +71,10 @@ export default function CheckoutClient() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  // تطبيق الكوبون
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) { setCouponError('أدخل كود الكوبون'); return; }
     setCouponLoading(true);
     setCouponError('');
-
     try {
       const res  = await fetch('/api/validate-coupon', {
         method: 'POST',
@@ -86,18 +82,11 @@ export default function CheckoutClient() {
         body: JSON.stringify({ code: couponCode.trim() }),
       });
       const data = await res.json();
-
-      if (!res.ok) {
-        setCouponError(data.error || 'الكوبون غير صالح');
-        return;
-      }
-
-      // التحقق من الحد الأدنى
+      if (!res.ok) { setCouponError(data.error || 'الكوبون غير صالح'); return; }
       if (data.minimum_amount && subtotal < data.minimum_amount) {
         setCouponError(`الحد الأدنى للطلب ${data.minimum_amount} ر.س`);
         return;
       }
-
       setAppliedCoupon(data);
       toast.success(`✅ تم تطبيق كوبون ${data.code}`);
     } catch {
@@ -117,8 +106,12 @@ export default function CheckoutClient() {
   const handleOrder = async (e) => {
     e.preventDefault();
     if (!form.phone.trim()) { toast.error('أدخل رقم الجوال'); return; }
+    // الدفع بالبطاقة غير متاح بعد
+    if (paymentMethod === 'card') {
+      toast.error('الدفع بالبطاقة غير متاح حالياً، اختر الدفع عند الاستلام');
+      return;
+    }
     setLoading(true);
-
     try {
       const response = await fetch('/api/create-order', {
         method: 'POST',
@@ -126,12 +119,11 @@ export default function CheckoutClient() {
         body: JSON.stringify({
           ...form,
           cartItems,
-          coupon_code: appliedCoupon?.code || null,
+          coupon_code:    appliedCoupon?.code || null,
+          payment_method: paymentMethod,
         }),
       });
-
       const data = await response.json();
-
       if (response.ok) {
         clearCart();
         toast.success('✅ تم إرسال طلبك بنجاح!');
@@ -157,7 +149,6 @@ export default function CheckoutClient() {
     );
   }
 
-  // Skeleton
   if (loadingAddress) {
     const pulse = {
       background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
@@ -204,74 +195,137 @@ export default function CheckoutClient() {
           <form onSubmit={handleOrder}>
             <div className={styles.checkoutFormGrid}>
 
-              {/* رقم الجوال */}
               <div className={styles.inputGroup}>
                 <label htmlFor="phone">رقم الجوال *</label>
-                <input
-                  id="phone" name="phone" value={form.phone}
-                  placeholder="05xxxxxxxx"
-                  onChange={handleChange}
-                  className={styles.checkoutInput}
-                  required
-                />
+                <input id="phone" name="phone" value={form.phone}
+                  placeholder="05xxxxxxxx" onChange={handleChange}
+                  className={styles.checkoutInput} required />
               </div>
 
-              {/* العنوان */}
               <div className={styles.inputGroup}>
                 <label htmlFor="address">العنوان *</label>
-                <input
-                  id="address" name="address" value={form.address}
-                  placeholder="اسم الشارع، رقم المنزل"
-                  onChange={handleChange}
-                  className={styles.checkoutInput}
-                  required
-                />
+                <input id="address" name="address" value={form.address}
+                  placeholder="اسم الشارع، رقم المنزل" onChange={handleChange}
+                  className={styles.checkoutInput} required />
               </div>
 
-              {/* المدينة */}
               <div className={styles.inputGroup}>
                 <label htmlFor="city">المدينة *</label>
-                <input
-                  id="city" name="city" value={form.city}
-                  placeholder="الرياض، جدة..."
-                  onChange={handleChange}
-                  className={styles.checkoutInput}
-                  required
-                />
+                <input id="city" name="city" value={form.city}
+                  placeholder="الرياض، جدة..." onChange={handleChange}
+                  className={styles.checkoutInput} required />
               </div>
 
-              {/* المنطقة */}
               <div className={styles.inputGroup}>
                 <label htmlFor="state">المنطقة</label>
-                <input
-                  id="state" name="state" value={form.state}
-                  placeholder="المنطقة"
-                  onChange={handleChange}
-                  className={styles.checkoutInput}
-                />
+                <input id="state" name="state" value={form.state}
+                  placeholder="المنطقة" onChange={handleChange}
+                  className={styles.checkoutInput} />
               </div>
 
-              {/* الرقم الوطني*/}
               <div className={styles.inputGroup}>
-                <label htmlFor="postcode"> الرقم الوطني</label>
-                <input
-                  id="postcode" name="postcode" value={form.postcode}
-                  placeholder="الرقم الوطني المختصر 4 حرف - 4 ارقام"
-                  onChange={handleChange}
-                  className={styles.checkoutInput}
-                />
+                <label htmlFor="postcode">الرقم الوطني</label>
+                <input id="postcode" name="postcode" value={form.postcode}
+                  placeholder="الرقم الوطني المختصر 4 حرف - 4 أرقام" onChange={handleChange}
+                  className={styles.checkoutInput} />
               </div>
 
-              {/* الدولة */}
               <div className={styles.inputGroup}>
                 <label>الدولة</label>
-                <input
-                  value="المملكة العربية السعودية" readOnly
-                  className={styles.checkoutInput}
-                  style={{ background: '#f1f5f9' }}
-                />
+                <input value="المملكة العربية السعودية" readOnly
+                  className={styles.checkoutInput} style={{ background: '#f1f5f9' }} />
               </div>
 
+            </div>
+
+            {/* ── طريقة الدفع ── */}
+            <div style={{ marginTop: '1.5rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '12px', color: '#2d3748' }}>
+                💳 طريقة الدفع
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+
+                {/* الدفع عند الاستلام */}
+                <label
+                  onClick={() => setPaymentMethod('cod')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '14px 16px',
+                    border: `2px solid ${paymentMethod === 'cod' ? '#1B365D' : '#e2e8f0'}`,
+                    borderRadius: '12px',
+                    background: paymentMethod === 'cod' ? '#f0f4ff' : '#fff',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="cod"
+                    checked={paymentMethod === 'cod'}
+                    onChange={() => setPaymentMethod('cod')}
+                    style={{ accentColor: '#1B365D', width: '18px', height: '18px' }}
+                  />
+                  <span style={{ fontSize: '24px' }}>💵</span>
+                  <div>
+                    <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '15px' }}>
+                      الدفع عند الاستلام
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                      ادفع نقداً عند وصول طلبك
+                    </div>
+                  </div>
+                </label>
+
+                {/* الدفع بالبطاقة — غير متاح */}
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '14px 16px',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '12px',
+                    background: '#f8fafc',
+                    cursor: 'not-allowed',
+                    opacity: 0.6,
+                    position: 'relative',
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="card"
+                    disabled
+                    style={{ width: '18px', height: '18px' }}
+                  />
+                  <span style={{ fontSize: '24px' }}>💳</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: '700', color: '#94a3b8', fontSize: '15px' }}>
+                      الدفع بالبطاقة الائتمانية
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                      فيزا / ماستركارد / مدى
+                    </div>
+                  </div>
+                  <span style={{
+                    background: '#f1f5f9',
+                    color: '#94a3b8',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    padding: '3px 10px',
+                    borderRadius: '20px',
+                    border: '1px solid #e2e8f0',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    قريباً
+                  </span>
+                </label>
+
+              </div>
             </div>
 
             {/* كوبون الخصم */}
@@ -307,17 +361,13 @@ export default function CheckoutClient() {
                     style={{ flex: 1 }}
                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleApplyCoupon())}
                   />
-                  <button
-                    type="button"
-                    onClick={handleApplyCoupon}
-                    disabled={couponLoading}
+                  <button type="button" onClick={handleApplyCoupon} disabled={couponLoading}
                     style={{
                       background: '#00c2cb', color: '#fff', border: 'none',
                       borderRadius: '12px', padding: '0 20px', fontWeight: '700',
                       cursor: couponLoading ? 'not-allowed' : 'pointer',
                       opacity: couponLoading ? 0.7 : 1, whiteSpace: 'nowrap',
-                    }}
-                  >
+                    }}>
                     {couponLoading ? '...' : 'تطبيق'}
                   </button>
                 </div>
@@ -344,13 +394,11 @@ export default function CheckoutClient() {
               const customFields = item.customFields || {};
               const hasAttributes   = Object.keys(attributes).length > 0;
               const hasCustomFields = Object.keys(customFields).length > 0;
-
               return (
                 <div key={`${item.id}-${index}`} className={styles.checkoutCartItem}>
                   <div className={styles.itemInfo}>
                     <span className={styles.itemName}>{item.name}</span>
                     <span className={styles.itemQty}>الكمية: {item.quantity}</span>
-
                     {hasAttributes && (
                       <div className={styles.itemMeta}>
                         {Object.entries(attributes).map(([key, value]) => (
@@ -358,7 +406,6 @@ export default function CheckoutClient() {
                         ))}
                       </div>
                     )}
-
                     {hasCustomFields && (
                       <div className={styles.itemMeta}>
                         {Object.entries(customFields).map(([key, field]) => {
@@ -384,19 +431,16 @@ export default function CheckoutClient() {
               <span>المجموع الفرعي:</span>
               <span>{subtotal.toFixed(2)} ر.س</span>
             </div>
-
             {appliedCoupon && (
               <div className={styles.summaryRow} style={{ color: '#276749' }}>
                 <span>الخصم ({appliedCoupon.code}):</span>
                 <span>- {discount.toFixed(2)} ر.س</span>
               </div>
             )}
-
             <div className={styles.summaryRow}>
               <span>الشحن:</span>
               <span style={{ color: '#0ca678', fontWeight: 'bold' }}>مجاني</span>
             </div>
-
             <div className={styles.totalRow}>
               <span>الإجمالي الكلي:</span>
               <span>{totalPrice.toFixed(2)} ر.س</span>
