@@ -207,12 +207,33 @@ export default function ProductContent({ product, variations = [] }) {
 
   // ─── Product change reset ────────────────────────────────────────────────
 
+// ─── Product change reset + default_attributes ───────────────────────────
+
   useEffect(() => {
     setSelectedImage(0);
-    setSelectedAttributes({});
     setQuantity(1);
     setShowAttributeError(false);
     setCustomFieldValues({});
+
+    const defaults = product?.default_attributes;
+
+    if (Array.isArray(defaults) && defaults.length > 0 && variationAttributes.length > 0) {
+      const defaultMap = {};
+      defaults.forEach((def) => {
+        const matched = variationAttributes.find((va) =>
+          attributeKeysMatch(va._productAttr, { name: def.name, slug: def.name })
+        );
+        if (!matched) return;
+        const realOption = matched.options.find(
+          (opt) => normalizeText(opt) === normalizeText(def.option)
+        );
+        if (realOption) defaultMap[matched.key] = realOption;
+      });
+      setSelectedAttributes(defaultMap);
+    } else {
+      setSelectedAttributes({});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id]);
 
   useEffect(() => {
