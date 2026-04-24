@@ -36,6 +36,8 @@
   gap: 12px;
   top: 20px;
   height: fit-content;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .mainImageContainer {
@@ -114,6 +116,7 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
   order: 1;
 }
