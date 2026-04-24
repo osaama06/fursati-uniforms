@@ -1590,3 +1590,104 @@
   box-shadow: 0 4px 12px rgba(27, 54, 93, 0.25);
   transform: translateY(-1px);
 }
+/* ===== Image Upload Field ===== */
+/* أضف هذا في آخر ProductPage.css */
+
+.customFieldImageUpload {
+  margin-top: 4px;
+}
+
+.imageUploadLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 16px;
+  border: 2px dashed #cbd5e0;
+  border-radius: 12px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 120px;
+}
+
+.imageUploadLabel:hover {
+  border-color: #1B365D;
+  background: #f0f4ff;
+}
+
+.imageUploadLabel.uploading {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.uploadIcon {
+  font-size: 32px;
+}
+
+.uploadText {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1B365D;
+}
+
+.uploadHint {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.uploadingIndicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.uploadSpinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #1B365D;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.uploadedImagePreview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.uploadedImg {
+  width: 100%;
+  max-width: 280px;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.removeImageBtn {
+  background: none;
+  border: 1px solid #fca5a5;
+  color: #ef4444;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.removeImageBtn:hover {
+  background: #fef2f2;
+}

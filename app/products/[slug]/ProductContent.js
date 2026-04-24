@@ -180,19 +180,12 @@ export default function ProductContent({ product, variations = [] }) {
 
   // ─── Image list: prefer variation image when available ───────────────────
 
-  /**
-   * Build the image gallery the user sees.
-   * - If a variation with its own image is selected → show that image first,
-   *   then the rest of the product gallery.
-   * - Otherwise → show the full product gallery as-is.
-   */
   const displayImages = useMemo(() => {
     const productImages = product.images || [];
     const variationImg = selectedVariation?.image?.src;
 
     if (!variationImg) return productImages;
 
-    // Put variation image first, remove duplicate if already in gallery
     const rest = productImages.filter(
       (img) => normalizeText(img.src) !== normalizeText(variationImg)
     );
@@ -205,9 +198,7 @@ export default function ProductContent({ product, variations = [] }) {
     setSelectedImage(0);
   }, [selectedVariation?.id]);
 
-  // ─── Product change reset ────────────────────────────────────────────────
-
-// ─── Product change reset + default_attributes ───────────────────────────
+  // ─── Product change reset + default_attributes ───────────────────────────
 
   useEffect(() => {
     setSelectedImage(0);
@@ -316,6 +307,48 @@ export default function ProductContent({ product, variations = [] }) {
     });
   };
 
+  // ─── Image upload handler ────────────────────────────────────────────────
+
+  const handleImageUpload = async (fieldKey, file) => {
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('نوع الملف غير مدعوم. يرجى رفع صورة JPG أو PNG أو WEBP');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('حجم الصورة كبير جداً. الحد الأقصى 5MB');
+      return;
+    }
+
+    handleCustomFieldChange(`${fieldKey}__loading`, true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || 'فشل رفع الصورة');
+        return;
+      }
+
+      handleCustomFieldChange(fieldKey, { url: data.url, public_id: data.public_id });
+      toast.success('تم رفع الصورة بنجاح ✅');
+    } catch {
+      toast.error('خطأ في رفع الصورة');
+    } finally {
+      handleCustomFieldChange(`${fieldKey}__loading`, false);
+    }
+  };
+
   const handleAddToCart = () => {
     setShowAttributeError(false);
     if (variationAttributes.length > 0) {
@@ -334,7 +367,9 @@ export default function ProductContent({ product, variations = [] }) {
       if (!field.field_required) continue;
       const val = customFieldValues[field.field_key];
       const isEmpty =
-        field.field_type === "checkbox"
+        field.field_type === "image"
+          ? !val?.url
+          : field.field_type === "checkbox"
           ? !Array.isArray(val) || val.length === 0
           : field.field_type === "measurements"
           ? !val || typeof val !== "object" ||
@@ -350,6 +385,18 @@ export default function ProductContent({ product, variations = [] }) {
     customFields.forEach((field) => {
       const value = customFieldValues[field.field_key];
       const options = Array.isArray(field.field_options) ? field.field_options : [];
+
+      // ── image ──
+      if (field.field_type === "image") {
+        if (value?.url) {
+          customFieldsWithLabels[field.field_key] = {
+            label: field.field_label,
+            value: value.url,
+          };
+        }
+        return;
+      }
+
       if (field.field_type === "checkbox") {
         if (!Array.isArray(value) || value.length === 0) return;
         const totalPrice = value.reduce((sum, label) => {
@@ -383,9 +430,7 @@ export default function ProductContent({ product, variations = [] }) {
       }
     });
 
-    // Use variation image if available, else product first image
-    const cartImage =
-      selectedVariation?.image?.src || product.images?.[0]?.src;
+    const cartImage = selectedVariation?.image?.src || product.images?.[0]?.src;
 
     const itemPayload = {
       id: selectedVariation?.id || product.id,
@@ -493,11 +538,9 @@ export default function ProductContent({ product, variations = [] }) {
   };
   const discount = calculateDiscount();
 
-  // Current displayed price (variation price takes priority)
   const currentPrice =
     parseFloat(selectedVariation?.price || product.sale_price || product.price || 0) + extraPrice;
 
-  // Show sale/discount only when no specific variation is selected OR variation has its own sale
   const showDiscount =
     !selectedVariation &&
     product.regular_price &&
@@ -647,7 +690,6 @@ export default function ProductContent({ product, variations = [] }) {
               </h3>
 
               {attr.isColor ? (
-                /* Color swatches */
                 <div className="colorSwatches">
                   {attr.options.map((option) => {
                     const isSelected = selectedAttributes[attr.key] === option;
@@ -665,7 +707,6 @@ export default function ProductContent({ product, variations = [] }) {
                   })}
                 </div>
               ) : (
-                /* Size / other attribute buttons */
                 <div className="sizeGrid">
                   {attr.options.map((option) => (
                     <button
@@ -696,11 +737,53 @@ export default function ProductContent({ product, variations = [] }) {
               {customFields.map((field, index) => {
                 const value = customFieldValues[field.field_key] ?? "";
                 const options = Array.isArray(field.field_options) ? field.field_options : [];
+                const isUploading = !!customFieldValues[`${field.field_key}__loading`];
                 return (
                   <div className="customFieldBlock" key={field.field_key || index}>
                     <label className="customFieldLabel">
                       {field.field_label}{field.field_required ? " *" : ""}
                     </label>
+
+                    {/* ── image upload ── */}
+                    {field.field_type === "image" && (
+                      <div className="customFieldImageUpload">
+                        {value?.url ? (
+                          <div className="uploadedImagePreview">
+                            <img src={value.url} alt="صورة مرفوعة" className="uploadedImg" />
+                            <button
+                              type="button"
+                              className="removeImageBtn"
+                              onClick={() => handleCustomFieldChange(field.field_key, null)}
+                            >
+                              ✕ إزالة الصورة
+                            </button>
+                          </div>
+                        ) : (
+                          <label className={`imageUploadLabel ${isUploading ? 'uploading' : ''}`}>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              style={{ display: 'none' }}
+                              disabled={isUploading}
+                              onChange={(e) => handleImageUpload(field.field_key, e.target.files?.[0])}
+                            />
+                            {isUploading ? (
+                              <div className="uploadingIndicator">
+                                <div className="uploadSpinner" />
+                                <span>جاري الرفع...</span>
+                              </div>
+                            ) : (
+                              <>
+                                <span className="uploadIcon">🖼️</span>
+                                <span className="uploadText">اضغط لرفع صورة التطريز</span>
+                                <span className="uploadHint">JPG, PNG, WEBP — حتى 5MB</span>
+                              </>
+                            )}
+                          </label>
+                        )}
+                      </div>
+                    )}
+
                     {field.field_type === "buttons" && (
                       <div className="customFieldButtons">
                         {options.map((option) => (
