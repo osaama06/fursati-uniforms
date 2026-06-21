@@ -121,10 +121,10 @@ export default function BannerSlider() {
     async function fetchBanners() {
       try {
         const [desktopRes, mobileRes] = await Promise.all([
-          fetch("https://furssati.io/wp-json/wp/v2/banner?_embed&per_page=100", {
+          fetch("https://fursatiuniforms.store/wp-json/wp/v2/banner?_embed&per_page=100", {
             cache: "no-store",
           }),
-          fetch("https://furssati.io/wp-json/wp/v2/mobile_banner?_embed&per_page=100", {
+          fetch("https://fursatiuniforms.store/wp-json/wp/v2/mobile_banner?_embed&per_page=100", {
             cache: "no-store",
           }),
         ]);

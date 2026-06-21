@@ -24,7 +24,7 @@ async function getCategoryBySlug(slug) {
   ).toString("base64");
 
   const res = await fetch(
-    `https://furssati.io/wp-json/wc/v3/products/categories?slug=${slug}`,
+    `https://fursatiuniforms.store/wp-json/wc/v3/products/categories?slug=${slug}`,
     {
       headers: { Authorization: `Basic ${auth}` },
       next: { revalidate: 3600 },
@@ -42,7 +42,7 @@ async function getProductsByCategoryId(id) {
   ).toString("base64");
 
   const res = await fetch(
-    `https://furssati.io/wp-json/wc/v3/products?category=${id}&per_page=50&status=publish`,
+    `https://fursatiuniforms.store/wp-json/wc/v3/products?category=${id}&per_page=50&status=publish`,
     {
       headers: { Authorization: `Basic ${auth}` },
       next: { revalidate: 3600 },

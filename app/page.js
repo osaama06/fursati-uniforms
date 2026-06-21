@@ -28,7 +28,7 @@ const getAuthHeader = () => {
 async function getHomeCategories() {
   try {
     const res = await fetch(
-      "https://furssati.io/wp-json/wc/v3/products/categories?per_page=100&hide_empty=false",
+      "https://fursatiuniforms.store/wp-json/wc/v3/products/categories?per_page=100&hide_empty=false",
       {
         headers: { Authorization: `Basic ${getAuthHeader()}` },
         // ✅ تم التغيير من 0 إلى 60 لتجنب مشاكل الـ Static Generation في فيرسل
@@ -55,7 +55,7 @@ async function getHomeCategories() {
 async function getProductsByCategoryId(categoryId) {
   try {
     const res = await fetch(
-      `https://furssati.io/wp-json/wc/v3/products?category=${categoryId}&status=publish&per_page=10`,
+      `https://fursatiuniforms.store/wp-json/wc/v3/products?category=${categoryId}&status=publish&per_page=10`,
       {
         headers: { Authorization: `Basic ${getAuthHeader()}` },
         next: { revalidate: 60 }, // ✅ متناسق مع باقي الطلبات

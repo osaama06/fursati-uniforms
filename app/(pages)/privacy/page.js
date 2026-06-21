@@ -23,7 +23,7 @@ export const metadata = {
 // 🟦 الصفحة + السكيما
 // ---------------------
 export default async function PrivacyPolicyPage() {
-  const WP_BASE = process.env.WOO_URL || "https://furssati.io";
+  const WP_BASE = process.env.WOO_URL || "https://fursatiuniforms.store";
 
   // 🔴 غير رقم الصفحة حسب ID صفحة الخصوصية في ووردبريس
   const res = await fetch(

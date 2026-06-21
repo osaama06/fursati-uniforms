@@ -41,7 +41,7 @@ export async function POST(req) {
       ).toString('base64');
 
       const couponRes  = await fetch(
-        `https://furssati.io/wp-json/wc/v3/coupons?code=${encodeURIComponent(coupon_code)}`,
+        `https://fursatiuniforms.store/wp-json/wc/v3/coupons?code=${encodeURIComponent(coupon_code)}`,
         { headers: { Authorization: `Basic ${auth}` }, cache: 'no-store' }
       );
       const couponData = await couponRes.json();

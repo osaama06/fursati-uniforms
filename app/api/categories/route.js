@@ -9,8 +9,8 @@ export async function GET(request) {
 
   try {
     const url = ids 
-      ? `https://furssati.io/wp-json/wc/v3/products/categories?include=${ids}`
-      : "https://furssati.io/wp-json/wc/v3/products/categories?per_page=100&hide_empty=false";
+      ? `https://fursatiuniforms.store/wp-json/wc/v3/products/categories?include=${ids}`
+      : "https://fursatiuniforms.store/wp-json/wc/v3/products/categories?per_page=100&hide_empty=false";
     
     const res = await fetch(url, {
       headers: { Authorization: `Basic ${auth}` },

@@ -13,7 +13,7 @@ export async function GET(request) {
 
   try {
     const response = await fetch(
-      `https://furssati.io/wp-json/wc/v3/products/reviews?product=${productId}&per_page=100`,
+      `https://fursatiuniforms.store/wp-json/wc/v3/products/reviews?product=${productId}&per_page=100`,
       {
         headers: {
           Authorization: `Basic ${auth}`,
@@ -74,7 +74,7 @@ export async function POST(request) {
 
   try {
     const response = await fetch(
-      'https://furssati.io/wp-json/wc/v3/products/reviews',
+      'https://fursatiuniforms.store/wp-json/wc/v3/products/reviews',
       {
         method: 'POST',
         headers: {

@@ -24,7 +24,7 @@ async function getProductBySlug(slug) {
   const decodedSlug = decodeURIComponent(slug);
 
   const res = await fetch(
-    `https://furssati.io/wp-json/wc/v3/products?slug=${decodedSlug}`,
+    `https://fursatiuniforms.store/wp-json/wc/v3/products?slug=${decodedSlug}`,
     {
       headers: { Authorization: `Basic ${auth}` },
       next: { revalidate: 3600 },
@@ -42,7 +42,7 @@ async function getVariations(productId) {
   const auth = Buffer.from(`${consumerKey}:${secretKey}`).toString("base64");
 
   const res = await fetch(
-    `https://furssati.io/wp-json/wc/v3/products/${productId}/variations`,
+    `https://fursatiuniforms.store/wp-json/wc/v3/products/${productId}/variations`,
     {
       headers: { Authorization: `Basic ${auth}` },
       next: { revalidate: 3600 },

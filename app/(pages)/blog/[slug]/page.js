@@ -5,7 +5,7 @@ import Image from "next/image";
 ============================ */
 async function getPost(slug) {
   const res = await fetch(
-    `https://furssati.io/wp-json/wp/v2/posts?slug=${slug}`,
+    `https://fursatiuniforms.store/wp-json/wp/v2/posts?slug=${slug}`,
     { next: { revalidate: 60 } }
   );
 
@@ -20,7 +20,7 @@ async function getPost(slug) {
 ============================================= */
 async function getYoastSEO(url) {
   const res = await fetch(
-    `https://furssati.io/wp-json/yoast/v1/get_head?url=${url}`,
+    `https://fursatiuniforms.store/wp-json/yoast/v1/get_head?url=${url}`,
     { next: { revalidate: 60 } }
   );
 

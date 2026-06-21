@@ -9,7 +9,7 @@ function stripHtml(html) {
 
 // ⚡ دالة لجلب صفحة WordPress
 async function getPage() {
-  const WP_BASE = process.env.WOO_URL || "https://furssati.io";
+  const WP_BASE = process.env.WOO_URL || "https://fursatiuniforms.store";
 
   const res = await fetch(
     `${WP_BASE.replace(/\/$/, "")}/wp-json/wp/v2/pages/492`,

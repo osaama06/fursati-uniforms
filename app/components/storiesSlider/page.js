@@ -19,7 +19,7 @@ export default function StoriesSlider() {
     async function fetchStories() {
       try {
         const res = await fetch(
-          'https://furssati.io/wp-json/wp/v2/stori?_embed',
+          'https://fursatiuniforms.store/wp-json/wp/v2/stori?_embed',
           { cache: 'no-store' }
         );
         const data = await res.json();

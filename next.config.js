@@ -1,14 +1,30 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  
+
   // ⭐ Image Optimization - محسّن
   images: {
-    domains: [
-      'furssati.io',
-      'fursatiuniforms.com',
-      'i0.wp.com',
-      'secure.gravatar.com',
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'fursatiuniforms.store',
+        pathname: '/wp-content/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'fursatiuniforms.com',
+        pathname: '/wp-content/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i0.wp.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'secure.gravatar.com',
+        pathname: '/**',
+      },
     ],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],

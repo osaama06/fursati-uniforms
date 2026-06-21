@@ -7,7 +7,7 @@ async function getProducts() {
 
   try {
     const res = await fetch(
-      'https://furssati.io/wp-json/wc/v3/products?per_page=100&status=publish',
+      'https://fursatiuniforms.store/wp-json/wc/v3/products?per_page=100&status=publish',
       {
         headers: { Authorization: `Basic ${auth}` },
         next: { revalidate: 3600 }
@@ -29,7 +29,7 @@ async function getCategories() {
 
   try {
     const res = await fetch(
-      'https://furssati.io/wp-json/wc/v3/products/categories?per_page=100&hide_empty=true',
+      'https://fursatiuniforms.store/wp-json/wc/v3/products/categories?per_page=100&hide_empty=true',
       {
         headers: { Authorization: `Basic ${auth}` },
         next: { revalidate: 3600 }

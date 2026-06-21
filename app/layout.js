@@ -122,8 +122,8 @@ export default function RootLayout({ children }) {
       <head>
         <meta charSet="UTF-8" />
         <meta httpEquiv="content-language" content="ar-SA" />
-        <link rel="preconnect" href="https://furssati.io" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://furssati.io" />
+        <link rel="preconnect" href="https://fursatiuniforms.store/" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://fursatiuniforms.store/" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={SITE_URL} />
@@ -131,7 +131,7 @@ export default function RootLayout({ children }) {
         <link
           rel="preload"
           as="image"
-          href="https://www.fursatiuniforms.com/_next/image?url=https%3A%2F%2Ffurssati.io%2Fwp-content%2Fuploads%2F2025%2F06%2F%D9%81%D8%B1%D8%B5%D8%AA%D9%8A.webp&w=2048&q=75"
+          href="https://www.fursatiuniforms.com/_next/image?url=https%3A%2F%fursatiuniforms.store/%2Fwp-content%2Fuploads%2F2025%2F06%2F%D9%81%D8%B1%D8%B5%D8%AA%D9%8A.webp&w=2048&q=75"
           fetchpriority="high"
           type="image/jpeg"
         />

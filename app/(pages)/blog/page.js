@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 // 1) جلب بوستات WordPress
 // =========================================================
 async function getPosts() {
-  const res = await fetch("https://furssati.io/wp-json/wp/v2/posts", {
+  const res = await fetch("https://fursatiuniforms.store/wp-json/wp/v2/posts", {
     next: { revalidate: 60 },
   });
   if (!res.ok) return [];
@@ -21,7 +21,7 @@ async function getYoastSEO() {
   const frontendUrl = "https://fursatiuniforms.com/blog";
 
   const res = await fetch(
-    `https://furssati.io/wp-json/yoast/v1/get_head?url=${frontendUrl}`,
+    `https://fursatiuniforms.store/wp-json/yoast/v1/get_head?url=${frontendUrl}`,
     { cache: "no-store" }
   );
 

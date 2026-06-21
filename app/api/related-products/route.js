@@ -15,7 +15,7 @@ export async function GET(request) {
       `${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`
     ).toString('base64');
 
-    let url = `https://furssati.io/wp-json/wc/v3/products?category=${categoryId}&per_page=${perPage}&status=publish`;
+    let url = `https://fursatiuniforms.store/wp-json/wc/v3/products?category=${categoryId}&per_page=${perPage}&status=publish`;
 
     if (excludeId) {
       url += `&exclude=${excludeId}`;

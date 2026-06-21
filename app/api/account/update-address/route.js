@@ -6,7 +6,7 @@ export async function POST(req) {
   const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString('base64');
 
   try {
-    const res = await fetch(`https://furssati.io/wp-json/wc/v3/customers/${customerId}`, {
+    const res = await fetch(`https://fursatiuniforms.store/wp-json/wc/v3/customers/${customerId}`, {
       method: 'PUT',
       headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ billing }),

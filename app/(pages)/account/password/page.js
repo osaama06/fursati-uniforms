@@ -11,7 +11,7 @@ const secret = process.env.WT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987';
 async function getCustomerData(email) {
   const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString('base64');
   try {
-    const res = await fetch(`https://furssati.io/wp-json/wc/v3/customers?email=${email}`, {
+    const res = await fetch(`https://fursatiuniforms.store/wp-json/wc/v3/customers?email=${email}`, {
       headers: { Authorization: `Basic ${auth}` },
       cache: 'no-store',
     });
