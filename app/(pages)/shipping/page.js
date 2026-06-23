@@ -77,7 +77,7 @@ export default async function ShippingPolicyPage() {
         <h1
           dangerouslySetInnerHTML={{
             __html: title,
-          }}
+          }}  
         />
 
         <article
