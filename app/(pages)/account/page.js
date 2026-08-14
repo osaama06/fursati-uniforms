@@ -28,13 +28,17 @@ async function getCustomerData(email) {
   }
 }
 
-async function getRecentOrders(email) {
+async function getRecentOrders(customerId) {
+  if (!customerId) return [];
   const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString('base64');
   try {
-    const res = await fetch(`https://fursatiuniforms.store/wp-json/wc/v3/orders?email=${email}&per_page=3`, {
-      headers: { Authorization: `Basic ${auth}` },
-      cache: 'no-store',
-    });
+    const res = await fetch(
+      `https://fursatiuniforms.store/wp-json/wc/v3/orders?customer=${customerId}&orderby=date&order=desc&per_page=3`,
+      {
+        headers: { Authorization: `Basic ${auth}` },
+        cache: 'no-store',
+      }
+    );
     return res.ok ? await res.json() : [];
   } catch {
     return [];
@@ -63,9 +67,11 @@ export default async function AccountPage() {
     redirect('/login');
   }
 
+  const customerId = decoded?.customer_id || decoded?.data?.user?.id;
+
   const [customerInfo, recentOrders] = await Promise.all([
     getCustomerData(decoded.email),
-    getRecentOrders(decoded.email),
+    getRecentOrders(customerId),
   ]);
 
   const finalName = customerInfo
