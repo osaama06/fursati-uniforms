@@ -55,6 +55,8 @@ export default function CheckoutClient() {
     fetchSavedAddress();
   }, []);
 
+  const SHIPPING_COST = 23;
+
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
   const calcDiscount = () => {
@@ -67,7 +69,7 @@ export default function CheckoutClient() {
   };
 
   const discount   = calcDiscount();
-  const totalPrice = Math.max(0, subtotal - discount);
+  const totalPrice = Math.max(0, subtotal - discount) + SHIPPING_COST;
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -106,6 +108,7 @@ export default function CheckoutClient() {
   const handleOrder = async (e) => {
     e.preventDefault();
     if (!form.phone.trim()) { toast.error('أدخل رقم الجوال'); return; }
+    if (!form.postcode.trim()) { toast.error('أدخل الرقم الوطني'); return; }
     // الدفع بالبطاقة غير متاح بعد
     if (paymentMethod === 'card') {
       toast.error('الدفع بالبطاقة غير متاح حالياً، اختر الدفع عند الاستلام');
@@ -224,10 +227,10 @@ export default function CheckoutClient() {
               </div>
 
               <div className={styles.inputGroup}>
-                <label htmlFor="postcode">الرقم الوطني</label>
+                <label htmlFor="postcode">الرقم الوطني *</label>
                 <input id="postcode" name="postcode" value={form.postcode}
                   placeholder="الرقم الوطني المختصر 4 حرف - 4 أرقام" onChange={handleChange}
-                  className={styles.checkoutInput} />
+                  className={styles.checkoutInput} required />
               </div>
 
               <div className={styles.inputGroup}>
@@ -439,7 +442,7 @@ export default function CheckoutClient() {
             )}
             <div className={styles.summaryRow}>
               <span>الشحن:</span>
-              <span style={{ color: '#0ca678', fontWeight: 'bold' }}>مجاني</span>
+              <span>{SHIPPING_COST.toFixed(2)} ر.س</span>
             </div>
             <div className={styles.totalRow}>
               <span>الإجمالي الكلي:</span>

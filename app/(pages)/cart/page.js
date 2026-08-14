@@ -88,10 +88,10 @@ const Cart = () => {
             <span>المجموع الفرعي</span>
             <span>{totalPrice.toFixed(2)} {cartItems[0]?.currency || 'ر.س'}</span>
           </div>
-          <div className={styles.summaryRow}>
+          {/* <div className={styles.summaryRow}>
             <span>الشحن</span>
             <span style={{ color: '#0ca678', fontWeight: 'bold' }}>مجاني</span>
-          </div>
+          </div> */}
           <div className={styles.totalDivider}>
             <span style={{ fontWeight: 'bold' }}>الإجمالي الكلي</span>
             <span style={{ fontWeight: '900', fontSize: '1.5rem', color: '#00c2cb' }}>
