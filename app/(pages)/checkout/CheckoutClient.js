@@ -56,8 +56,12 @@ export default function CheckoutClient() {
   }, []);
 
   const SHIPPING_COST = 23;
+  const FREE_SHIPPING_THRESHOLD = 300;
 
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+
+  // ✅ الشحن مجاني فوق الحد (نفس منطق الـ server)
+  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
 
   const calcDiscount = () => {
     if (!appliedCoupon) return 0;
@@ -69,7 +73,7 @@ export default function CheckoutClient() {
   };
 
   const discount   = calcDiscount();
-  const totalPrice = Math.max(0, subtotal - discount) + SHIPPING_COST;
+  const totalPrice = Math.max(0, subtotal - discount) + shipping;
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -442,7 +446,7 @@ export default function CheckoutClient() {
             )}
             <div className={styles.summaryRow}>
               <span>الشحن:</span>
-              <span>{SHIPPING_COST.toFixed(2)} ر.س</span>
+              <span>{shipping === 0 ? 'مجاني 🎉' : `${shipping.toFixed(2)} ر.س`}</span>
             </div>
             <div className={styles.totalRow}>
               <span>الإجمالي الكلي:</span>

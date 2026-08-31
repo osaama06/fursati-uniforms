@@ -6,6 +6,10 @@ import { verifyAppToken } from '@/lib/auth';
 
 const sanitize = (str) => String(str || '').trim().replace(/<[^>]*>/g, '').slice(0, 500);
 
+// ─── قواعد الشحن (server-side مصدر الحقيقة) ──────────────────────────
+const SHIPPING_FLAT = 23;
+const FREE_SHIPPING_THRESHOLD = 300;
+
 export async function POST(req) {
   try {
     const rawBody = await req.text();
@@ -32,6 +36,15 @@ export async function POST(req) {
 
     const customer_id = payload.customerId || payload.customer_id || payload.id || null;
 
+    // ─── الـ subtotal (أساس الخصم والشحن) ───────────────────────────────
+    const subtotal = cartItems.reduce(
+      (t, i) => t + parseFloat(i.price) * i.quantity,
+      0
+    );
+
+    // ─── حساب الشحن ──────────────────────────────────────────────────
+    const shippingTotal = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT;
+
     // ─── التحقق من الكوبون وحساب الخصم ──────────────────────────────────
     let discountAmount = 0;
 
@@ -47,8 +60,7 @@ export async function POST(req) {
       const couponData = await couponRes.json();
 
       if (couponData && couponData.length > 0) {
-        const coupon   = couponData[0];
-        const subtotal = cartItems.reduce((t, i) => t + parseFloat(i.price) * i.quantity, 0);
+        const coupon = couponData[0];
 
         if (coupon.discount_type === 'percent') {
           discountAmount = (subtotal * parseFloat(coupon.amount)) / 100;
@@ -117,6 +129,14 @@ export async function POST(req) {
         country,
       },
       line_items,
+      // ✅ الشحن كـ shipping_lines عشان يندرج في الطلب
+      shipping_lines: [
+        {
+          method_id:    shippingTotal === 0 ? 'free_shipping' : 'flat_rate',
+          method_title: shippingTotal === 0 ? 'شحن مجاني' : 'الشحن',
+          total:        shippingTotal.toFixed(2),
+        },
+      ],
       // ✅ الخصم في fee_lines فقط
       ...(coupon_code && discountAmount > 0 ? {
         fee_lines: [{
