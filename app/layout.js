@@ -1,4 +1,3 @@
-// app/layout.js
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import { Toaster } from "react-hot-toast";
@@ -31,44 +30,23 @@ const geistMono = Geist_Mono({
   preload: false,
 });
 
-const SITE_URL = "https://fursatiuniforms.com";
+const SITE_URL = "https://www.fursatiuniforms.com";
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
+
   title: {
     default: "فرصتي | تسوق جميع منتجات الزي الموحد",
     template: "%s | فرصتي",
   },
+
   description:
     "متجر فرصتي للزي الموحد الطبي والمدرسي والعملي في السعودية. جودة عالية وتصاميم عملية بأسعار مناسبة.",
-  keywords: [
-    "فرصتي",
-    "يونيفورم طبي",
-    "زي طبي",
-    "يونيفورم مدرسي",
-    "Scrubs Saudi",
-    "Medical Uniform Saudi",
-    "متجر سعودي",
-    "ملابس زي موحد",
-    "مريول مدرسي",
-    "ملابس عمل",
-    "سديريي",
-    "تطريز",
-    "تفصيل ",
-    "عبايات تخرج",
-  ],
-  alternates: {
-    canonical: "/",
-    languages: {
-      ar: "/",
-      "x-default": "/",
-    },
-  },
+
   openGraph: {
     title: "فرصتي | تسوق جميع منتجات الزي الموحد",
     description:
-      "متجر فرصتي لليونيفورم الطبي والمدرسي والعملي في السعودية.",
-    url: SITE_URL,
+      "متجر فرصتي للزي الموحد الطبي والمدرسي والعملي في السعودية.",
     siteName: "فرصتي",
     locale: "ar_SA",
     type: "website",
@@ -77,39 +55,55 @@ export const metadata = {
         url: "/og-image.webp",
         width: 1200,
         height: 630,
+        alt: "متجر فرصتي للزي الموحد",
       },
     ],
   },
+
   twitter: {
     card: "summary_large_image",
     title: "فرصتي | تسوق جميع منتجات الزي الموحد",
-    description: "أفضل متجر يونيفورم طبي ومدرسي في السعودية.",
+    description:
+      "متجر فرصتي للزي الموحد الطبي والمدرسي والعملي في السعودية.",
     images: ["/og-image.webp"],
   },
+
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
+
   icons: {
     icon: "/favicon.ico",
     apple: "/favicon.ico",
   },
+
+  verification: {
+    google: "XiAUcrB6eUQFXmKOgwCJZ5OOKOzaZyRcNpoNyoHH4h4",
+  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#251f35" },
+    {
+      media: "(prefers-color-scheme: light)",
+      color: "#ffffff",
+    },
+    {
+      media: "(prefers-color-scheme: dark)",
+      color: "#251f35",
+    },
   ],
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-  },
-  other: {
-    "mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-status-bar-style": "default",
-    "apple-mobile-web-app-title": "فرصتي",
-    "application-name": "فرصتي",
-  },
 };
 
 export default function RootLayout({ children }) {
@@ -120,88 +114,122 @@ export default function RootLayout({ children }) {
       className={`${tajawal.variable} ${geistSans.variable} ${geistMono.variable}`}
     >
       <head>
-        <meta charSet="UTF-8" />
-        <meta httpEquiv="content-language" content="ar-SA" />
-        <link rel="preconnect" href="https://fursatiuniforms.store/" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://fursatiuniforms.store/" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href={SITE_URL} />
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link
-          rel="preload"
-          as="image"
-          href="https://www.fursatiuniforms.com/_next/image?url=https%3A%2F%fursatiuniforms.store/%2Fwp-content%2Fuploads%2F2025%2F06%2F%D9%81%D8%B1%D8%B5%D8%AA%D9%8A.webp&w=2048&q=75"
-          fetchpriority="high"
-          type="image/jpeg"
+          rel="preconnect"
+          href="https://fursatiuniforms.store"
+          crossOrigin="anonymous"
         />
-        <meta name="google-site-verification" content="XiAUcrB6eUQFXmKOgwCJZ5OOKOzaZyRcNpoNyoHH4h4" />
+
+        <link
+          rel="dns-prefetch"
+          href="https://fursatiuniforms.store"
+        />
+
+        <link
+          rel="preconnect"
+          href="https://www.googletagmanager.com"
+        />
+
         <meta name="format-detection" content="telephone=no" />
-        <meta name="geo.region" content="SA" />
-        <meta name="geo.placename" content="sakaka" />
       </head>
 
       <body className={tajawal.className}>
         <CartProvider>
           <WishlistProvider>
             <Header />
+
             <main>{children}</main>
+
             <Footer />
+
             <WhatsAppButton />
+
             <Toaster position="top-center" />
           </WishlistProvider>
         </CartProvider>
 
         <Script id="ga-interaction-loader" strategy="afterInteractive">
-{`
-(function () {
-  let loaded = false;
+          {`
+            (function () {
+              let loaded = false;
 
-  function loadGA() {
-    if (loaded) return;
-    loaded = true;
+              function loadGA() {
+                if (loaded) return;
+                loaded = true;
 
-    const script = document.createElement('script');
-    script.src = 'https://www.googletagmanager.com/gtag/js?id=G-90YRR71JZ7';
-    script.async = true;
-    document.head.appendChild(script);
+                const script = document.createElement('script');
+                script.src = 'https://www.googletagmanager.com/gtag/js?id=G-90YRR71JZ7';
+                script.async = true;
+                document.head.appendChild(script);
 
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    window.gtag = gtag;
+                window.dataLayer = window.dataLayer || [];
 
-    gtag('js', new Date());
-    gtag('config', 'G-90YRR71JZ7', { send_page_view: true });
+                function gtag() {
+                  dataLayer.push(arguments);
+                }
 
-    window.removeEventListener('scroll', loadGA);
-    window.removeEventListener('click', loadGA);
-    window.removeEventListener('touchstart', loadGA);
-  }
+                window.gtag = gtag;
 
-  window.addEventListener('scroll', loadGA, { once: true });
-  window.addEventListener('click', loadGA, { once: true });
-  window.addEventListener('touchstart', loadGA, { once: true });
-})();
-`}
+                gtag('js', new Date());
+
+                gtag('config', 'G-90YRR71JZ7', {
+                  send_page_view: true
+                });
+
+                window.removeEventListener('scroll', loadGA);
+                window.removeEventListener('click', loadGA);
+                window.removeEventListener('touchstart', loadGA);
+              }
+
+              window.addEventListener('scroll', loadGA, { once: true });
+              window.addEventListener('click', loadGA, { once: true });
+              window.addEventListener('touchstart', loadGA, { once: true });
+            })();
+          `}
         </Script>
 
         {process.env.NEXT_PUBLIC_FB_PIXEL_ID && (
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                !function(f,b,e,v,n,t,s)
-                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-                n.queue=[];t=b.createElement(e);t.async=!0;
-                t.src=v;s=b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t,s)}(window, document,'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-                fbq('init', '${process.env.NEXT_PUBLIC_FB_PIXEL_ID}');
-                fbq('track', 'PageView');
-              `,
-            }}
-          />
+          <Script id="facebook-pixel" strategy="afterInteractive">
+            {`
+              !function(f,b,e,v,n,t,s)
+              {
+                if(f.fbq)return;
+
+                n=f.fbq=function(){
+                  n.callMethod
+                    ? n.callMethod.apply(n,arguments)
+                    : n.queue.push(arguments)
+                };
+
+                if(!f._fbq)f._fbq=n;
+
+                n.push=n;
+                n.loaded=!0;
+                n.version='2.0';
+                n.queue=[];
+
+                t=b.createElement(e);
+                t.async=!0;
+                t.src=v;
+
+                s=b.getElementsByTagName(e)[0];
+                s.parentNode.insertBefore(t,s);
+
+              }(
+                window,
+                document,
+                'script',
+                'https://connect.facebook.net/en_US/fbevents.js'
+              );
+
+              fbq(
+                'init',
+                '${process.env.NEXT_PUBLIC_FB_PIXEL_ID}'
+              );
+
+              fbq('track', 'PageView');
+            `}
+          </Script>
         )}
       </body>
     </html>

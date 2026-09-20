@@ -1,22 +1,35 @@
 // app/sitemap.js
+
 // دالة لجلب المنتجات من WooCommerce
 async function getProducts() {
   const consumerKey = process.env.WOO_CONSUMER_KEY;
   const secretKey = process.env.WOO_SECRET_KEY;
-  const auth = Buffer.from(`${consumerKey}:${secretKey}`).toString("base64");
+
+  const auth = Buffer.from(
+    `${consumerKey}:${secretKey}`
+  ).toString("base64");
 
   try {
     const res = await fetch(
-      'https://fursatiuniforms.store/wp-json/wc/v3/products?per_page=100&status=publish',
+      "https://fursatiuniforms.store/wp-json/wc/v3/products?per_page=100&status=publish",
       {
-        headers: { Authorization: `Basic ${auth}` },
-        next: { revalidate: 3600 }
+        headers: {
+          Authorization: `Basic ${auth}`,
+        },
+        next: {
+          revalidate: 3600,
+        },
       }
     );
-    if (!res.ok) return [];
+
+    if (!res.ok) {
+      console.error("Failed to fetch products:", res.status);
+      return [];
+    }
+
     return await res.json();
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error("Error fetching products:", error);
     return [];
   }
 }
@@ -25,28 +38,41 @@ async function getProducts() {
 async function getCategories() {
   const consumerKey = process.env.WOO_CONSUMER_KEY;
   const secretKey = process.env.WOO_SECRET_KEY;
-  const auth = Buffer.from(`${consumerKey}:${secretKey}`).toString("base64");
+
+  const auth = Buffer.from(
+    `${consumerKey}:${secretKey}`
+  ).toString("base64");
 
   try {
     const res = await fetch(
-      'https://fursatiuniforms.store/wp-json/wc/v3/products/categories?per_page=100&hide_empty=true',
+      "https://fursatiuniforms.store/wp-json/wc/v3/products/categories?per_page=100&hide_empty=true",
       {
-        headers: { Authorization: `Basic ${auth}` },
-        next: { revalidate: 3600 }
+        headers: {
+          Authorization: `Basic ${auth}`,
+        },
+        next: {
+          revalidate: 3600,
+        },
       }
     );
-    if (!res.ok) return [];
+
+    if (!res.ok) {
+      console.error("Failed to fetch categories:", res.status);
+      return [];
+    }
+
     return await res.json();
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error("Error fetching categories:", error);
     return [];
   }
 }
 
 export default async function sitemap() {
-  const baseUrl = 'https://fursatiuniforms.com';
+  // الدومين الأساسي للموقع
+  const baseUrl = "https://www.fursatiuniforms.com";
 
-  // جلب البيانات
+  // جلب البيانات من WooCommerce
   const products = await getProducts();
   const categories = await getCategories();
 
@@ -55,25 +81,25 @@ export default async function sitemap() {
     {
       url: baseUrl,
       lastModified: new Date(),
-      changeFrequency: 'daily',
+      changeFrequency: "daily",
       priority: 1.0,
     },
     {
       url: `${baseUrl}/products`,
       lastModified: new Date(),
-      changeFrequency: 'daily',
+      changeFrequency: "daily",
       priority: 0.9,
     },
     {
       url: `${baseUrl}/about-us`,
       lastModified: new Date(),
-      changeFrequency: 'monthly',
+      changeFrequency: "monthly",
       priority: 0.5,
     },
     {
       url: `${baseUrl}/contact`,
       lastModified: new Date(),
-      changeFrequency: 'monthly',
+      changeFrequency: "monthly",
       priority: 0.5,
     },
   ];
@@ -81,19 +107,26 @@ export default async function sitemap() {
   // صفحات المنتجات
   const productPages = products.map((product) => ({
     url: `${baseUrl}/products/${product.slug}`,
-    lastModified: new Date(product.date_modified || product.date_created),
-    changeFrequency: 'weekly',
+    lastModified: new Date(
+      product.date_modified || product.date_created
+    ),
+    changeFrequency: "weekly",
     priority: 0.8,
   }));
 
-  // ⭐ صفحات الفئات - بدون /category
+  // صفحات الفئات
+  // بدون /category لأن مساراتك الحالية مباشرة مثل /scrubs
   const categoryPages = categories.map((category) => ({
     url: `${baseUrl}/${category.slug}`,
     lastModified: new Date(),
-    changeFrequency: 'daily',
+    changeFrequency: "daily",
     priority: 0.7,
   }));
 
-  // دمج كل الصفحات
-  return [...staticPages, ...productPages, ...categoryPages];
+  // دمج جميع الروابط
+  return [
+    ...staticPages,
+    ...productPages,
+    ...categoryPages,
+  ];
 }
