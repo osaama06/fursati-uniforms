@@ -20,8 +20,8 @@ export async function generateMetadata({ searchParams }) {
       : "ابحث داخل متجر فرصتي يونيفورمز عن الزي الطبي والمدرسي.";
 
   const cleanUrl = query
-    ? `https://fursatiuniforms.com/search?q=${encodeURIComponent(query)}`
-    : "https://fursatiuniforms.com/search";
+    ? `https://www.fursatiuniforms.com/search?q=${encodeURIComponent(query)}`
+    : "https://www.fursatiuniforms.com/search";
 
   return {
     title,
@@ -33,7 +33,7 @@ export async function generateMetadata({ searchParams }) {
       siteName: "Fursati Uniforms",
       images: [
         {
-          url: "https://fursatiuniforms.com/og-search.jpg",
+          url: "https://www.fursatiuniforms.com/og-search.jpg",
           width: 1200,
           height: 630,
           alt: title,
@@ -46,7 +46,7 @@ export async function generateMetadata({ searchParams }) {
       card: "summary_large_image",
       title,
       description,
-      images: ["https://fursatiuniforms.com/og-search.jpg"],
+      images: ["https://www.fursatiuniforms.com/og-search.jpg"],
     },
   };
 }
@@ -68,7 +68,7 @@ export default async function SearchPage({ searchParams }) {
     "@type": "SearchResultsPage",
     "name": `نتائج البحث عن ${query}`,
     "description": `نتائج البحث داخل متجر فرصتي يونيفورمز عن: ${query}`,
-    "url": `https://fursatiuniforms.com/search?q=${encodeURIComponent(query)}`
+    "url": `https://www.fursatiuniforms.com/search?q=${encodeURIComponent(query)}`
   };
 
   const listSchema =
@@ -85,7 +85,7 @@ export default async function SearchPage({ searchParams }) {
               "@type": "Product",
               "name": p.name,
               "image": p.images?.[0]?.src,
-              "url": `https://fursatiuniforms.com/products/${p.slug}`,
+              "url": `https://www.fursatiuniforms.com/products/${p.slug}`,
               "offers": {
                 "@type": "Offer",
                 "price": p.price,

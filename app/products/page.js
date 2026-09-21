@@ -9,7 +9,7 @@ export const metadata = {
     title: "جميع المنتجات | فرصتي",
     description:
       "استعرض جميع منتجات متجر فرصتي للملابس الطبية والمدرسية.",
-    url: "https://fursatiuniforms.com/products",
+    url: "https://www.fursatiuniforms.com/products",
     siteName: "فرصتي",
     locale: "ar",
     type: "website",
@@ -56,13 +56,13 @@ export default async function ProductsPage() {
             name: "جميع المنتجات",
             description:
               "استعرض جميع منتجات متجر فرصتي للملابس الطبية والمدرسية.",
-            url: "https://fursatiuniforms.com/products",
+            url: "https://www.fursatiuniforms.com/products",
             inLanguage: "ar",
             mainEntity: products.map((p) => ({
               "@type": "Product",
               name: p.name,
               image: p.images?.[0]?.src || "",
-              url: `https://fursatiuniforms.com/product/${p.slug}`,
+              url: `https://www.fursatiuniforms.com/product/${p.slug}`,
               offers: {
                 "@type": "Offer",
                 price: p.price,

@@ -22,7 +22,7 @@ async function getPage() {
 
 // ⚡ إصلاح روابط Yoast تلقائياً
 function fixYoastDomain(str = "") {
-  return str.replace(/https?:\/\/furssati\.io/gi, "https://fursatiuniforms.com");
+  return str.replace(/https?:\/\/furssati\.io/gi, "https://www.fursatiuniforms.com");
 }
 
 // ⚡ Metadata
@@ -35,7 +35,7 @@ export async function generateMetadata() {
       description:
         "تعرف على سياسة الإرجاع والاستبدال في متجر فرصتي يونيفورمز.",
       alternates: {
-        canonical: "https://fursatiuniforms.com/return-policy",
+        canonical: "https://www.fursatiuniforms.com/return-policy",
       },
     };
   }
@@ -43,7 +43,7 @@ export async function generateMetadata() {
   const yoast = page.yoast_head_json || {};
   const fixedCanonical =
     fixYoastDomain(yoast.canonical) ||
-    "https://fursatiuniforms.com/return-policy";
+    "https://www.fursatiuniforms.com/return-policy";
 
   return {
     title: yoast.title || page.title?.rendered,
@@ -90,7 +90,7 @@ function WebPageSchema(page) {
     "@context": "https://schema.org",
     "@type": "WebPage",
     name: stripHtml(page.title.rendered),
-    url: "https://fursatiuniforms.com/return-policy",
+    url: "https://www.fursatiuniforms.com/return-policy",
     description: stripHtml(page.excerpt?.rendered || page.content?.rendered),
   };
 }
@@ -104,13 +104,13 @@ function BreadcrumbSchema() {
         "@type": "ListItem",
         position: 1,
         name: "الرئيسية",
-        item: "https://fursatiuniforms.com",
+        item: "https://www.fursatiuniforms.com",
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "سياسة الإرجاع والاستبدال",
-        item: "https://fursatiuniforms.com/return-policy",
+        item: "https://www.fursatiuniforms.com/return-policy",
       },
     ],
   };

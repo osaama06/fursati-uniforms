@@ -3,7 +3,7 @@
 // ========================================
 // CONSTANTS
 // ========================================
-const SITE_URL = "https://fursatiuniforms.com";
+const SITE_URL = "https://www.fursatiuniforms.com";
 const ORG_ID = `${SITE_URL}/#organization`;
 
 // دالة لتنظيف HTML tags

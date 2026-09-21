@@ -18,7 +18,7 @@ export const metadata = {
       "تعرف على تفاصيل سياسة الشحن والتوصيل في فرصتي يونيفورمز. مواعيد الشحن والرسوم والمناطق المغطاة.",
     type: "article",
     locale: "ar_AR",
-    url: "https://fursatiuniforms.com/shipping-policy",
+    url: "https://www.fursatiuniforms.com/shipping-policy",
     siteName: "فرصتي يونيفورمز",
   },
 };
@@ -53,14 +53,14 @@ export default async function ShippingPolicyPage() {
       name: "سياسة الشحن",
       description:
         "اقرأ سياسة الشحن الخاصة بفرصتي يونيفورمز، بما يشمل أوقات التوصيل والرسوم والمناطق المتاحة.",
-      url: "https://fursatiuniforms.com/shipping-policy",
+      url: "https://www.fursatiuniforms.com/shipping-policy",
       publisher: {
         "@type": "Organization",
         name: "فرصتي يونيفورمز",
-        url: "https://fursatiuniforms.com",
+        url: "https://www.fursatiuniforms.com",
         logo: {
           "@type": "ImageObject",
-          url: "https://fursatiuniforms.com/logo.png",
+          url: "https://www.fursatiuniforms.com/logo.png",
         },
       },
     };

@@ -7,7 +7,7 @@ import "@/styles/components/BannerSlider.css";
 
 const FRONTEND_ORIGINS = [
   "https://www.fursatiuniforms.com",
-  "https://fursatiuniforms.com",
+  "https://www.fursatiuniforms.com",
   "http://localhost:3000",
 ];
 

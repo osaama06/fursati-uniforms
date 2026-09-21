@@ -11,7 +11,7 @@ import {
 // ================================
 // CONSTANTS (Static Config)
 // ================================
-const SITE_URL = "https://fursatiuniforms.com";
+const SITE_URL = "https://www.fursatiuniforms.com";
 const SITE_NAME = " فرصتي";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.webp`;
 

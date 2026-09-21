@@ -78,7 +78,7 @@ export const metadata = {
 openGraph: {
   title: "فرصتي | متجر الزي الموحد",
   description: "متجر فرصتي للزي الموحدي.",
-  url: "https://fursatiuniforms.com",
+  url: "https://www.fursatiuniforms.com",
   siteName: "فرصتي",
   images: [
     {
@@ -112,8 +112,8 @@ export default async function Home() {
 const siteConfig = {
   name: "فرصتي",
   alternateName: ["Fursati", "Fursati Uniforms"],
-  url: "https://fursatiuniforms.com",
-  logo: "https://fursatiuniforms.com/logo.png",
+  url: "https://www.fursatiuniforms.com",
+  logo: "https://www.fursatiuniforms.com/logo.png",
   description: "متجر فرصتي للزي الموحد الطبي والمدرسي في السعودية.",
 };
 

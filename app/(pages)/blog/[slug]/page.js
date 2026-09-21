@@ -43,7 +43,7 @@ export async function generateMetadata({ params }) {
   }
 
   // *** التعديل هنا ***
-  const postUrl = `https://fursatiuniforms.com/blog/${params.slug}`;
+  const postUrl = `https://www.fursatiuniforms.com/blog/${params.slug}`;
 
   const yoast = await getYoastSEO(postUrl);
 
@@ -92,7 +92,7 @@ export default async function BlogSinglePage({ params }) {
   }
 
   // *** التعديل هنا ***
-  const postUrl = `https://fursatiuniforms.com/blog/${params.slug}`;
+  const postUrl = `https://www.fursatiuniforms.com/blog/${params.slug}`;
   const yoast = await getYoastSEO(postUrl);
 
   const img =

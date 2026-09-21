@@ -18,7 +18,7 @@ async function getPosts() {
 // 2) Yoast SEO — مع تصحيح الدومين للفرونت
 // =========================================================
 async function getYoastSEO() {
-  const frontendUrl = "https://fursatiuniforms.com/blog";
+  const frontendUrl = "https://www.fursatiuniforms.com/blog";
 
   const res = await fetch(
     `https://fursatiuniforms.store/wp-json/yoast/v1/get_head?url=${frontendUrl}`,
@@ -40,7 +40,7 @@ export async function generateMetadata() {
       title: "المدونة | متجر فرصتي",
       description: "مقالات حول الزي الطبي والمدرسي.",
       alternates: {
-        canonical: "https://fursatiuniforms.com/blog",
+        canonical: "https://www.fursatiuniforms.com/blog",
       },
     };
   }
@@ -51,12 +51,12 @@ export async function generateMetadata() {
     title: head.title || "المدونة",
     description: head.description || "",
     alternates: {
-      canonical: head.canonical || "https://fursatiuniforms.com/blog",
+      canonical: head.canonical || "https://www.fursatiuniforms.com/blog",
     },
     openGraph: {
       title: head.og_title,
       description: head.og_description,
-      url: "https://fursatiuniforms.com/blog",
+      url: "https://www.fursatiuniforms.com/blog",
       images: head.og_image?.map((img) => ({
         url: img.url,
         width: img.width,
@@ -83,12 +83,12 @@ function BlogSchema(posts) {
     "@context": "https://schema.org",
     "@type": "Blog",
     name: "مدونة متجر فرصتي",
-    url: "https://fursatiuniforms.com/blog",
+    url: "https://www.fursatiuniforms.com/blog",
     description: "مقالات ونصائح حول الزي الطبي والمدرسي والخامات والقياسات.",
     blogPost: posts.map((post) => ({
       "@type": "BlogPosting",
       headline: post.title.rendered,
-      url: `https://fursatiuniforms.com/blog/${post.slug}`,
+      url: `https://www.fursatiuniforms.com/blog/${post.slug}`,
       image:
         post?.better_featured_image?.source_url ||
         post?.yoast_head_json?.og_image?.[0]?.url ||
@@ -108,13 +108,13 @@ function BreadcrumbSchema() {
         "@type": "ListItem",
         position: 1,
         name: "الرئيسية",
-        item: "https://fursatiuniforms.com",
+        item: "https://www.fursatiuniforms.com",
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "المدونة",
-        item: "https://fursatiuniforms.com/blog",
+        item: "https://www.fursatiuniforms.com/blog",
       },
     ],
   };

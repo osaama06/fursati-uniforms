@@ -14,7 +14,7 @@ export const metadata = {
       "اطلع على سياسة الخصوصية الخاصة بفرصتي يونيفورمز، ومعرفة كيفية التعامل مع بياناتك الشخصية وحمايتها.",
     type: "article",
     locale: "ar_AR",
-    url: "https://fursatiuniforms.com/privacy-policy",
+    url: "https://www.fursatiuniforms.com/privacy-policy",
     siteName: "فرصتي يونيفورمز",
   },
 };
@@ -54,14 +54,14 @@ export default async function PrivacyPolicyPage() {
     name: "سياسة الخصوصية",
     description:
       "توضح سياسة الخصوصية في فرصتي يونيفورمز كيفية جمع واستخدام وحماية البيانات الشخصية للمستخدمين.",
-    url: "https://fursatiuniforms.com/privacy-policy",
+    url: "https://www.fursatiuniforms.com/privacy-policy",
     publisher: {
       "@type": "Organization",
       name: "فرصتي يونيفورمز",
-      url: "https://fursatiuniforms.com",
+      url: "https://www.fursatiuniforms.com",
       logo: {
         "@type": "ImageObject",
-        url: "https://fursatiuniforms.com/logo.png",
+        url: "https://www.fursatiuniforms.com/logo.png",
       },
     },
   };

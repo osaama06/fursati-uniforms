@@ -23,7 +23,7 @@ async function getPage() {
 
 // إصلاح روابط Yoast تلقائياً
 function fixYoastDomain(str = "") {
-  return str.replace(/https?:\/\/furssati\.io/gi, "https://fursatiuniforms.com");
+  return str.replace(/https?:\/\/furssati\.io/gi, "https://www.fursatiuniforms.com");
 }
 
 // Metadata
@@ -36,7 +36,7 @@ export async function generateMetadata() {
       description:
         "تعرف على الشروط والأحكام الخاصة بمتجر فرصتي يونيفورمز.",
       alternates: {
-        canonical: "https://fursatiuniforms.com/terms-and-conditions",
+        canonical: "https://www.fursatiuniforms.com/terms-and-conditions",
       },
     };
   }
@@ -44,7 +44,7 @@ export async function generateMetadata() {
   const yoast = page.yoast_head_json || {};
   const fixedCanonical =
     fixYoastDomain(yoast.canonical) ||
-    "https://fursatiuniforms.com/terms-and-conditions";
+    "https://www.fursatiuniforms.com/terms-and-conditions";
 
   return {
     title: yoast.title || page.title?.rendered || "الشروط والأحكام | فرصتي يونيفورمز",
@@ -91,7 +91,7 @@ function WebPageSchema(page) {
     "@context": "https://schema.org",
     "@type": "WebPage",
     name: stripHtml(page.title.rendered),
-    url: "https://fursatiuniforms.com/terms-and-conditions",
+    url: "https://www.fursatiuniforms.com/terms-and-conditions",
     description: stripHtml(page.excerpt?.rendered || page.content?.rendered),
   };
 }
@@ -105,13 +105,13 @@ function BreadcrumbSchema() {
         "@type": "ListItem",
         position: 1,
         name: "الرئيسية",
-        item: "https://fursatiuniforms.com",
+        item: "https://www.fursatiuniforms.com",
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "الشروط والأحكام",
-        item: "https://fursatiuniforms.com/terms-and-conditions",
+        item: "https://www.fursatiuniforms.com/terms-and-conditions",
       },
     ],
   };

@@ -9,7 +9,7 @@ import {
 // ================================
 // CONSTANTS (Static Config)
 // ================================
-const SITE_URL = "https://fursatiuniforms.com";
+const SITE_URL = "https://www.fursatiuniforms.com";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.webp`;
 
 // ================================
