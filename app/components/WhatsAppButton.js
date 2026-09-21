@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
  
 const WHATSAPP_NUMBER = "+966533812602"; // ← غيّر هذا برقمك
-const WHATSAPP_MESSAGE = "ابغى استفسر عن"; // الرسالة الافتراضية
+const WHATSAPP_MESSAGE = "كم الكمية المطلوبة؟"; // الرسالة الافتراضية
  
 export default function WhatsAppButton() {
   const [visible, setVisible] = useState(false);
@@ -23,7 +23,7 @@ export default function WhatsAppButton() {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="تواصل معنا عبر واتساب"
+        aria-label="لطلب الكميات او التفصيلات"
         className={`whatsapp-fab ${visible ? "whatsapp-fab--visible" : ""}`}
       >
         {/* WhatsApp SVG icon */}
