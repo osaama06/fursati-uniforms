@@ -29,7 +29,6 @@ export default function ProductContent({ product, variations = [] }) {
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [breadcrumbCategories, setBreadcrumbCategories] = useState([]);
-  const [sizeGuideImage, setSizeGuideImage] = useState(null);
   const [isDesktop, setIsDesktop] = useState(false);
   const [zoomVisible, setZoomVisible] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
@@ -247,8 +246,6 @@ export default function ProductContent({ product, variations = [] }) {
         }
         if (current) hierarchy.unshift(current);
         setBreadcrumbCategories(hierarchy);
-        const imgMatch = deepestCategory?.description?.match(/<img[^>]+src=["']([^"']+)["']/);
-        setSizeGuideImage(imgMatch ? imgMatch[1] : null);
       } catch (error) {
         console.error('Error fetching category hierarchy:', error);
       }
@@ -680,6 +677,7 @@ export default function ProductContent({ product, variations = [] }) {
           </div>
 
           {/* ── Variation Attributes (color + size + any other) ── */}
+           <SizeGuideTrigger image="/size_guide1.png" />
           {variationAttributes.map((attr) => (
             <div className={attr.isColor ? "colorSection" : "sizeSection"} key={attr.key}>
               <h3 className="sectionTitle">
@@ -729,7 +727,8 @@ export default function ProductContent({ product, variations = [] }) {
             </p>
           )}
 
-          {sizeGuideImage && <SizeGuideTrigger image={sizeGuideImage} />}
+
+          
 
           {/* ── Custom Fields ── */}
           {customFields.length > 0 && (
