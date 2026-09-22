@@ -32,6 +32,70 @@ const geistMono = Geist_Mono({
 
 const SITE_URL = "https://www.fursatiuniforms.com";
 
+// =============================
+// WooCommerce Auth
+// =============================
+const getAuthHeader = () => {
+  return Buffer.from(
+    `${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`
+  ).toString("base64");
+};
+
+// =============================
+// Build Categories Tree
+// =============================
+function buildCategoryTree(items, parentId) {
+  return items
+    .filter((item) => Number(item.parent) === Number(parentId))
+    .map((item) => ({
+      ...item,
+      children: buildCategoryTree(items, item.id),
+    }));
+}
+
+// =============================
+// Fetch Header Categories
+// =============================
+async function getHeaderCategories() {
+  try {
+    const res = await fetch(
+      "https://fursatiuniforms.store/wp-json/wc/v3/products/categories?per_page=100&hide_empty=false",
+      {
+        headers: {
+          Authorization: `Basic ${getAuthHeader()}`,
+        },
+
+        // التصنيفات تتخزن لمدة ساعة
+        next: {
+          revalidate: 3600,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      console.error(
+        "Failed to fetch header categories:",
+        res.status
+      );
+
+      return [];
+    }
+
+    const data = await res.json();
+
+    // نفس المنطق القديم عندك:
+    // نبدأ من التصنيف الأب ID = 27
+    return buildCategoryTree(data, 27);
+  } catch (error) {
+    console.error(
+      "Error fetching header categories:",
+      error
+    );
+
+    return [];
+  }
+}
+
 export const metadata = {
   metadataBase: new URL(SITE_URL),
 
@@ -106,7 +170,17 @@ export const viewport = {
   ],
 };
 
-export default function RootLayout({ children }) {
+// =============================
+// Root Layout
+// =============================
+export default async function RootLayout({
+  children,
+}) {
+  // التصنيفات تنجلب على السيرفر
+  // قبل إرسال الصفحة للمتصفح
+  const categories =
+    await getHeaderCategories();
+
   return (
     <html
       lang="ar-SA"
@@ -130,13 +204,18 @@ export default function RootLayout({ children }) {
           href="https://www.googletagmanager.com"
         />
 
-        <meta name="format-detection" content="telephone=no" />
+        <meta
+          name="format-detection"
+          content="telephone=no"
+        />
       </head>
 
       <body className={tajawal.className}>
         <CartProvider>
           <WishlistProvider>
-            <Header />
+            <Header
+              categories={categories}
+            />
 
             <main>{children}</main>
 
@@ -148,7 +227,10 @@ export default function RootLayout({ children }) {
           </WishlistProvider>
         </CartProvider>
 
-        <Script id="ga-interaction-loader" strategy="afterInteractive">
+        <Script
+          id="ga-interaction-loader"
+          strategy="afterInteractive"
+        >
           {`
             (function () {
               let loaded = false;
@@ -189,7 +271,10 @@ export default function RootLayout({ children }) {
         </Script>
 
         {process.env.NEXT_PUBLIC_FB_PIXEL_ID && (
-          <Script id="facebook-pixel" strategy="afterInteractive">
+          <Script
+            id="facebook-pixel"
+            strategy="afterInteractive"
+          >
             {`
               !function(f,b,e,v,n,t,s)
               {
