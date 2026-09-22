@@ -3,7 +3,8 @@
 // ✅ حل مشكلة فيرسل: إجبار الصفحة على العمل كوضع ديناميكي لتجنب خطأ الـ Build
 export const dynamic = "force-dynamic";
 
-import { unstable_cache } from "next/cache";
+import { headers } from "next/headers";
+
 import BannerSlider from "./components/bannerslider/page";
 import ProductSlider from "./components/ProductSlider/page";
 import StoriesSlider from "./components/storiesSlider/page";
@@ -73,80 +74,73 @@ async function getProductsByCategoryId(categoryId) {
 }
 
 // =============================
-// 🖼️ Fetch Homepage Banners
-// Server-side + Cache لمدة ساعة
+// 🖼️ Fetch Banner Type
 // =============================
-const getBanners = unstable_cache(
-  async () => {
-    try {
-      const [desktopRes, mobileRes] = await Promise.all([
-        fetch(
-          "https://fursatiuniforms.store/wp-json/wp/v2/banner?_embed&per_page=10"
-        ),
-        fetch(
-          "https://fursatiuniforms.store/wp-json/wp/v2/mobile_banner?_embed&per_page=10"
-        ),
-      ]);
-
-      if (!desktopRes.ok || !mobileRes.ok) {
-        throw new Error("فشل في جلب البانرات");
+async function fetchBannerType(type) {
+  try {
+    const res = await fetch(
+      `https://fursatiuniforms.store/wp-json/wp/v2/${type}?_embed&per_page=10`,
+      {
+        next: { revalidate: 3600 },
       }
+    );
 
-      const [desktopData, mobileData] = await Promise.all([
-        desktopRes.json(),
-        mobileRes.json(),
-      ]);
-
-      const desktopBanners = desktopData
-        .map((post) => {
-          const media = post?._embedded?.["wp:featuredmedia"];
-
-          return {
-            id: post.id,
-            image: media?.[0]?.source_url || "",
-            link: post?.acf?.banner_link || "",
-          };
-        })
-        .filter((item) => item.image);
-
-      const mobileBanners = mobileData
-        .map((post) => {
-          const media = post?._embedded?.["wp:featuredmedia"];
-
-          const embeddedImage =
-            media?.[0] && !media?.[0]?.code
-              ? media[0].source_url
-              : "";
-
-          const fallbackYoastImage =
-            post?.yoast_head_json?.og_image?.[0]?.url || "";
-
-          return {
-            id: post.id,
-            image: embeddedImage || fallbackYoastImage || "",
-            link: post?.acf?.banner_link || "",
-          };
-        })
-        .filter((item) => item.image);
-
-      return {
-        desktopBanners,
-        mobileBanners,
-      };
-    } catch (error) {
-      console.error("Error fetching banners:", error);
-
-      return {
-        desktopBanners: [],
-        mobileBanners: [],
-      };
+    if (!res.ok) {
+      console.error(`Failed to fetch ${type}:`, res.status);
+      return [];
     }
-  },
-  ["homepage-banners"],
-  {
-    revalidate: 3600,
+
+    const data = await res.json();
+
+    return data
+      .map((post) => {
+        const media = post?._embedded?.["wp:featuredmedia"];
+
+        const embeddedImage =
+          media?.[0] && !media?.[0]?.code
+            ? media[0]?.source_url || ""
+            : "";
+
+        const fallbackYoastImage =
+          post?.yoast_head_json?.og_image?.[0]?.url || "";
+
+        return {
+          id: post.id,
+          image: embeddedImage || fallbackYoastImage || "",
+          link: post?.acf?.banner_link || "",
+        };
+      })
+      .filter((item) => item.image);
+  } catch (error) {
+    console.error(`Error fetching ${type}:`, error);
+    return [];
   }
-);
+}
+
+// =============================
+// 🖼️ Fetch Correct Homepage Banners
+// =============================
+async function getBanners(isMobile) {
+  const preferredType = isMobile
+    ? "mobile_banner"
+    : "banner";
+
+  const fallbackType = isMobile
+    ? "banner"
+    : "mobile_banner";
+
+  // أولاً: جيب النوع الصحيح للجهاز
+  const preferredBanners =
+    await fetchBannerType(preferredType);
+
+  if (preferredBanners.length > 0) {
+    return preferredBanners;
+  }
+
+  // فقط لو النوع المطلوب فاضي أو فشل
+  // استخدم النوع الآخر كـ fallback
+  return await fetchBannerType(fallbackType);
+}
 
 // =============================
 // ✅ Metadata (Homepage)
@@ -184,16 +178,36 @@ export const metadata = {
 // 🏠 Homepage Component
 // =============================
 export default async function Home() {
-  // 1. جلب أقسام الهوم والبانرات بالتوازي
-  const [categories, bannersData] = await Promise.all([
+  // =============================
+  // 📱 Detect Device ONCE on Server
+  // =============================
+  const headersList = await headers();
+
+  const userAgent =
+    headersList.get("user-agent") || "";
+
+  const clientHintMobile =
+    headersList.get("sec-ch-ua-mobile");
+
+  const isMobile =
+    clientHintMobile === "?1" ||
+    /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent);
+
+  // =============================
+  // 1. Categories + correct banners
+  // =============================
+  const [categories, banners] = await Promise.all([
     getHomeCategories(),
-    getBanners(),
+    getBanners(isMobile),
   ]);
 
-  // 2. جلب منتجات كل قسم بالتوازي لسرعة الأداء
+  // =============================
+  // 2. جلب منتجات كل قسم بالتوازي
+  // =============================
   const sliders = await Promise.all(
     categories.map(async (category) => {
-      const products = await getProductsByCategoryId(category.id);
+      const products =
+        await getProductsByCategoryId(category.id);
 
       return {
         category,
@@ -215,7 +229,8 @@ export default async function Home() {
 
     url: "https://www.fursatiuniforms.com",
 
-    logo: "https://www.fursatiuniforms.com/logo.png",
+    logo:
+      "https://www.fursatiuniforms.com/logo.png",
 
     description:
       "متجر فرصتي للزي الموحد الطبي والمدرسي في السعودية.",
@@ -245,25 +260,17 @@ export default async function Home() {
 
       <main>
         {/* السلايدر الرئيسي في الأعلى */}
-        <BannerSlider
-          desktopBanners={
-            bannersData.desktopBanners
-          }
-          mobileBanners={
-            bannersData.mobileBanners
-          }
-        />
+        <BannerSlider banners={banners} />
 
         {/* عرض أقسام الهوم الديناميكية */}
-        {sliders.map(
-          ({ category, products }) =>
-            products.length > 0 ? (
-              <ProductSlider
-                key={category.id}
-                category={category}
-                products={products}
-              />
-            ) : null
+        {sliders.map(({ category, products }) =>
+          products.length > 0 ? (
+            <ProductSlider
+              key={category.id}
+              category={category}
+              products={products}
+            />
+          ) : null
         )}
       </main>
     </>

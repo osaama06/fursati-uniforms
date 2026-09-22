@@ -5,7 +5,6 @@ import React, {
   useEffect,
   useCallback,
   useRef,
-  useMemo,
 } from "react";
 
 import Image from "next/image";
@@ -20,9 +19,7 @@ const FRONTEND_ORIGINS = [
 ];
 
 function normalizeBannerLink(url) {
-  if (!url || typeof url !== "string") {
-    return "";
-  }
+  if (!url || typeof url !== "string") return "";
 
   const trimmed = url.trim();
 
@@ -30,30 +27,23 @@ function normalizeBannerLink(url) {
     return trimmed;
   }
 
-  const matchedOrigin =
-    FRONTEND_ORIGINS.find((origin) =>
-      trimmed.startsWith(origin)
-    );
+  const matchedOrigin = FRONTEND_ORIGINS.find((origin) =>
+    trimmed.startsWith(origin)
+  );
 
   if (matchedOrigin) {
-    return (
-      trimmed.replace(matchedOrigin, "") || "/"
-    );
+    return trimmed.replace(matchedOrigin, "") || "/";
   }
 
   return trimmed;
 }
 
 function isExternalBannerLink(url) {
-  if (!url || typeof url !== "string") {
-    return false;
-  }
+  if (!url || typeof url !== "string") return false;
 
   const trimmed = url.trim();
 
-  if (trimmed.startsWith("/")) {
-    return false;
-  }
+  if (trimmed.startsWith("/")) return false;
 
   return !FRONTEND_ORIGINS.some((origin) =>
     trimmed.startsWith(origin)
@@ -97,8 +87,7 @@ const ChevronRight = () => (
 );
 
 export default function BannerSlider({
-  desktopBanners = [],
-  mobileBanners = [],
+  banners = [],
 }) {
   const [current, setCurrent] =
     useState(0);
@@ -106,88 +95,33 @@ export default function BannerSlider({
   const [isPaused, setIsPaused] =
     useState(false);
 
-  const [isMobile, setIsMobile] =
-    useState(false);
+  const touchStartX =
+    useRef(null);
 
-  const touchStartX = useRef(null);
+  const touchStartY =
+    useRef(null);
 
-  const touchStartY = useRef(null);
+  const touchMoveX =
+    useRef(null);
 
-  const touchMoveX = useRef(null);
+  const isSwiping =
+    useRef(false);
 
-  const isSwiping = useRef(false);
-
-  const suppressClick = useRef(false);
-
-  // =============================
-  // Detect Mobile
-  // =============================
-  useEffect(() => {
-    const mediaQuery =
-      window.matchMedia(
-        "(max-width: 767px)"
-      );
-
-    const updateView = () => {
-      setIsMobile(mediaQuery.matches);
-    };
-
-    updateView();
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener(
-        "change",
-        updateView
-      );
-    } else {
-      mediaQuery.addListener(updateView);
-    }
-
-    return () => {
-      if (
-        mediaQuery.removeEventListener
-      ) {
-        mediaQuery.removeEventListener(
-          "change",
-          updateView
-        );
-      } else {
-        mediaQuery.removeListener(
-          updateView
-        );
-      }
-    };
-  }, []);
+  const suppressClick =
+    useRef(false);
 
   // =============================
-  // Choose Desktop / Mobile Banners
+  // Reset slide إذا تغيرت القائمة
   // =============================
-  const banners = useMemo(() => {
-    return isMobile
-      ? mobileBanners
-      : desktopBanners;
-  }, [
-    isMobile,
-    mobileBanners,
-    desktopBanners,
-  ]);
-
-  // Reset current slide when device changes
   useEffect(() => {
     setCurrent(0);
-  }, [
-    isMobile,
-    desktopBanners.length,
-    mobileBanners.length,
-  ]);
+  }, [banners.length]);
 
   // =============================
   // Next Slide
   // =============================
   const nextSlide = useCallback(() => {
-    if (banners.length <= 1) {
-      return;
-    }
+    if (banners.length <= 1) return;
 
     setCurrent(
       (prev) =>
@@ -199,9 +133,7 @@ export default function BannerSlider({
   // Previous Slide
   // =============================
   const prevSlide = useCallback(() => {
-    if (banners.length <= 1) {
-      return;
-    }
+    if (banners.length <= 1) return;
 
     setCurrent(
       (prev) =>
@@ -244,9 +176,7 @@ export default function BannerSlider({
   // Touch Start
   // =============================
   const handleTouchStart = (e) => {
-    if (banners.length <= 1) {
-      return;
-    }
+    if (banners.length <= 1) return;
 
     const touch = e.touches[0];
 
@@ -270,9 +200,7 @@ export default function BannerSlider({
   // Touch Move
   // =============================
   const handleTouchMove = (e) => {
-    if (!isSwiping.current) {
-      return;
-    }
+    if (!isSwiping.current) return;
 
     const touch = e.touches[0];
 
@@ -301,9 +229,7 @@ export default function BannerSlider({
   // Touch End
   // =============================
   const handleTouchEnd = () => {
-    if (!isSwiping.current) {
-      return;
-    }
+    if (!isSwiping.current) return;
 
     const startX =
       touchStartX.current;
@@ -386,6 +312,9 @@ export default function BannerSlider({
     return null;
   }
 
+  // =============================
+  // Render
+  // =============================
   return (
     <div
       className="banner-slider"
@@ -544,8 +473,7 @@ export default function BannerSlider({
                 <button
                   key={index}
                   className={`banner-dot ${
-                    index ===
-                    current
+                    index === current
                       ? "active"
                       : ""
                   }`}
@@ -560,8 +488,7 @@ export default function BannerSlider({
                     index + 1
                   }`}
                   aria-current={
-                    index ===
-                    current
+                    index === current
                       ? "true"
                       : "false"
                   }
