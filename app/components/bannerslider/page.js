@@ -1,8 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
+
 import Image from "next/image";
 import Link from "next/link";
+
 import "@/styles/components/BannerSlider.css";
 
 const FRONTEND_ORIGINS = [
@@ -12,7 +20,9 @@ const FRONTEND_ORIGINS = [
 ];
 
 function normalizeBannerLink(url) {
-  if (!url || typeof url !== "string") return "";
+  if (!url || typeof url !== "string") {
+    return "";
+  }
 
   const trimmed = url.trim();
 
@@ -20,25 +30,34 @@ function normalizeBannerLink(url) {
     return trimmed;
   }
 
-  const matchedOrigin = FRONTEND_ORIGINS.find((origin) =>
-    trimmed.startsWith(origin)
-  );
+  const matchedOrigin =
+    FRONTEND_ORIGINS.find((origin) =>
+      trimmed.startsWith(origin)
+    );
 
   if (matchedOrigin) {
-    return trimmed.replace(matchedOrigin, "") || "/";
+    return (
+      trimmed.replace(matchedOrigin, "") || "/"
+    );
   }
 
   return trimmed;
 }
 
 function isExternalBannerLink(url) {
-  if (!url || typeof url !== "string") return false;
+  if (!url || typeof url !== "string") {
+    return false;
+  }
 
   const trimmed = url.trim();
 
-  if (trimmed.startsWith("/")) return false;
+  if (trimmed.startsWith("/")) {
+    return false;
+  }
 
-  return !FRONTEND_ORIGINS.some((origin) => trimmed.startsWith(origin));
+  return !FRONTEND_ORIGINS.some((origin) =>
+    trimmed.startsWith(origin)
+  );
 }
 
 const ChevronLeft = () => (
@@ -77,22 +96,37 @@ const ChevronRight = () => (
   </svg>
 );
 
-export default function BannerSlider() {
-  const [desktopBanners, setDesktopBanners] = useState([]);
-  const [mobileBanners, setMobileBanners] = useState([]);
-  const [current, setCurrent] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+export default function BannerSlider({
+  desktopBanners = [],
+  mobileBanners = [],
+}) {
+  const [current, setCurrent] =
+    useState(0);
+
+  const [isPaused, setIsPaused] =
+    useState(false);
+
+  const [isMobile, setIsMobile] =
+    useState(false);
 
   const touchStartX = useRef(null);
+
   const touchStartY = useRef(null);
+
   const touchMoveX = useRef(null);
+
   const isSwiping = useRef(false);
+
   const suppressClick = useRef(false);
 
+  // =============================
+  // Detect Mobile
+  // =============================
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const mediaQuery =
+      window.matchMedia(
+        "(max-width: 767px)"
+      );
 
     const updateView = () => {
       setIsMobile(mediaQuery.matches);
@@ -101,166 +135,202 @@ export default function BannerSlider() {
     updateView();
 
     if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", updateView);
+      mediaQuery.addEventListener(
+        "change",
+        updateView
+      );
     } else {
       mediaQuery.addListener(updateView);
     }
 
     return () => {
-      if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener("change", updateView);
+      if (
+        mediaQuery.removeEventListener
+      ) {
+        mediaQuery.removeEventListener(
+          "change",
+          updateView
+        );
       } else {
-        mediaQuery.removeListener(updateView);
+        mediaQuery.removeListener(
+          updateView
+        );
       }
     };
   }, []);
 
-  useEffect(() => {
-    let mounted = true;
-
-    async function fetchBanners() {
-      try {
-        const [desktopRes, mobileRes] = await Promise.all([
-          fetch("https://fursatiuniforms.store/wp-json/wp/v2/banner?_embed&per_page=100", {
-            cache: "no-store",
-          }),
-          fetch("https://fursatiuniforms.store/wp-json/wp/v2/mobile_banner?_embed&per_page=100", {
-            cache: "no-store",
-          }),
-        ]);
-
-        if (!desktopRes.ok || !mobileRes.ok) {
-          throw new Error("فشل في جلب البانرات");
-        }
-
-        const [desktopData, mobileData] = await Promise.all([
-          desktopRes.json(),
-          mobileRes.json(),
-        ]);
-
-        const formattedDesktop = desktopData
-          .map((post) => {
-            const media = post?._embedded?.["wp:featuredmedia"];
-            return {
-              id: post.id,
-              image: media?.[0]?.source_url || "",
-              link: post?.acf?.banner_link || "",
-            };
-          })
-          .filter((item) => item.image);
-
-const formattedMobile = mobileData
-  .map((post) => {
-    const media = post?._embedded?.["wp:featuredmedia"];
-    const embeddedImage =
-      media?.[0] && !media?.[0]?.code ? media[0].source_url : "";
-
-    const fallbackYoastImage =
-      post?.yoast_head_json?.og_image?.[0]?.url || "";
-
-    return {
-      id: post.id,
-      image: embeddedImage || fallbackYoastImage || "",
-      link: post?.acf?.banner_link || "",
-    };
-  })
-  .filter((item) => item.image);
-
-        if (mounted) {
-          setDesktopBanners(formattedDesktop);
-          setMobileBanners(formattedMobile);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("فشل في تحميل البانرات:", error);
-        if (mounted) {
-          setDesktopBanners([]);
-          setMobileBanners([]);
-          setIsLoading(false);
-        }
-      }
-    }
-
-    fetchBanners();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
+  // =============================
+  // Choose Desktop / Mobile Banners
+  // =============================
   const banners = useMemo(() => {
-    return isMobile ? mobileBanners : desktopBanners;
-  }, [isMobile, mobileBanners, desktopBanners]);
+    return isMobile
+      ? mobileBanners
+      : desktopBanners;
+  }, [
+    isMobile,
+    mobileBanners,
+    desktopBanners,
+  ]);
 
+  // Reset current slide when device changes
   useEffect(() => {
     setCurrent(0);
-  }, [isMobile, desktopBanners.length, mobileBanners.length]);
+  }, [
+    isMobile,
+    desktopBanners.length,
+    mobileBanners.length,
+  ]);
 
+  // =============================
+  // Next Slide
+  // =============================
   const nextSlide = useCallback(() => {
-    if (banners.length <= 1) return;
-    setCurrent((prev) => (prev + 1) % banners.length);
+    if (banners.length <= 1) {
+      return;
+    }
+
+    setCurrent(
+      (prev) =>
+        (prev + 1) % banners.length
+    );
   }, [banners.length]);
 
+  // =============================
+  // Previous Slide
+  // =============================
   const prevSlide = useCallback(() => {
-    if (banners.length <= 1) return;
-    setCurrent((prev) => (prev - 1 + banners.length) % banners.length);
+    if (banners.length <= 1) {
+      return;
+    }
+
+    setCurrent(
+      (prev) =>
+        (prev - 1 + banners.length) %
+        banners.length
+    );
   }, [banners.length]);
 
+  // =============================
+  // Go To Slide
+  // =============================
   const goToSlide = (index) => {
     setCurrent(index);
   };
 
+  // =============================
+  // Auto Slide
+  // =============================
   useEffect(() => {
-    if (isPaused || banners.length <= 1) return;
+    if (
+      isPaused ||
+      banners.length <= 1
+    ) {
+      return;
+    }
 
     const interval = setInterval(() => {
       nextSlide();
     }, 5000);
 
-    return () => clearInterval(interval);
-  }, [isPaused, banners.length, nextSlide]);
+    return () =>
+      clearInterval(interval);
+  }, [
+    isPaused,
+    banners.length,
+    nextSlide,
+  ]);
 
+  // =============================
+  // Touch Start
+  // =============================
   const handleTouchStart = (e) => {
-    if (banners.length <= 1) return;
+    if (banners.length <= 1) {
+      return;
+    }
 
     const touch = e.touches[0];
-    touchStartX.current = touch.clientX;
-    touchStartY.current = touch.clientY;
-    touchMoveX.current = touch.clientX;
+
+    touchStartX.current =
+      touch.clientX;
+
+    touchStartY.current =
+      touch.clientY;
+
+    touchMoveX.current =
+      touch.clientX;
+
     isSwiping.current = true;
+
     suppressClick.current = false;
+
     setIsPaused(true);
   };
 
+  // =============================
+  // Touch Move
+  // =============================
   const handleTouchMove = (e) => {
-    if (!isSwiping.current) return;
+    if (!isSwiping.current) {
+      return;
+    }
 
     const touch = e.touches[0];
-    touchMoveX.current = touch.clientX;
 
-    const diffX = Math.abs((touchStartX.current ?? 0) - touch.clientX);
-    const diffY = Math.abs((touchStartY.current ?? 0) - touch.clientY);
+    touchMoveX.current =
+      touch.clientX;
 
-    if (diffX > 10 && diffX > diffY) {
+    const diffX = Math.abs(
+      (touchStartX.current ?? 0) -
+        touch.clientX
+    );
+
+    const diffY = Math.abs(
+      (touchStartY.current ?? 0) -
+        touch.clientY
+    );
+
+    if (
+      diffX > 10 &&
+      diffX > diffY
+    ) {
       suppressClick.current = true;
     }
   };
 
+  // =============================
+  // Touch End
+  // =============================
   const handleTouchEnd = () => {
-    if (!isSwiping.current) return;
+    if (!isSwiping.current) {
+      return;
+    }
 
-    const startX = touchStartX.current;
-    const endX = touchMoveX.current;
+    const startX =
+      touchStartX.current;
+
+    const endX =
+      touchMoveX.current;
 
     isSwiping.current = false;
+
     setIsPaused(false);
 
-    if (startX == null || endX == null) return;
+    if (
+      startX == null ||
+      endX == null
+    ) {
+      return;
+    }
 
-    const distance = startX - endX;
+    const distance =
+      startX - endX;
+
     const SWIPE_THRESHOLD = 50;
 
-    if (Math.abs(distance) >= SWIPE_THRESHOLD) {
+    if (
+      Math.abs(distance) >=
+      SWIPE_THRESHOLD
+    ) {
       if (distance > 0) {
         nextSlide();
       } else {
@@ -273,15 +343,24 @@ const formattedMobile = mobileData
     }, 80);
 
     touchStartX.current = null;
+
     touchStartY.current = null;
+
     touchMoveX.current = null;
   };
 
+  // =============================
+  // Touch Cancel
+  // =============================
   const handleTouchCancel = () => {
     isSwiping.current = false;
+
     setIsPaused(false);
+
     touchStartX.current = null;
+
     touchStartY.current = null;
+
     touchMoveX.current = null;
 
     setTimeout(() => {
@@ -289,96 +368,147 @@ const formattedMobile = mobileData
     }, 80);
   };
 
+  // =============================
+  // Prevent Click After Swipe
+  // =============================
   const handleBannerClick = (e) => {
     if (suppressClick.current) {
       e.preventDefault();
+
       e.stopPropagation();
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="banner-skeleton">
-        <div className="skeleton-shimmer"></div>
-      </div>
-    );
+  // =============================
+  // No Banners
+  // =============================
+  if (!banners.length) {
+    return null;
   }
-
-  if (!banners.length) return null;
 
   return (
     <div
       className="banner-slider"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchCancel}
+      onMouseEnter={() =>
+        setIsPaused(true)
+      }
+      onMouseLeave={() =>
+        setIsPaused(false)
+      }
+      onTouchStart={
+        handleTouchStart
+      }
+      onTouchMove={
+        handleTouchMove
+      }
+      onTouchEnd={
+        handleTouchEnd
+      }
+      onTouchCancel={
+        handleTouchCancel
+      }
       role="region"
       aria-label="Promotional Banners"
     >
-      {banners.map((banner, index) => {
-        const rawLink =
-          typeof banner.link === "string" && banner.link.trim()
-            ? banner.link.trim()
-            : "";
+      {banners.map(
+        (banner, index) => {
+          const rawLink =
+            typeof banner.link ===
+              "string" &&
+            banner.link.trim()
+              ? banner.link.trim()
+              : "";
 
-        const safeLink = normalizeBannerLink(rawLink);
-        const isExternal = isExternalBannerLink(rawLink);
+          const safeLink =
+            normalizeBannerLink(
+              rawLink
+            );
 
-        const content = (
-          <Image
-            src={banner.image}
-            alt={`Banner ${index + 1}`}
-            fill
-            sizes="100vw"
-            className="banner-image"
-            priority={index === 0}
-            fetchPriority={index === 0 ? "high" : "auto"}
-            draggable={false}
-          />
-        );
+          const isExternal =
+            isExternalBannerLink(
+              rawLink
+            );
 
-        return (
-          <div
-            key={banner.id || index}
-            className={`banner-slide ${index === current ? "active" : ""}`}
-            aria-hidden={index !== current}
-          >
-            {safeLink ? (
-              isExternal ? (
-                <a
-                  href={safeLink}
-                  className="banner-link-wrap"
-                  aria-label={`Open banner ${index + 1}`}
-                  onClick={handleBannerClick}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {content}
-                </a>
+          const content = (
+            <Image
+              src={banner.image}
+              alt={`Banner ${
+                index + 1
+              }`}
+              fill
+              sizes="100vw"
+              className="banner-image"
+              priority={
+                index === 0
+              }
+              fetchPriority={
+                index === 0
+                  ? "high"
+                  : "auto"
+              }
+              draggable={false}
+            />
+          );
+
+          return (
+            <div
+              key={
+                banner.id ||
+                index
+              }
+              className={`banner-slide ${
+                index === current
+                  ? "active"
+                  : ""
+              }`}
+              aria-hidden={
+                index !== current
+              }
+            >
+              {safeLink ? (
+                isExternal ? (
+                  <a
+                    href={safeLink}
+                    className="banner-link-wrap"
+                    aria-label={`Open banner ${
+                      index + 1
+                    }`}
+                    onClick={
+                      handleBannerClick
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {content}
+                  </a>
+                ) : (
+                  <Link
+                    href={safeLink}
+                    className="banner-link-wrap"
+                    aria-label={`Open banner ${
+                      index + 1
+                    }`}
+                    onClick={
+                      handleBannerClick
+                    }
+                  >
+                    {content}
+                  </Link>
+                )
               ) : (
-                <Link
-                  href={safeLink}
+                <div
                   className="banner-link-wrap"
-                  aria-label={`Open banner ${index + 1}`}
-                  onClick={handleBannerClick}
+                  aria-label={`Banner ${
+                    index + 1
+                  }`}
                 >
                   {content}
-                </Link>
-              )
-            ) : (
-              <div
-                className="banner-link-wrap"
-                aria-label={`Banner ${index + 1}`}
-              >
-                {content}
-              </div>
-            )}
-          </div>
-        );
-      })}
+                </div>
+              )}
+            </div>
+          );
+        }
+      )}
 
       {banners.length > 1 && (
         <>
@@ -386,6 +516,7 @@ const formattedMobile = mobileData
             className="banner-control prev"
             onClick={(e) => {
               e.stopPropagation();
+
               prevSlide();
             }}
             aria-label="Previous Slide"
@@ -398,6 +529,7 @@ const formattedMobile = mobileData
             className="banner-control next"
             onClick={(e) => {
               e.stopPropagation();
+
               nextSlide();
             }}
             aria-label="Next Slide"
@@ -407,19 +539,36 @@ const formattedMobile = mobileData
           </button>
 
           <div className="banner-indicators">
-            {banners.map((_, index) => (
-              <button
-                key={index}
-                className={`banner-dot ${index === current ? "active" : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  goToSlide(index);
-                }}
-                aria-label={`Go to slide ${index + 1}`}
-                aria-current={index === current ? "true" : "false"}
-                type="button"
-              />
-            ))}
+            {banners.map(
+              (_, index) => (
+                <button
+                  key={index}
+                  className={`banner-dot ${
+                    index ===
+                    current
+                      ? "active"
+                      : ""
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+
+                    goToSlide(
+                      index
+                    );
+                  }}
+                  aria-label={`Go to slide ${
+                    index + 1
+                  }`}
+                  aria-current={
+                    index ===
+                    current
+                      ? "true"
+                      : "false"
+                  }
+                  type="button"
+                />
+              )
+            )}
           </div>
         </>
       )}
