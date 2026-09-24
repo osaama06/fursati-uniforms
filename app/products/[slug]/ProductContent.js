@@ -573,12 +573,17 @@ export default function ProductContent({ product, variations = [] }) {
           >
             {displayImages.length > 0 ? (
               <Image
-                src={currentImage}
-                alt={product.name}
-                width={600}
-                height={600}
-                className="mainImage"
+  src={currentImage}
+  alt={product.name}
+  width={600}
+  height={600}
+  sizes="(max-width: 767px) 100vw, (max-width: 1023px) 350px, 680px"
+  className="mainImage"
+  priority={selectedImage === 0}
               />
+ 
+
+        
             ) : (
               <div className="mainImage" style={{ display:'flex', alignItems:'center', justifyContent:'center', color:'#565959' }}>
                 لا توجد صورة
@@ -608,21 +613,48 @@ export default function ProductContent({ product, variations = [] }) {
               </>
             )}
 
-            <div className="imageOverlayButtons">
-              <button
-                onClick={handleToggleWishlist}
-                className={`overlayButton ${isWishlisted ? 'liked' : ''}`}
-                type="button"
-              >
-                <Heart className="w-4 h-4" fill={isWishlisted ? "currentColor" : "none"} />
-              </button>
-              <button className="overlayButton" onClick={handleShare} type="button">
-                <Share2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+<div className="imageOverlayButtons">
+  <button
+    onClick={handleToggleWishlist}
+    className={`overlayButton ${isWishlisted ? 'liked' : ''}`}
+    type="button"
+  >
+    <Heart className="w-4 h-4" fill={isWishlisted ? "currentColor" : "none"} />
+  </button>
 
-          {/* Thumbnails (mobile = horizontal, desktop = vertical via CSS) */}
+  <button className="overlayButton" onClick={handleShare} type="button">
+    <Share2 className="w-4 h-4" />
+  </button>
+</div>
+</div>
+
+{/* Preload additional product images */}
+<div
+  aria-hidden="true"
+  style={{
+    position: "absolute",
+    width: "1px",
+    height: "1px",
+    overflow: "hidden",
+    opacity: 0,
+    pointerEvents: "none",
+  }}
+>
+  {displayImages.slice(1).map((img) => (
+    <Image
+      key={img.src}
+      src={img.src}
+      alt=""
+      width={600}
+      height={600}
+      sizes="(max-width: 767px) 100vw, (max-width: 1023px) 350px, 680px"
+      loading="eager"
+      fetchPriority="low"
+    />
+  ))}
+</div>
+
+{/* Thumbnails (mobile = horizontal, desktop = vertical via CSS) */}
           {displayImages.length > 1 && (
             <div className="thumbnailGrid">
               {displayImages.map((img, index) => (
