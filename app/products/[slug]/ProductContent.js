@@ -17,6 +17,7 @@ export default function ProductContent({ product, variations = [] }) {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, wishlistItems } = useWishlist();
   const [selectedImage, setSelectedImage] = useState(0);
+  const [preloadGallery, setPreloadGallery] = useState(false);
   const [selectedAttributes, setSelectedAttributes] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
@@ -193,10 +194,10 @@ export default function ProductContent({ product, variations = [] }) {
 
   // ─── Reset image to 0 when variation changes ────────────────────────────
 
-  useEffect(() => {
-    setSelectedImage(0);
-  }, [selectedVariation?.id]);
-
+useEffect(() => {
+  setSelectedImage(0);
+  setPreloadGallery(false);
+}, [selectedVariation?.id]);
   // ─── Product change reset + default_attributes ───────────────────────────
 
   useEffect(() => {
@@ -572,7 +573,7 @@ export default function ProductContent({ product, variations = [] }) {
             onMouseLeave={handleImageMouseLeave}
           >
             {displayImages.length > 0 ? (
-              <Image
+<Image
   src={currentImage}
   alt={product.name}
   width={600}
@@ -580,7 +581,12 @@ export default function ProductContent({ product, variations = [] }) {
   sizes="(max-width: 767px) 100vw, (max-width: 1023px) 350px, 680px"
   className="mainImage"
   priority={selectedImage === 0}
-              />
+  onLoad={() => {
+    if (selectedImage === 0) {
+      setPreloadGallery(true);
+    }
+  }}
+/>
  
 
         
@@ -628,32 +634,32 @@ export default function ProductContent({ product, variations = [] }) {
 </div>
 </div>
 
-{/* Preload additional product images */}
-<div
-  aria-hidden="true"
-  style={{
-    position: "absolute",
-    width: "1px",
-    height: "1px",
-    overflow: "hidden",
-    opacity: 0,
-    pointerEvents: "none",
-  }}
->
-  {displayImages.slice(1).map((img) => (
-    <Image
-      key={img.src}
-      src={img.src}
-      alt=""
-      width={600}
-      height={600}
-      sizes="(max-width: 767px) 100vw, (max-width: 1023px) 350px, 680px"
-      loading="eager"
-      fetchPriority="low"
-    />
-  ))}
-</div>
-
+{preloadGallery && displayImages.length > 1 && (
+  <div
+    aria-hidden="true"
+    style={{
+      position: "absolute",
+      width: "1px",
+      height: "1px",
+      overflow: "hidden",
+      opacity: 0,
+      pointerEvents: "none",
+    }}
+  >
+    {displayImages.slice(1).map((img) => (
+      <Image
+        key={img.src}
+        src={img.src}
+        alt=""
+        width={600}
+        height={600}
+        sizes="(max-width: 767px) 100vw, (max-width: 1023px) 350px, 680px"
+        loading="eager"
+        fetchPriority="low"
+      />
+    ))}
+  </div>
+)}
 {/* Thumbnails (mobile = horizontal, desktop = vertical via CSS) */}
           {displayImages.length > 1 && (
             <div className="thumbnailGrid">
