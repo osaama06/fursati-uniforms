@@ -146,17 +146,25 @@ async function getBanners(isMobile) {
 // ✅ Metadata (Homepage)
 // =============================
 export const metadata = {
-  title: "فرصتي | تسوق جميع منتجات الزي الموحد",
+  // ✅ absolute عشان ما ينضاف " | فرصتي" مرة ثانية من الـ template في layout.js
+  title: {
+    absolute: "فرصتي | تسوق جميع منتجات الزي الموحد",
+  },
 
   description:
     "متجر فرصتي للزي الموحد الطبي والمدرسي. سكراب طبي، مريول مدرسي، لابكوت، زي موحد بجودة عالية وأسعار مناسبة.",
 
+  // ✅ الـ canonical للصفحة الرئيسية — يتحول إلى https://www.fursatiuniforms.com/ عبر metadataBase
+  alternates: {
+    canonical: "/",
+  },
+
   openGraph: {
     title: "فرصتي | متجر الزي الموحد",
 
-    description: "متجر فرصتي للزي الموحدي.",
+    description: "متجر فرصتي للزي الموحد الطبي والمدرسي في السعودية.",
 
-    url: "https://www.fursatiuniforms.com",
+    url: "https://www.fursatiuniforms.com/",
 
     siteName: "فرصتي",
 
@@ -227,7 +235,7 @@ export default async function Home() {
       "Fursati Uniforms",
     ],
 
-    url: "https://www.fursatiuniforms.com",
+    url: "https://www.fursatiuniforms.com/",
 
     logo:
       "https://www.fursatiuniforms.com/logo.png",
@@ -258,7 +266,8 @@ export default async function Home() {
         )}
       />
 
-      <main>
+      {/* ✅ div بدل main — الـ layout فيه <main> أصلاً، وما يصح main داخل main */}
+      <div>
         {/* السلايدر الرئيسي في الأعلى */}
         <BannerSlider banners={banners} />
 
@@ -272,7 +281,7 @@ export default async function Home() {
             />
           ) : null
         )}
-      </main>
+      </div>
     </>
   );
 }
