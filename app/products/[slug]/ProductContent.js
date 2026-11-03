@@ -2,13 +2,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useCart } from "@/app/context/CartContext";
 import { useReviews } from "@/app/hooks/reviews";
-import SizeGuideTrigger from "@/app/components/Size-guide/SizeGuideTrigger";
+import SizeGuideTrigger from "@/app/_components/Size-guide/SizeGuideTrigger";
 import Image from "next/image";
 import Link from "next/link";
 import { FiShoppingCart } from 'react-icons/fi';
 import { Star, Heart, Share2, Award, Plus, Minus, X, ChevronLeft, ChevronRight } from "lucide-react";
-import ReviewForm from "@/app/components/ReviewForm";
-import ProductSlider from "@/app/components/ProductSlider/page";
+import ReviewForm from "@/app/_components/ReviewForm";
+import ProductSlider from "@/app/_components/ProductSlider/page";
 import toast from 'react-hot-toast';
 import { useWishlist } from '@/app/context/WishlistContext';
 import '@/styles/pages/ProductPage.css';

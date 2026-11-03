@@ -5,9 +5,9 @@ export const dynamic = "force-dynamic";
 
 import { headers } from "next/headers";
 
-import BannerSlider from "./components/bannerslider/page";
-import ProductSlider from "./components/ProductSlider/page";
-import StoriesSlider from "./components/storiesSlider/page";
+import BannerSlider from "./_components/bannerslider/page";
+import ProductSlider from "./_components/ProductSlider/page";
+import StoriesSlider from "./_components/storiesSlider/page";
 
 import {
   generateOrganizationSchema,

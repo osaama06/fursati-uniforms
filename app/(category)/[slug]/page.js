@@ -1,4 +1,4 @@
-import ProductCard from "@/app/productCard/page";
+import ProductCard from "@/app/_productCard/page";
 import { notFound } from "next/navigation";
 import "@/styles/components/products-grid.css";
 

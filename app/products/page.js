@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import ProductCard from "../productCard/page";
+import ProductCard from "../_productCard/page";
 
 export const metadata = {
   title: "جميع المنتجات | فرصتي",

@@ -2,9 +2,9 @@ import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import { Toaster } from "react-hot-toast";
 import { Geist, Geist_Mono, Tajawal } from "next/font/google";
-import Header from "./components/header/page";
-import Footer from "./components/footer/page";
-import WhatsAppButton from "./components/WhatsAppButton";
+import Header from "./_components/header/page";
+import Footer from "./_components/footer/page";
+import WhatsAppButton from "./_components/WhatsAppButton";
 import Script from "next/script";
 import "./globals.css";
 

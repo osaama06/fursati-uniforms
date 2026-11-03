@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ProductCard from "@/app/productCard/page";
+import ProductCard from "@/app/_productCard/page";
 import "@/styles/components/ProductSlider.css";
 
 export default function ProductSlider({ category, products }) {
