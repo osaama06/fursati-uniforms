@@ -1,14 +1,9 @@
 // app/page.js
 
-// ✅ شلنا force-dynamic:
-// كان يلغي كاش الـ fetch ويخلي كل زيارة تضرب الباك إند بكل الطلبات.
-// الصفحة تظل ديناميكية بسبب headers() (اختيار بانر الجوال/الديسكتوب)،
-// لكن البيانات الحين تجي من الكاش وتتحدث كل ساعة أو عبر الـ webhook.
 
 import { headers } from "next/headers";
 
 import BannerSlider from "./_components/bannerslider/page";
-
 import ProductSlider from "./_components/ProductSlider/page";
 
 import {
@@ -189,7 +184,29 @@ export const metadata = {
 // =============================
 export default async function Home() {
   // =============================
-  // 📱 Detect Device ONCE on Server
+  // ⚠ الترتيب مهم:
+  // الطلبات اللي فيها Authorization لازم تجي قبل headers().
+  // Next.js ما يخزّن fetch فيه Authorization إذا انقرأت headers() قبله،
+  // فكانت كل زيارة تضرب الباك إند.
+  // =============================
+
+  // 1. التصنيفات + منتجات كل قسم (فيها Authorization)
+  const categories = await getHomeCategories();
+
+  const sliders = await Promise.all(
+    categories.map(async (category) => {
+      const products =
+        await getProductsByCategoryId(category.id);
+
+      return {
+        category,
+        products,
+      };
+    })
+  );
+
+  // =============================
+  // 2. 📱 Detect Device (بعد الطلبات المحمية)
   // =============================
   const headersList = await headers();
 
@@ -203,28 +220,8 @@ export default async function Home() {
     clientHintMobile === "?1" ||
     /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent);
 
-  // =============================
-  // 1. Categories + correct banners
-  // =============================
-  const [categories, banners] = await Promise.all([
-    getHomeCategories(),
-    getBanners(isMobile),
-  ]);
-
-  // =============================
-  // 2. جلب منتجات كل قسم بالتوازي
-  // =============================
-  const sliders = await Promise.all(
-    categories.map(async (category) => {
-      const products =
-        await getProductsByCategoryId(category.id);
-
-      return {
-        category,
-        products,
-      };
-    })
-  );
+  // 3. البانرات (بدون Authorization — تتخزن عادي)
+  const banners = await getBanners(isMobile);
 
   // =============================
   // Schema Config
