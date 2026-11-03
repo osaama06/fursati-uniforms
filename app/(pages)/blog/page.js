@@ -1,101 +1,124 @@
 import Link from "next/link";
 import Image from "next/image";
 import "@/styles/pages/blog.css";
-export const dynamic = "force-dynamic";
 
 // =========================================================
-// 1) جلب بوستات WordPress
+// Static + ISR — الصفحة تتحدث كل 10 دقائق
+// =========================================================
+export const revalidate = 600;
+
+const SITE_URL = "https://www.fursatiuniforms.com";
+const WP_BASE = (
+  process.env.WOO_URL || "https://fursatiuniforms.store"
+).replace(/\/$/, "");
+
+// =========================================================
+// 1) جلب بوستات WordPress — مع مهلة ومحاولة ثانية
 // =========================================================
 async function getPosts() {
-  const res = await fetch("https://fursatiuniforms.store/wp-json/wp/v2/posts", {
-    next: { revalidate: 60 },
-  });
-  if (!res.ok) return [];
-  return res.json();
-}
+  const fields = [
+    "id",
+    "slug",
+    "title",
+    "excerpt",
+    "date",
+    "modified",
+    "better_featured_image",
+    "yoast_head_json",
+  ].join(",");
 
-// =========================================================
-// 2) Yoast SEO — مع تصحيح الدومين للفرونت
-// =========================================================
-async function getYoastSEO() {
-  const frontendUrl = "https://www.fursatiuniforms.com/blog";
+  const url = `${WP_BASE}/wp-json/wp/v2/posts?per_page=20&_fields=${fields}`;
 
-  const res = await fetch(
-    `https://fursatiuniforms.store/wp-json/yoast/v1/get_head?url=${frontendUrl}`,
-    { cache: "no-store" }
-  );
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(url, {
+        next: { revalidate: 600 },
+        signal: AbortSignal.timeout(20000),
+      });
 
-  if (!res.ok) return null;
-  return res.json();
-}
+      if (!res.ok) {
+        throw new Error(`Failed to fetch posts: ${res.status}`);
+      }
 
-// =========================================================
-// 3) Metadata
-// =========================================================
-export async function generateMetadata() {
-  const seo = await getYoastSEO();
-
-  if (!seo) {
-    return {
-      title: "المدونة | متجر فرصتي",
-      description: "مقالات حول الزي الطبي والمدرسي.",
-      alternates: {
-        canonical: "https://www.fursatiuniforms.com/blog",
-      },
-    };
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error(
+        `Blog posts fetch failed (attempt ${attempt}):`,
+        error?.cause?.code || error?.message
+      );
+    }
   }
 
-  const head = seo?.json || {};
-
-  return {
-    title: head.title || "المدونة",
-    description: head.description || "",
-    alternates: {
-      canonical: head.canonical || "https://www.fursatiuniforms.com/blog",
-    },
-    openGraph: {
-      title: head.og_title,
-      description: head.og_description,
-      url: "https://www.fursatiuniforms.com/blog",
-      images: head.og_image?.map((img) => ({
-        url: img.url,
-        width: img.width,
-        height: img.height,
-      })),
-      type: "website",
-      locale: "ar_SA",
-      siteName: "Fursati Uniforms",
-    },
-    twitter: {
-      card: head.twitter_card,
-      title: head.twitter_title,
-      description: head.twitter_description,
-      images: head.twitter_image ? [head.twitter_image] : [],
-    },
-  };
+  return [];
 }
 
 // =========================================================
-// 4) Blog Schema + Breadcrumb
+// Helpers
+// =========================================================
+function stripHtml(html = "") {
+  return html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&#8211;/g, "–")
+    .replace(/&#8217;/g, "’")
+    .replace(/&amp;/g, "&")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+}
+
+function getPostImage(post) {
+  return (
+    post?.better_featured_image?.source_url ||
+    post?.yoast_head_json?.og_image?.[0]?.url ||
+    ""
+  );
+}
+
+// =========================================================
+// 2) Metadata — ثابتة، بدون Yoast
+// =========================================================
+export const metadata = {
+  // الـ template في layout.js يضيف " | فرصتي" تلقائياً
+  title: "المدونة",
+  description:
+    "مقالات ونصائح حول الزي الطبي والمدرسي، الخامات، والمقاسات من متجر فرصتي.",
+  alternates: {
+    canonical: "/blog",
+  },
+  openGraph: {
+    title: "المدونة | فرصتي",
+    description:
+      "مقالات ونصائح حول الزي الطبي والمدرسي، الخامات، والمقاسات من متجر فرصتي.",
+    url: `${SITE_URL}/blog`,
+    type: "website",
+    locale: "ar_SA",
+    siteName: "فرصتي",
+  },
+};
+
+// =========================================================
+// 3) Blog Schema + Breadcrumb
 // =========================================================
 function BlogSchema(posts) {
   return {
     "@context": "https://schema.org",
     "@type": "Blog",
     name: "مدونة متجر فرصتي",
-    url: "https://www.fursatiuniforms.com/blog",
-    description: "مقالات ونصائح حول الزي الطبي والمدرسي والخامات والقياسات.",
-    blogPost: posts.map((post) => ({
-      "@type": "BlogPosting",
-      headline: post.title.rendered,
-      url: `https://www.fursatiuniforms.com/blog/${post.slug}`,
-      image:
-        post?.better_featured_image?.source_url ||
-        post?.yoast_head_json?.og_image?.[0]?.url ||
-        "",
-      datePublished: post.date,
-      dateModified: post.modified,
-    })),
+    url: `${SITE_URL}/blog`,
+    description:
+      "مقالات ونصائح حول الزي الطبي والمدرسي والخامات والقياسات.",
+    blogPost: posts.map((post) => {
+      const image = getPostImage(post);
+
+      return {
+        "@type": "BlogPosting",
+        headline: stripHtml(post?.title?.rendered),
+        url: `${SITE_URL}/blog/${post.slug}`,
+        ...(image ? { image } : {}),
+        datePublished: post.date,
+        dateModified: post.modified,
+      };
+    }),
   };
 }
 
@@ -108,27 +131,27 @@ function BreadcrumbSchema() {
         "@type": "ListItem",
         position: 1,
         name: "الرئيسية",
-        item: "https://www.fursatiuniforms.com",
+        item: `${SITE_URL}/`,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "المدونة",
-        item: "https://www.fursatiuniforms.com/blog",
+        item: `${SITE_URL}/blog`,
       },
     ],
   };
 }
 
 // =========================================================
-// 5) Blog Page
+// 4) Blog Page
 // =========================================================
 export default async function BlogPage() {
   const posts = await getPosts();
 
+  // div بدل main — الـ layout فيه <main> أصلاً
   return (
-    <main className="blog-container">
-      {/* Schema */}
+    <div className="blog-container">
       <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -146,44 +169,49 @@ export default async function BlogPage() {
 
       <h1 className="blog-title">المدونة</h1>
 
-      <div className="blog-grid">
-        {posts.map((post) => {
-          const img =
-            post?.better_featured_image?.source_url ||
-            post?.yoast_head_json?.og_image?.[0]?.url ||
-            "/placeholder.jpg";
+      {posts.length === 0 ? (
+        <p>لا توجد مقالات حالياً.</p>
+      ) : (
+        <div className="blog-grid">
+          {posts.map((post) => {
+            const img = getPostImage(post) || "/placeholder.jpg";
 
-          return (
-            <Link
-              href={`/blog/${post.slug}`}
-              key={post.id}
-              className="blog-card"
-            >
-              <div className="blog-image-wrapper">
-                <Image
-                  src={img}
-                  alt={post.title.rendered}
-                  width={200}
-                  height={130}
-                  className="blog-image"
-                />
-              </div>
+            return (
+              <Link
+                href={`/blog/${post.slug}`}
+                key={post.id}
+                className="blog-card"
+              >
+                <div className="blog-image-wrapper">
+                  <Image
+                    src={img}
+                    alt={stripHtml(post?.title?.rendered)}
+                    width={200}
+                    height={130}
+                    className="blog-image"
+                  />
+                </div>
 
-              <div className="blog-card-body">
-                <h2
-                  className="blog-card-title"
-                  dangerouslySetInnerHTML={{ __html: post.title.rendered }}
-                />
+                <div className="blog-card-body">
+                  <h2
+                    className="blog-card-title"
+                    dangerouslySetInnerHTML={{
+                      __html: post?.title?.rendered || "",
+                    }}
+                  />
 
-                <p
-                  className="blog-card-excerpt"
-                  dangerouslySetInnerHTML={{ __html: post.excerpt.rendered }}
-                />
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-    </main>
+                  <p
+                    className="blog-card-excerpt"
+                    dangerouslySetInnerHTML={{
+                      __html: post?.excerpt?.rendered || "",
+                    }}
+                  />
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

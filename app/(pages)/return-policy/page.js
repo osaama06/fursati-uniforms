@@ -1,6 +1,6 @@
 import "@/styles/pages/info-pages.css";
-export const dynamic = "force-dynamic";
-
+// export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 // تنظيف HTML من التاجات
 function stripHtml(html) {
   if (!html) return "";

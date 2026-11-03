@@ -1,61 +1,100 @@
 import "@/styles/pages/info-pages.css";
-import { Metadata } from "next";
-export const dynamic = "force-dynamic";
 
+// ---------------------
+// 🟦 Static + ISR
+// ---------------------
+// الصفحة تنبني مرة وتتحدث كل ساعة
+export const revalidate = 3600;
+
+const SITE_URL = "https://www.fursatiuniforms.com";
+const PAGE_PATH = "/about-us";
+const WP_PAGE_ID = 504;
+
+// ---------------------
+// 🟦 Metadata
+// ---------------------
 export const metadata = {
-  title: "من نحن | فرصتي يونيفورمز",
+  // الـ template في layout.js يضيف " | فرصتي" تلقائياً
+  title: "من نحن",
   description:
-    "تعرف على فرصتي يونيفورمز: متجر متخصص في الزي الطبي والمدرسي بجودة عالية وتصاميم مميزة، مع خدمة عملاء احترافية وتوصيل سريع.",
+    "تعرف على فرصتي: متجر متخصص في الزي الطبي والمدرسي بجودة عالية وتصاميم مميزة، مع خدمة عملاء احترافية وتوصيل سريع.",
+  alternates: {
+    canonical: PAGE_PATH,
+  },
   openGraph: {
-    title: "من نحن | فرصتي يونيفورمز",
+    title: "من نحن | فرصتي",
     description:
-      "من نحن: تعرف على رؤيتنا ورسالتنا في تقديم أفضل خيارات الزي الطبي والمدرسي.",
+      "تعرف على رؤيتنا ورسالتنا في تقديم أفضل خيارات الزي الطبي والمدرسي.",
     type: "article",
-    locale: "ar_AR",
-    url: "https://fursati-uniforms.com/about-us",
-    siteName: "فرصتي يونيفورمز",
+    locale: "ar_SA",
+    url: `${SITE_URL}${PAGE_PATH}`,
+    siteName: "فرصتي",
   },
 };
 
-export default async function AboutUsPage() {
-  const WP_BASE = process.env.WOO_URL || "https://fursatiuniforms.store";
+// ---------------------
+// 🟦 Fetch مع مهلة ومحاولة ثانية
+// ---------------------
+async function getWpPage(id) {
+  const WP_BASE = (
+    process.env.WOO_URL || "https://fursatiuniforms.store"
+  ).replace(/\/$/, "");
 
-  const res = await fetch(
-    `${WP_BASE.replace(/\/$/, "")}/wp-json/wp/v2/pages/504`,
-    { next: { revalidate: 60 } }
-  );
+  const url = `${WP_BASE}/wp-json/wp/v2/pages/${id}?_fields=title,content`;
 
-  if (!res.ok) {
-    return (
-      <main className="wp-page-container">
-        <p>هنالك خطأ ما.</p>
-      </main>
-    );
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(url, {
+        next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(20000),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch page: ${res.status}`);
+      }
+
+      return await res.json();
+    } catch (error) {
+      console.error(
+        `About page fetch failed (attempt ${attempt}):`,
+        error?.cause?.code || error?.message
+      );
+    }
   }
 
-  const page = await res.json();
+  return null;
+}
 
-  const title = page.title?.rendered || "من نحن";
-  const content = page.content?.rendered || "";
+// ---------------------
+// 🟦 الصفحة
+// ---------------------
+export default async function AboutUsPage() {
+  const page = await getWpPage(WP_PAGE_ID);
 
-  // 🔥 JSON-LD Schema
+  const title = page?.title?.rendered || "من نحن";
+  const content = page?.content?.rendered || "";
+
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "AboutPage",
     name: "من نحن",
     description:
-      "تعرف على فرصتي يونيفورمز، متجر متخصص في الزي الطبي والمدرسي بجودة عالية.",
-    url: "https://fursati-uniforms.com/about-us",
+      "تعرف على فرصتي، متجر متخصص في الزي الطبي والمدرسي بجودة عالية.",
+    url: `${SITE_URL}${PAGE_PATH}`,
     publisher: {
       "@type": "Organization",
-      name: "فرصتي يونيفورمز",
-      url: "https://fursati-uniforms.com",
+      name: "فرصتي",
+      url: `${SITE_URL}/`,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/logo.png`,
+      },
     },
   };
 
+  // div بدل main — الـ layout فيه <main> أصلاً
   return (
-    <main className="wp-page-container">
-      {/* Inject Schema JSON-LD */}
+    <div className="wp-page-container">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
@@ -63,10 +102,14 @@ export default async function AboutUsPage() {
 
       <h1 dangerouslySetInnerHTML={{ __html: title }} />
 
-      <article
-        className="wp-page-content"
-        dangerouslySetInnerHTML={{ __html: content }}
-      />
-    </main>
+      {content ? (
+        <article
+          className="wp-page-content"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      ) : (
+        <p>تعذر تحميل المحتوى حالياً.</p>
+      )}
+    </div>
   );
 }

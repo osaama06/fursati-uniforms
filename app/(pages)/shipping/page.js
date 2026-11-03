@@ -1,101 +1,123 @@
 import "@/styles/pages/info-pages.css";
 
 // ---------------------
-// 🟦 Dynamic Rendering
+// 🟦 Static + ISR
 // ---------------------
-export const dynamic = "force-dynamic";
+// الصفحة تنبني مرة وتتحدث كل ساعة
+export const revalidate = 3600;
+
+const SITE_URL = "https://www.fursatiuniforms.com";
+const PAGE_PATH = "/shipping";
+const WP_PAGE_ID = 508;
 
 // ---------------------
 // 🟦 Metadata
 // ---------------------
 export const metadata = {
-  title: "سياسة الشحن | فرصتي يونيفورمز",
+  // الـ template في layout.js يضيف " | فرصتي" تلقائياً
+  title: "سياسة الشحن",
   description:
-    "اطلع على سياسة الشحن الخاصة بفرصتي يونيفورمز، مواعيد التوصيل، الرسوم، مناطق الشحن، وسياسة التعامل مع التأخير.",
+    "اطلع على سياسة الشحن الخاصة بفرصتي، مواعيد التوصيل، الرسوم، مناطق الشحن، وسياسة التعامل مع التأخير.",
+  alternates: {
+    canonical: PAGE_PATH,
+  },
   openGraph: {
-    title: "سياسة الشحن | فرصتي يونيفورمز",
+    title: "سياسة الشحن | فرصتي",
     description:
-      "تعرف على تفاصيل سياسة الشحن والتوصيل في فرصتي يونيفورمز. مواعيد الشحن والرسوم والمناطق المغطاة.",
+      "تعرف على تفاصيل سياسة الشحن والتوصيل في فرصتي. مواعيد الشحن والرسوم والمناطق المغطاة.",
     type: "article",
-    locale: "ar_AR",
-    url: "https://www.fursatiuniforms.com/shipping-policy",
-    siteName: "فرصتي يونيفورمز",
+    locale: "ar_SA",
+    url: `${SITE_URL}${PAGE_PATH}`,
+    siteName: "فرصتي",
   },
 };
+
+// ---------------------
+// 🟦 Fetch مع مهلة ومحاولة ثانية
+// ---------------------
+async function getWpPage(id) {
+  const WP_BASE = (
+    process.env.WOO_URL || "https://fursatiuniforms.store"
+  ).replace(/\/$/, "");
+
+  const url = `${WP_BASE}/wp-json/wp/v2/pages/${id}?_fields=title,content`;
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(url, {
+        next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(20000),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch page: ${res.status}`);
+      }
+
+      return await res.json();
+    } catch (error) {
+      console.error(
+        `Shipping page fetch failed (attempt ${attempt}):`,
+        error?.cause?.code || error?.message
+      );
+    }
+  }
+
+  return null;
+}
 
 // ---------------------
 // 🟦 الصفحة
 // ---------------------
 export default async function ShippingPolicyPage() {
-  const WP_BASE =
-    process.env.WOO_URL || "https://fursatiuniforms.store";
+  const page = await getWpPage(WP_PAGE_ID);
 
-  try {
-    const res = await fetch(
-      `${WP_BASE.replace(/\/$/, "")}/wp-json/wp/v2/pages/508`,
-      {
-        cache: "no-store",
-      }
-    );
+  const title = page?.title?.rendered || "سياسة الشحن";
+  const content = page?.content?.rendered || "";
 
-    if (!res.ok) {
-      throw new Error(`Failed to fetch page: ${res.status}`);
-    }
-
-    const page = await res.json();
-
-    const title = page.title?.rendered || "سياسة الشحن";
-    const content = page.content?.rendered || "";
-
-    const schemaData = {
-      "@context": "https://schema.org",
-      "@type": "WebPage",
-      name: "سياسة الشحن",
-      description:
-        "اقرأ سياسة الشحن الخاصة بفرصتي يونيفورمز، بما يشمل أوقات التوصيل والرسوم والمناطق المتاحة.",
-      url: "https://www.fursatiuniforms.com/shipping-policy",
-      publisher: {
-        "@type": "Organization",
-        name: "فرصتي يونيفورمز",
-        url: "https://www.fursatiuniforms.com",
-        logo: {
-          "@type": "ImageObject",
-          url: "https://www.fursatiuniforms.com/logo.png",
-        },
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "سياسة الشحن",
+    description:
+      "اقرأ سياسة الشحن الخاصة بفرصتي، بما يشمل أوقات التوصيل والرسوم والمناطق المتاحة.",
+    url: `${SITE_URL}${PAGE_PATH}`,
+    publisher: {
+      "@type": "Organization",
+      name: "فرصتي",
+      url: `${SITE_URL}/`,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/logo.png`,
       },
-    };
+    },
+  };
 
-    return (
-      <main className="wp-page-container">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(schemaData),
-          }}
-        />
+  // div بدل main — الـ layout فيه <main> أصلاً
+  return (
+    <div className="wp-page-container">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(schemaData),
+        }}
+      />
 
-        <h1
-          dangerouslySetInnerHTML={{
-            __html: title,
-          }}  
-        />
+      <h1
+        dangerouslySetInnerHTML={{
+          __html: title,
+        }}
+      />
 
+      {content ? (
         <article
           className="wp-page-content"
           dangerouslySetInnerHTML={{
             __html: content,
           }}
         />
-      </main>
-    );
-  } catch (error) {
-    console.error("Shipping page error:", error);
-
-    return (
-      <main className="wp-page-container">
-        <h1>سياسة الشحن</h1>
+      ) : (
         <p>تعذر تحميل المحتوى حالياً.</p>
-      </main>
-    );
-  }
+      )}
+    </div>
+  );
 }
