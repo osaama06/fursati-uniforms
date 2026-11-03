@@ -1,13 +1,15 @@
 // app/page.js
 
-// ✅ حل مشكلة فيرسل: إجبار الصفحة على العمل كوضع ديناميكي لتجنب خطأ الـ Build
-export const dynamic = "force-dynamic";
+// ✅ شلنا force-dynamic:
+// كان يلغي كاش الـ fetch ويخلي كل زيارة تضرب الباك إند بكل الطلبات.
+// الصفحة تظل ديناميكية بسبب headers() (اختيار بانر الجوال/الديسكتوب)،
+// لكن البيانات الحين تجي من الكاش وتتحدث كل ساعة أو عبر الـ webhook.
 
 import { headers } from "next/headers";
 
 import BannerSlider from "./_components/bannerslider/page";
+
 import ProductSlider from "./_components/ProductSlider/page";
-import StoriesSlider from "./_components/storiesSlider/page";
 
 import {
   generateOrganizationSchema,
@@ -33,8 +35,8 @@ async function getHomeCategories() {
       "https://fursatiuniforms.store/wp-json/wc/v3/products/categories?per_page=100&hide_empty=false",
       {
         headers: { Authorization: `Basic ${getAuthHeader()}` },
-        // ✅ تم التغيير من 0 إلى 60 لتجنب مشاكل الـ Static Generation في فيرسل
-        next: { revalidate: 60 },
+        // ساعة — والـ webhook يحدّثها فوراً عند تعديل المنتجات
+        next: { revalidate: 3600 },
       }
     );
 
@@ -61,7 +63,7 @@ async function getProductsByCategoryId(categoryId) {
       `https://fursatiuniforms.store/wp-json/wc/v3/products?category=${categoryId}&status=publish&per_page=10`,
       {
         headers: { Authorization: `Basic ${getAuthHeader()}` },
-        next: { revalidate: 60 },
+        next: { revalidate: 3600 },
       }
     );
 
@@ -285,16 +287,3 @@ export default async function Home() {
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
