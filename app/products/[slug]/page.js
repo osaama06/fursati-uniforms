@@ -7,50 +7,88 @@ import {
 } from "@/utils/schema";
 
 // ================================
+// ISR
+// ================================
+// الصفحة تنبني أول مرة يزورها أحد، وتتخزن، وتتحدث كل ساعة
+export const revalidate = 3600;
+
+// مصفوفة فاضية = لا نبني المنتجات وقت الـ build (عشان ما نضغط الباك إند)
+// لكن نفعّل الكاش لكل منتج من أول زيارة
+export async function generateStaticParams() {
+  return [];
+}
+
+// ================================
 // CONSTANTS (Static Config)
 // ================================
 const SITE_URL = "https://www.fursatiuniforms.com";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.webp`;
+const WP_BASE = (
+  process.env.WOO_URL || "https://fursatiuniforms.store"
+).replace(/\/$/, "");
+
+function authHeader() {
+  const auth = Buffer.from(
+    `${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`
+  ).toString("base64");
+  return { Authorization: `Basic ${auth}` };
+}
+
+// ================================
+// Fetch مع مهلة ومحاولة ثانية
+// ================================
+// ⚠ لو فشل الاتصال نرمي خطأ — ما نرجع null.
+// السبب: null يعني notFound()، و Next يخزّن الـ 404 ساعة كاملة،
+// فـ Google يشوف المنتج محذوف بسبب عطل مؤقت.
+// مع الخطأ: Next يبقي النسخة القديمة من الصفحة في الكاش.
+async function wooFetch(url) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: authHeader(),
+        next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(20000),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} — ${url}`);
+      }
+
+      return await res.json();
+    } catch (error) {
+      lastError = error;
+      console.error(
+        `Product fetch failed (attempt ${attempt}):`,
+        error?.cause?.code || error?.message
+      );
+    }
+  }
+
+  throw lastError;
+}
 
 // ================================
 // Data Fetching
 // ================================
 async function getProductBySlug(slug) {
-  const consumerKey = process.env.WOO_CONSUMER_KEY;
-  const secretKey = process.env.WOO_SECRET_KEY;
-  const auth = Buffer.from(`${consumerKey}:${secretKey}`).toString("base64");
-
-  // ✅ decode the slug before fetching
-  const decodedSlug = decodeURIComponent(slug);
-
-  const res = await fetch(
-    `https://fursatiuniforms.store/wp-json/wc/v3/products?slug=${decodedSlug}`,
-    {
-      headers: { Authorization: `Basic ${auth}` },
-      next: { revalidate: 3600 },
-    }
+  const data = await wooFetch(
+    `${WP_BASE}/wp-json/wc/v3/products?slug=${encodeURIComponent(slug)}`
   );
 
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.length > 0 ? data[0] : null;
+  // هنا فقط نرجع null — المنتج فعلاً غير موجود
+  return Array.isArray(data) && data.length > 0 ? data[0] : null;
 }
 
 async function getVariations(productId) {
-  const consumerKey = process.env.WOO_CONSUMER_KEY;
-  const secretKey = process.env.WOO_SECRET_KEY;
-  const auth = Buffer.from(`${consumerKey}:${secretKey}`).toString("base64");
-
-  const res = await fetch(
-    `https://fursatiuniforms.store/wp-json/wc/v3/products/${productId}/variations`,
-    {
-      headers: { Authorization: `Basic ${auth}` },
-      next: { revalidate: 3600 },
-    }
+  // per_page=100 — الافتراضي 10 فقط، فالمنتجات اللي فيها
+  // مقاسات × ألوان أكثر من 10 كانت تنقص منها خيارات
+  const data = await wooFetch(
+    `${WP_BASE}/wp-json/wc/v3/products/${productId}/variations?per_page=100`
   );
 
-  if (!res.ok) return [];
-  return await res.json();
+  return Array.isArray(data) ? data : [];
 }
 
 function stripHtml(html) {
@@ -58,12 +96,21 @@ function stripHtml(html) {
   return html.replace(/<[^>]*>/g, "").trim();
 }
 
+function safeDecode(slug) {
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return slug;
+  }
+}
+
 // ================================
 // HELPERS FOR GOOGLE RICH RESULTS
 // ================================
 function getProductBrand(product) {
   const brandAttr = product.attributes?.find(
-    (attr) => attr.name.toLowerCase() === "brand" || attr.name === "الماركة"
+    (attr) =>
+      attr.name?.toLowerCase() === "brand" || attr.name === "الماركة"
   );
   if (brandAttr && brandAttr.options && brandAttr.options.length > 0) {
     return brandAttr.options[0];
@@ -76,8 +123,7 @@ function getProductBrand(product) {
 // ================================
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const decodedSlug = decodeURIComponent(slug); // ✅
-  const product = await getProductBySlug(decodedSlug);
+  const product = await getProductBySlug(safeDecode(slug));
 
   if (!product) {
     return {
@@ -96,31 +142,27 @@ export async function generateMetadata({ params }) {
       `تسوق ${product.name} بأفضل الأسعار من متجر فرصتي.`
   );
 
-  // ✅ نبني العنوان يدوياً ونستخدم absolute لمنع layout من إضافة | فرصتي مرة ثانية
+  // نبني العنوان يدوياً ونستخدم absolute لمنع layout من إضافة | فرصتي مرة ثانية
   const title =
     rawTitle.includes("فرصتي") || rawTitle.includes("Fursati")
       ? rawTitle
       : `${rawTitle} | فرصتي`;
 
   const mainImage =
-    seo.opengraphImage ||
-    product.images?.[0]?.src ||
-    DEFAULT_OG_IMAGE;
+    seo.opengraphImage || product.images?.[0]?.src || DEFAULT_OG_IMAGE;
 
   const pageUrl = `/products/${product.slug}`;
 
-  // ✅ تجاهل Yoast robots — WordPress مانع الأرشفة عمداً
+  // تجاهل Yoast robots — WordPress مانع الأرشفة عمداً
   const index = true;
   const follow = true;
 
-  const condition = "new";
   const availability =
     product.stock_status === "instock" ? "in stock" : "out of stock";
 
   return {
     metadataBase: new URL(SITE_URL),
 
-    // ✅ absolute يمنع layout template من إضافة | فرصتي مرة ثانية
     title: { absolute: title },
 
     description: rawDesc,
@@ -182,7 +224,7 @@ export async function generateMetadata({ params }) {
       "product:availability": availability,
       "product:brand": "فرصتي",
       "product:retailer_item_id": product.sku || String(product.id),
-      "product:condition": condition,
+      "product:condition": "new",
     },
   };
 }
@@ -192,12 +234,12 @@ export async function generateMetadata({ params }) {
 // ================================
 export default async function ProductPage({ params }) {
   const { slug } = await params;
-  const decodedSlug = decodeURIComponent(slug); // ✅
-  const product = await getProductBySlug(decodedSlug);
+  const product = await getProductBySlug(safeDecode(slug));
 
   if (!product) notFound();
 
-  const variations = await getVariations(product.id);
+  const variations =
+    product.type === "variable" ? await getVariations(product.id) : [];
 
   const frontendUrl = `${SITE_URL}/products/${product.slug}`;
 
@@ -221,7 +263,7 @@ export default async function ProductPage({ params }) {
       price: product.price || 0,
       currency: "SAR",
       availability: schemaAvailability,
-      priceValidUntil: priceValidUntil,
+      priceValidUntil,
       url: frontendUrl,
     },
     average_rating: Number(product.average_rating) || 0,
