@@ -417,4 +417,4 @@ export async function POST(req) {
     console.error('❌ خطأ أثناء إنشاء الطلب:', error.response?.data || error.message);
     return NextResponse.json({ error: 'فشل إنشاء الطلب، حاول مرة أخرى' }, { status: 500 });
   }
-}  
+}     
