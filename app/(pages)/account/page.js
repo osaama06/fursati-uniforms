@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import LogoutButton from './LogoutButton';
 import WishlistSection from './WishlistSection';
+import { getStatusInfo, isHiddenFromCustomer } from '../orders/orderStatus';
 import '@/styles/pages/account.css';
 
 export const dynamic = 'force-dynamic';
@@ -15,14 +16,18 @@ export const metadata = {
 const secret = process.env.WT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987';
 
 async function getCustomerData(email) {
+  if (!email) return null;
   const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString('base64');
   try {
-    const res = await fetch(`https://fursatiuniforms.store/wp-json/wc/v3/customers?email=${email}`, {
-      headers: { Authorization: `Basic ${auth}` },
-      cache: 'no-store',
-    });
+    const res = await fetch(
+      `https://fursatiuniforms.store/wp-json/wc/v3/customers?email=${encodeURIComponent(email)}`,
+      {
+        headers: { Authorization: `Basic ${auth}` },
+        cache: 'no-store',
+      }
+    );
     const data = await res.json();
-    return data.length > 0 ? data[0] : null;
+    return Array.isArray(data) && data.length > 0 ? data[0] : null;
   } catch {
     return null;
   }
@@ -32,28 +37,21 @@ async function getRecentOrders(customerId) {
   if (!customerId) return [];
   const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString('base64');
   try {
+    // نجيب 10 ونفلتر محاولات الدفع الفاشلة، وبعدها ناخذ آخر 3
     const res = await fetch(
-      `https://fursatiuniforms.store/wp-json/wc/v3/orders?customer=${customerId}&orderby=date&order=desc&per_page=3`,
+      `https://fursatiuniforms.store/wp-json/wc/v3/orders?customer=${customerId}&orderby=date&order=desc&per_page=10`,
       {
         headers: { Authorization: `Basic ${auth}` },
         cache: 'no-store',
       }
     );
-    return res.ok ? await res.json() : [];
+    if (!res.ok) return [];
+    const orders = await res.json();
+    return (Array.isArray(orders) ? orders : []).filter((o) => !isHiddenFromCustomer(o)).slice(0, 3);
   } catch {
     return [];
   }
 }
-
-const statusTranslation = {
-  'pending':    { label: 'قيد الانتظار',  class: 'pending' },
-  'processing': { label: 'قيد التنفيذ',   class: 'processing' },
-  'on-hold':    { label: 'بانتظار الدفع', class: 'on-hold' },
-  'completed':  { label: 'مكتمل',         class: 'completed' },
-  'cancelled':  { label: 'ملغي',          class: 'cancelled' },
-  'refunded':   { label: 'مسترجع',        class: 'refunded' },
-  'failed':     { label: 'فشل الطلب',     class: 'failed' },
-};
 
 export default async function AccountPage() {
   const cookieStore = await cookies();
@@ -107,11 +105,8 @@ export default async function AccountPage() {
         {/* Sidebar */}
         <aside className="account-sidebar">
           <nav className="side-nav">
-            <Link href="/account" className="nav-link active">🏠 لوحة التحكم</Link>
             <Link href="/orders" className="nav-link">📦 طلباتي</Link>
             <Link href="/account/address" className="nav-link">📍 العناوين</Link>
-            <Link href="/account/edit" className="nav-link">✏️ تعديل البيانات</Link>
-            <Link href="/account/password" className="nav-link">🔒 تغيير كلمة المرور</Link>
             <LogoutButton />
           </nav>
         </aside>
@@ -130,18 +125,32 @@ export default async function AccountPage() {
                 <p className="empty-msg">لا توجد طلبات حالياً.</p>
               ) : (
                 recentOrders.map((order) => {
-                  const statusInfo = statusTranslation[order.status] || { label: order.status, class: '' };
+                  const statusInfo = getStatusInfo(order.status);
                   return (
                     <div key={order.id} className="order-item-row">
                       <div className="order-main-info">
-                        <span className="order-number">#{order.id}</span>
+                        <span className="order-number">#{order.number || order.id}</span>
                         <span className="order-date">
                           {new Date(order.date_created).toLocaleDateString('ar-SA')}
                         </span>
                       </div>
-                      <div className={`status-tag ${statusInfo.class}`}>{statusInfo.label}</div>
+                      <div
+                        className="status-tag"
+                        style={{
+                          padding: '6px 16px',
+                          borderRadius: '10px',
+                          fontSize: '0.9rem',
+                          fontWeight: '700',
+                          backgroundColor: statusInfo.bg,
+                          color: statusInfo.color,
+                          minWidth: '110px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {statusInfo.label}
+                      </div>
                       <div className="order-amount">{order.total} ر.س</div>
-                      <Link href={`/orders/${order.id}`} className="order-action-btn">التفاصيل</Link>
+                      <Link href={`/orders/${order.id}`} className="order-action-btn">تتبع الطلب</Link>
                     </div>
                   );
                 })

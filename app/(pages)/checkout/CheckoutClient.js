@@ -5,6 +5,37 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import styles from '@/styles/pages/checkOut.module.css';
 
+// ─── Moyasar Form ────────────────────────────────────────────────────────────
+const MOYASAR_VERSION = '1.15.0';
+const MOYASAR_JS  = `https://cdn.moyasar.com/mpf/${MOYASAR_VERSION}/moyasar.js`;
+const MOYASAR_CSS = `https://cdn.moyasar.com/mpf/${MOYASAR_VERSION}/moyasar.css`;
+
+function loadMoyasar() {
+  if (typeof window === 'undefined') return Promise.reject(new Error('no window'));
+  if (window.Moyasar) return Promise.resolve(window.Moyasar);
+  if (window.__moyasarLoading) return window.__moyasarLoading;
+
+  window.__moyasarLoading = new Promise((resolve, reject) => {
+    if (!document.querySelector('link[data-moyasar]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = MOYASAR_CSS;
+      link.dataset.moyasar = '1';
+      document.head.appendChild(link);
+    }
+    const script = document.createElement('script');
+    script.src = MOYASAR_JS;
+    script.async = true;
+    script.onload = () => resolve(window.Moyasar);
+    script.onerror = () => {
+      window.__moyasarLoading = null;
+      reject(new Error('Moyasar failed to load'));
+    };
+    document.head.appendChild(script);
+  });
+  return window.__moyasarLoading;
+}
+
 export default function CheckoutClient() {
   const { cartItems, clearCart } = useCart();
   const router = useRouter();
@@ -20,7 +51,11 @@ export default function CheckoutClient() {
 
   const [loadingAddress, setLoadingAddress] = useState(true);
   const [loading, setLoading]               = useState(false);
-  const [paymentMethod, setPaymentMethod]   = useState('cod'); // 'cod' | 'card'
+  const [paymentMethod, setPaymentMethod]   = useState('card'); // 'card' | 'cod' — البطاقة افتراضياً
+
+  // الدفع بالبطاقة: بعد ما ينعمل الطلب
+  const [pendingPayment, setPendingPayment] = useState(null); // { orderId, orderNumber, total, amount, currency, description }
+  const [formLoading, setFormLoading]       = useState(false);
 
   // كوبون
   const [couponCode, setCouponCode]       = useState('');
@@ -55,12 +90,61 @@ export default function CheckoutClient() {
     fetchSavedAddress();
   }, []);
 
+  // تحميل مكتبة ميسر مسبقاً لما يختار البطاقة
+  useEffect(() => {
+    if (paymentMethod === 'card') loadMoyasar().catch(() => {});
+  }, [paymentMethod]);
+
+  // تشغيل نموذج ميسر بعد إنشاء الطلب
+  useEffect(() => {
+    if (!pendingPayment) return;
+
+    const publishableKey = process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY;
+    if (!publishableKey) {
+      toast.error('الدفع بالبطاقة غير مهيأ حالياً');
+      return;
+    }
+
+    let cancelled = false;
+    setFormLoading(true);
+
+    loadMoyasar()
+      .then((Moyasar) => {
+        if (cancelled) return;
+        const container = document.querySelector('.mysr-form');
+        if (container) container.innerHTML = '';
+
+        Moyasar.init({
+          element: '.mysr-form',
+          amount: pendingPayment.amount, // بالهللة — محسوب من السيرفر
+          currency: pendingPayment.currency,
+          description: pendingPayment.description,
+          publishable_api_key: publishableKey,
+          callback_url: `${window.location.origin}/api/payments/moyasar/callback?order_id=${pendingPayment.orderId}`,
+          methods: ['creditcard'],
+          supported_networks: ['mada', 'visa', 'mastercard'],
+          language: 'ar',
+          metadata: { order_id: String(pendingPayment.orderId) },
+        });
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('تعذّر تحميل نموذج الدفع، حدّث الصفحة وحاول مرة ثانية');
+      })
+      .finally(() => {
+        if (!cancelled) setFormLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingPayment]);
+
   const SHIPPING_COST = 23;
+  const COD_FEE = 10; // نفس قيمة السيرفر — للعرض فقط
   const FREE_SHIPPING_THRESHOLD = 300;
 
+  // ⚠️ هذي الأرقام للعرض فقط — المبلغ الفعلي يحسبه السيرفر
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-
-  // ✅ الشحن مجاني فوق الحد (نفس منطق الـ server)
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
 
   const calcDiscount = () => {
@@ -73,7 +157,8 @@ export default function CheckoutClient() {
   };
 
   const discount   = calcDiscount();
-  const totalPrice = Math.max(0, subtotal - discount) + shipping;
+  const codFee     = paymentMethod === 'cod' ? COD_FEE : 0;
+  const totalPrice = Math.max(0, subtotal - discount) + shipping + codFee;
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -113,11 +198,7 @@ export default function CheckoutClient() {
     e.preventDefault();
     if (!form.phone.trim()) { toast.error('أدخل رقم الجوال'); return; }
     if (!form.postcode.trim()) { toast.error('أدخل الرقم الوطني'); return; }
-    // الدفع بالبطاقة غير متاح بعد
-    if (paymentMethod === 'card') {
-      toast.error('الدفع بالبطاقة غير متاح حالياً، اختر الدفع عند الاستلام');
-      return;
-    }
+
     setLoading(true);
     try {
       const response = await fetch('/api/create-order', {
@@ -131,18 +212,39 @@ export default function CheckoutClient() {
         }),
       });
       const data = await response.json();
-      if (response.ok) {
-        clearCart();
-        toast.success('✅ تم إرسال طلبك بنجاح!');
-        router.push('/orders?new=true');
-      } else {
+
+      if (!response.ok) {
         toast.error(data?.error || 'فشل في إنشاء الطلب');
+        return;
       }
+
+      // ─── الدفع بالبطاقة: نعرض نموذج ميسر، والسلة تنمسح بعد نجاح الدفع ───
+      if (paymentMethod === 'card') {
+        setPendingPayment({
+          orderId:     data.order.id,
+          orderNumber: data.order.number,
+          total:       data.order.total,
+          amount:      data.payment.amount,
+          currency:    data.payment.currency,
+          description: data.payment.description,
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      // ─── الدفع عند الاستلام ───
+      clearCart();
+      toast.success('✅ تم إرسال طلبك بنجاح!');
+      router.push('/orders?new=true');
     } catch (error) {
       toast.error('❌ خطأ: ' + error.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancelCardPayment = () => {
+    setPendingPayment(null);
   };
 
   if (cartItems.length === 0) {
@@ -190,206 +292,247 @@ export default function CheckoutClient() {
     );
   }
 
+  const serverTotalDiffers =
+    pendingPayment && Math.abs(parseFloat(pendingPayment.total) - totalPrice) > 0.01;
+
   return (
     <div dir="rtl" className={styles.checkoutPage}>
       <h1 className={styles.checkoutHeading}>إتمام الشراء</h1>
 
       <div className={styles.checkoutContent}>
 
-        {/* فورم الشحن */}
-        <div className={styles.checkoutFormSection}>
-          <h2 className={styles.sectionTitle}>📦 عنوان الشحن</h2>
-          <form onSubmit={handleOrder}>
-            <div className={styles.checkoutFormGrid}>
+        {pendingPayment ? (
+          /* ── نموذج الدفع بالبطاقة ── */
+          <div className={styles.checkoutFormSection}>
+            <h2 className={styles.sectionTitle}>💳 الدفع بالبطاقة</h2>
 
-              <div className={styles.inputGroup}>
-                <label htmlFor="phone">رقم الجوال *</label>
-                <input id="phone" name="phone" value={form.phone}
-                  placeholder="05xxxxxxxx" onChange={handleChange}
-                  className={styles.checkoutInput} required />
+            <div style={{
+              background: '#f0f4ff', border: '1px solid #c3d4f7', borderRadius: '12px',
+              padding: '14px 16px', marginBottom: '16px',
+            }}>
+              <div style={{ fontWeight: 700, color: '#1B365D' }}>
+                طلب رقم #{pendingPayment.orderNumber}
               </div>
-
-              <div className={styles.inputGroup}>
-                <label htmlFor="address">العنوان *</label>
-                <input id="address" name="address" value={form.address}
-                  placeholder="اسم الشارع، رقم المنزل" onChange={handleChange}
-                  className={styles.checkoutInput} required />
+              <div style={{ marginTop: '4px', color: '#2d3748' }}>
+                المبلغ المطلوب: <strong>{pendingPayment.total} ر.س</strong>
               </div>
-
-              <div className={styles.inputGroup}>
-                <label htmlFor="city">المدينة *</label>
-                <input id="city" name="city" value={form.city}
-                  placeholder="الرياض، جدة..." onChange={handleChange}
-                  className={styles.checkoutInput} required />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label htmlFor="state">المنطقة</label>
-                <input id="state" name="state" value={form.state}
-                  placeholder="المنطقة" onChange={handleChange}
-                  className={styles.checkoutInput} />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label htmlFor="postcode">الرقم الوطني *</label>
-                <input id="postcode" name="postcode" value={form.postcode}
-                  placeholder="الرقم الوطني المختصر 4 حرف - 4 أرقام" onChange={handleChange}
-                  className={styles.checkoutInput} required />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label>الدولة</label>
-                <input value="المملكة العربية السعودية" readOnly
-                  className={styles.checkoutInput} style={{ background: '#f1f5f9' }} />
-              </div>
-
-            </div>
-
-            {/* ── طريقة الدفع ── */}
-            <div style={{ marginTop: '1.5rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '12px', color: '#2d3748' }}>
-                💳 طريقة الدفع
-              </h3>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-
-                {/* الدفع عند الاستلام */}
-                <label
-                  onClick={() => setPaymentMethod('cod')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '14px 16px',
-                    border: `2px solid ${paymentMethod === 'cod' ? '#1B365D' : '#e2e8f0'}`,
-                    borderRadius: '12px',
-                    background: paymentMethod === 'cod' ? '#f0f4ff' : '#fff',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="cod"
-                    checked={paymentMethod === 'cod'}
-                    onChange={() => setPaymentMethod('cod')}
-                    style={{ accentColor: '#1B365D', width: '18px', height: '18px' }}
-                  />
-                  <span style={{ fontSize: '24px' }}>💵</span>
-                  <div>
-                    <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '15px' }}>
-                      الدفع عند الاستلام
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-                      ادفع نقداً عند وصول طلبك
-                    </div>
-                  </div>
-                </label>
-
-                {/* الدفع بالبطاقة — غير متاح */}
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '14px 16px',
-                    border: '2px solid #e2e8f0',
-                    borderRadius: '12px',
-                    background: '#f8fafc',
-                    cursor: 'not-allowed',
-                    opacity: 0.6,
-                    position: 'relative',
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="card"
-                    disabled
-                    style={{ width: '18px', height: '18px' }}
-                  />
-                  <span style={{ fontSize: '24px' }}>💳</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: '700', color: '#94a3b8', fontSize: '15px' }}>
-                      الدفع بالبطاقة الائتمانية
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                      فيزا / ماستركارد / مدى
-                    </div>
-                  </div>
-                  <span style={{
-                    background: '#f1f5f9',
-                    color: '#94a3b8',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    padding: '3px 10px',
-                    borderRadius: '20px',
-                    border: '1px solid #e2e8f0',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    قريباً
-                  </span>
-                </label>
-
-              </div>
-            </div>
-
-            {/* كوبون الخصم */}
-            <div style={{ marginTop: '1.5rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '10px', color: '#2d3748' }}>
-                🎟️ كوبون الخصم
-              </h3>
-
-              {appliedCoupon ? (
-                <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  background: '#f0fff4', border: '1px solid #c6f6d5',
-                  borderRadius: '12px', padding: '12px 16px',
-                }}>
-                  <span style={{ color: '#276749', fontWeight: '700' }}>
-                    ✅ {appliedCoupon.code} —{' '}
-                    {appliedCoupon.discount_type === 'percent'
-                      ? `خصم ${appliedCoupon.amount}%`
-                      : `خصم ${appliedCoupon.amount} ر.س`}
-                  </span>
-                  <button type="button" onClick={handleRemoveCoupon}
-                    style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', fontWeight: '700' }}>
-                    إزالة
-                  </button>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <input
-                    value={couponCode}
-                    onChange={(e) => { setCouponCode(e.target.value); setCouponError(''); }}
-                    placeholder="أدخل كود الكوبون"
-                    className={styles.checkoutInput}
-                    style={{ flex: 1 }}
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleApplyCoupon())}
-                  />
-                  <button type="button" onClick={handleApplyCoupon} disabled={couponLoading}
-                    style={{
-                      background: '#00c2cb', color: '#fff', border: 'none',
-                      borderRadius: '12px', padding: '0 20px', fontWeight: '700',
-                      cursor: couponLoading ? 'not-allowed' : 'pointer',
-                      opacity: couponLoading ? 0.7 : 1, whiteSpace: 'nowrap',
-                    }}>
-                    {couponLoading ? '...' : 'تطبيق'}
-                  </button>
+              {serverTotalDiffers && (
+                <div style={{ marginTop: '6px', fontSize: '0.85rem', color: '#b7791f' }}>
+                  ⚠️ تم تحديث المبلغ حسب الأسعار والعروض الحالية
                 </div>
               )}
-
-              {couponError && (
-                <p style={{ color: '#e53e3e', fontSize: '0.85rem', marginTop: '6px' }}>⚠️ {couponError}</p>
-              )}
             </div>
 
-            <button type="submit" disabled={loading} className={styles.checkoutButton}>
-              {loading ? '⏳ جارٍ الإرسال...' : `تأكيد الطلب — ${totalPrice.toFixed(2)} ر.س`}
+            {formLoading && (
+              <p style={{ textAlign: 'center', color: '#64748b' }}>⏳ جارٍ تحميل نموذج الدفع...</p>
+            )}
+
+            <div className="mysr-form" dir="ltr" />
+
+            <p style={{ fontSize: '12px', color: '#64748b', textAlign: 'center', marginTop: '12px' }}>
+              🔒 بيانات بطاقتك تُرسل مباشرة إلى ميسر ولا نحتفظ بها
+            </p>
+
+            <button
+              type="button"
+              onClick={handleCancelCardPayment}
+              style={{
+                display: 'block', margin: '16px auto 0', background: 'none', border: 'none',
+                color: '#64748b', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.9rem',
+              }}
+            >
+              الرجوع وتغيير طريقة الدفع
             </button>
-          </form>
-        </div>
+          </div>
+        ) : (
+          /* ── فورم الشحن ── */
+          <div className={styles.checkoutFormSection}>
+            <h2 className={styles.sectionTitle}>📦 عنوان الشحن</h2>
+            <form onSubmit={handleOrder}>
+              <div className={styles.checkoutFormGrid}>
+
+                <div className={styles.inputGroup}>
+                  <label htmlFor="phone">رقم الجوال *</label>
+                  <input id="phone" name="phone" value={form.phone}
+                    placeholder="05xxxxxxxx" onChange={handleChange}
+                    className={styles.checkoutInput} required />
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label htmlFor="address">العنوان *</label>
+                  <input id="address" name="address" value={form.address}
+                    placeholder="اسم الشارع، رقم المنزل" onChange={handleChange}
+                    className={styles.checkoutInput} required />
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label htmlFor="city">المدينة *</label>
+                  <input id="city" name="city" value={form.city}
+                    placeholder="الرياض، جدة..." onChange={handleChange}
+                    className={styles.checkoutInput} required />
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label htmlFor="state">المنطقة</label>
+                  <input id="state" name="state" value={form.state}
+                    placeholder="المنطقة" onChange={handleChange}
+                    className={styles.checkoutInput} />
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label htmlFor="postcode">الرقم الوطني *</label>
+                  <input id="postcode" name="postcode" value={form.postcode}
+                    placeholder="الرقم الوطني المختصر 4 حرف - 4 أرقام" onChange={handleChange}
+                    className={styles.checkoutInput} required />
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>الدولة</label>
+                  <input value="المملكة العربية السعودية" readOnly
+                    className={styles.checkoutInput} style={{ background: '#f1f5f9' }} />
+                </div>
+
+              </div>
+
+              {/* ── طريقة الدفع ── */}
+              <div style={{ marginTop: '1.5rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '12px', color: '#2d3748' }}>
+                  💳 طريقة الدفع
+                </h3>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+
+                  {/* الدفع بالبطاقة */}
+                  <label
+                    onClick={() => setPaymentMethod('card')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      border: `2px solid ${paymentMethod === 'card' ? '#1B365D' : '#e2e8f0'}`,
+                      borderRadius: '12px',
+                      background: paymentMethod === 'card' ? '#f0f4ff' : '#fff',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="card"
+                      checked={paymentMethod === 'card'}
+                      onChange={() => setPaymentMethod('card')}
+                      style={{ accentColor: '#1B365D', width: '18px', height: '18px' }}
+                    />
+                    <span style={{ fontSize: '24px' }}>💳</span>
+                    <div>
+                      <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '15px' }}>
+                        الدفع بالبطاقة
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                        مدى / فيزا / ماستركارد
+                      </div>
+                    </div>
+                  </label>
+
+                  {/* الدفع عند الاستلام */}
+                  <label
+                    onClick={() => setPaymentMethod('cod')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      border: `2px solid ${paymentMethod === 'cod' ? '#1B365D' : '#e2e8f0'}`,
+                      borderRadius: '12px',
+                      background: paymentMethod === 'cod' ? '#f0f4ff' : '#fff',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="cod"
+                      checked={paymentMethod === 'cod'}
+                      onChange={() => setPaymentMethod('cod')}
+                      style={{ accentColor: '#1B365D', width: '18px', height: '18px' }}
+                    />
+                    <span style={{ fontSize: '24px' }}>💵</span>
+                    <div>
+                      <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '15px' }}>
+                        الدفع عند الاستلام
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                        ادفع نقداً عند وصول طلبك — رسوم إضافية {COD_FEE} ر.س
+                      </div>
+                    </div>
+                  </label>
+
+                </div>
+              </div>
+
+              {/* كوبون الخصم */}
+              <div style={{ marginTop: '1.5rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '10px', color: '#2d3748' }}>
+                  🎟️ كوبون الخصم
+                </h3>
+
+                {appliedCoupon ? (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: '#f0fff4', border: '1px solid #c6f6d5',
+                    borderRadius: '12px', padding: '12px 16px',
+                  }}>
+                    <span style={{ color: '#276749', fontWeight: '700' }}>
+                      ✅ {appliedCoupon.code} —{' '}
+                      {appliedCoupon.discount_type === 'percent'
+                        ? `خصم ${appliedCoupon.amount}%`
+                        : `خصم ${appliedCoupon.amount} ر.س`}
+                    </span>
+                    <button type="button" onClick={handleRemoveCoupon}
+                      style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', fontWeight: '700' }}>
+                      إزالة
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <input
+                      value={couponCode}
+                      onChange={(e) => { setCouponCode(e.target.value); setCouponError(''); }}
+                      placeholder="أدخل كود الكوبون"
+                      className={styles.checkoutInput}
+                      style={{ flex: 1 }}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleApplyCoupon())}
+                    />
+                    <button type="button" onClick={handleApplyCoupon} disabled={couponLoading}
+                      style={{
+                        background: '#00c2cb', color: '#fff', border: 'none',
+                        borderRadius: '12px', padding: '0 20px', fontWeight: '700',
+                        cursor: couponLoading ? 'not-allowed' : 'pointer',
+                        opacity: couponLoading ? 0.7 : 1, whiteSpace: 'nowrap',
+                      }}>
+                      {couponLoading ? '...' : 'تطبيق'}
+                    </button>
+                  </div>
+                )}
+
+                {couponError && (
+                  <p style={{ color: '#e53e3e', fontSize: '0.85rem', marginTop: '6px' }}>⚠️ {couponError}</p>
+                )}
+              </div>
+
+              <button type="submit" disabled={loading} className={styles.checkoutButton}>
+                {loading
+                  ? '⏳ جارٍ الإرسال...'
+                  : paymentMethod === 'card'
+                    ? `المتابعة للدفع — ${totalPrice.toFixed(2)} ر.س`
+                    : `تأكيد الطلب — ${totalPrice.toFixed(2)} ر.س`}
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* ملخص الطلب */}
         <div className={styles.checkoutCart}>
@@ -448,9 +591,15 @@ export default function CheckoutClient() {
               <span>الشحن:</span>
               <span>{shipping === 0 ? 'مجاني 🎉' : `${shipping.toFixed(2)} ر.س`}</span>
             </div>
+            {codFee > 0 && !pendingPayment && (
+              <div className={styles.summaryRow}>
+                <span>رسوم الدفع عند الاستلام:</span>
+                <span>{codFee.toFixed(2)} ر.س</span>
+              </div>
+            )}
             <div className={styles.totalRow}>
               <span>الإجمالي الكلي:</span>
-              <span>{totalPrice.toFixed(2)} ر.س</span>
+              <span>{pendingPayment ? pendingPayment.total : totalPrice.toFixed(2)} ر.س</span>
             </div>
           </div>
         </div>
