@@ -12,6 +12,18 @@ const CONTENT = {
     text: 'شكراً لك! استلمنا طلبك وبنبدأ نجهّزه.',
     color: '#276749',
   },
+  cod: {
+    icon: '✅',
+    title: 'تم استلام طلبك',
+    text: 'بنجهّز طلبك ونتواصل معك قبل التوصيل.',
+    color: '#276749',
+  },
+  confirming: {
+    icon: '✅',
+    title: 'تم الدفع بنجاح',
+    text: 'استلمنا الدفع ونأكد طلبك الحين. بيظهر في طلباتك خلال دقائق، لا تعيد الدفع.',
+    color: '#276749',
+  },
   review: {
     icon: '🕓',
     title: 'استلمنا الدفع وطلبك قيد المراجعة',
@@ -49,7 +61,10 @@ export default function PaymentResultClient() {
   const message = params.get('message');
   const c = CONTENT[status] || CONTENT.error;
 
-  const moneyTaken = status === 'paid' || status === 'review';
+  const total = params.get('total');
+
+  // الطلب انعمل فعلاً (مدفوع أو استلام) → نفضّي السلة ونوجّهه لطلباته
+  const moneyTaken = ['paid', 'review', 'confirming', 'cod'].includes(status);
 
   useEffect(() => {
     if (moneyTaken && !cleared.current) {
@@ -66,6 +81,14 @@ export default function PaymentResultClient() {
         <p style={{ fontWeight: 700, marginBottom: '8px' }}>رقم الطلب: #{order}</p>
       )}
       <p style={{ color: '#4a5568', marginBottom: '8px' }}>{c.text}</p>
+      {status === 'cod' && total && (
+        <p style={{
+          display: 'inline-block', background: '#f0f4ff', border: '1px solid #c3d4f7',
+          borderRadius: '12px', padding: '10px 18px', marginTop: '8px', fontWeight: 700, color: '#1B365D',
+        }}>
+          💵 المبلغ المطلوب عند الاستلام: {parseFloat(total).toFixed(2)} ر.س
+        </p>
+      )}
       {status === 'failed' && message && (
         <p style={{ color: '#718096', fontSize: '0.9rem', marginBottom: '8px' }}>السبب: {message}</p>
       )}

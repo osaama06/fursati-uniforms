@@ -232,10 +232,9 @@ export default function CheckoutClient() {
         return;
       }
 
-      // ─── الدفع عند الاستلام ───
-      clearCart();
-      toast.success('✅ تم إرسال طلبك بنجاح!');
-      router.push('/orders?new=true');
+      // ─── الدفع عند الاستلام → نفس صفحة النتيجة حقت البطاقة ───
+      // السلة تنفضى في صفحة النتيجة (عشان ما تومض "سلتك فارغة" قبل الانتقال)
+      router.push(`/checkout/result?status=cod&order=${data.order.id}&total=${data.order.total}`);
     } catch (error) {
       toast.error('❌ خطأ: ' + error.message);
     } finally {
