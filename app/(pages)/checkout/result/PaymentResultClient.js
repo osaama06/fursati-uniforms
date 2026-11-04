@@ -10,7 +10,7 @@ const CONTENT = {
     icon: '✅',
     title: 'تم الدفع بنجاح',
     text: 'شكراً لك! استلمنا طلبك وبنبدأ نجهّزه.',
-    color: '#276749', 
+    color: '#276749',
   },
   cod: {
     icon: '✅',
@@ -49,6 +49,26 @@ const CONTENT = {
     color: '#c53030',
   },
 };
+
+// رسائل الرفض من ميسر/البنك تجي بالإنجليزي — نترجمها للعميل
+const DECLINE_REASONS = [
+  [/insufficient/i,                         'الرصيد غير كافٍ في البطاقة'],
+  [/expired/i,                              'البطاقة منتهية الصلاحية'],
+  [/invalid card|not found|card number/i,   'بيانات البطاقة غير صحيحة، تأكد من الرقم وتاريخ الانتهاء'],
+  [/cvv|cvc|security code/i,                'رمز التحقق (CVV) غير صحيح'],
+  [/3d|authenticat|otp/i,                   'ما اكتمل التحقق من البنك (رمز التحقق)'],
+  [/limit|exceed/i,                         'العملية تتجاوز حد البطاقة'],
+  [/not permitted|not allowed|restricted|online/i, 'البطاقة غير مفعّلة للشراء عبر الإنترنت'],
+  [/timeout|timed out/i,                    'انتهت مهلة العملية، حاول مرة ثانية'],
+  [/cancel|abandon/i,                       'تم إلغاء عملية الدفع'],
+  [/do not honor|declined|reject/i,         'البنك رفض العملية، تواصل مع بنكك أو جرّب بطاقة ثانية'],
+];
+
+function translateReason(message) {
+  if (!message) return null;
+  const match = DECLINE_REASONS.find(([re]) => re.test(message));
+  return match ? match[1] : 'البنك رفض العملية، جرّب بطاقة ثانية أو اختر الدفع عند الاستلام';
+}
 
 export default function PaymentResultClient() {
   const params = useSearchParams();
@@ -90,7 +110,7 @@ export default function PaymentResultClient() {
         </p>
       )}
       {status === 'failed' && message && (
-        <p style={{ color: '#718096', fontSize: '0.9rem', marginBottom: '8px' }}>السبب: {message}</p>
+        <p style={{ color: '#718096', fontSize: '0.9rem', marginBottom: '8px' }}>السبب: {translateReason(message)}</p>
       )}
 
       <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '28px', flexWrap: 'wrap' }}>
