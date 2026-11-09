@@ -2,18 +2,21 @@ import ProductCard from "@/app/_productCard/page";
 import { notFound } from "next/navigation";
 import "@/styles/components/products-grid.css";
 
-import { 
-  generateCategorySchema, 
+import {
+  generateCategorySchema,
   generateCategoryBreadcrumb,
-  renderSchema 
+  renderSchema
 } from '@/utils/schema';
 
 // ================================
 // CONSTANTS (Static Config)
 // ================================
 const SITE_URL = "https://www.fursatiuniforms.com";
-const SITE_NAME = " فرصتي";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.webp`;
+
+// ✅ مسار التصنيف الفعلي في الموقع (على الجذر مباشرة: /scrubs)
+// لو غيرت مكان الـ route مستقبلاً، غيّر هذا السطر بس
+const categoryPath = (slug) => `/${slug}`;
 
 // ================================
 // Data Fetching
@@ -62,37 +65,42 @@ function stripHtml(html) {
 // GENERATE METADATA
 // ================================
 export async function generateMetadata({ params }) {
-  const category = await getCategoryBySlug(params.slug);
+  const { slug } = await params;
+  const category = await getCategoryBySlug(slug);
 
   if (!category) {
     return {
-      title: { absolute: "فئة غير موجودة | فرصتي" },
+      title: { absolute: "الصفحة غير موجودة | فرصتي" },
       robots: { index: false, follow: true }
     };
   }
 
   const seo = category.yoast_seo || {};
-  
+
   const rawTitle = seo.title || category.name;
   const rawDesc = stripHtml(seo.metaDesc || category.description || `تسوق أفضل منتجات ${category.name} من متجر فرصتي.`);
-  
+
   // ✅ نبني العنوان يدوياً ونستخدم absolute لمنع layout من إضافة | فرصتي مرة ثانية
-  const title = rawTitle.includes("فرصتي") || rawTitle.includes("Fursati") 
-    ? rawTitle 
+  const title = rawTitle.includes("فرصتي") || rawTitle.includes("Fursati")
+    ? rawTitle
     : `${rawTitle} | فرصتي`;
 
   const categoryImage = category.image?.src || seo.opengraphImage || DEFAULT_OG_IMAGE;
-  const pageUrl = `/category/${category.slug}`;
+
+  // ✅ الـ canonical يأشر على الصفحة نفسها، مو على /category/ اللي ترجع 404
+  const pageUrl = categoryPath(category.slug);
+
+  // ✅ تصنيف فاضي (زي public أو تصنيف تجريبي) ما ينفهرس
+  const isIndexable = category.count > 0;
 
   return {
     metadataBase: new URL(SITE_URL),
-    
-    // ✅ absolute يمنع layout template من إضافة | فرصتي مرة ثانية
+
     title: { absolute: title },
 
     description: rawDesc,
     keywords: seo.focuskw || `${category.name}, زي موحد, فرصتي, ملابس ${category.name}`,
-    
+
     alternates: {
       canonical: pageUrl,
     },
@@ -123,10 +131,10 @@ export async function generateMetadata({ params }) {
     },
 
     robots: {
-      index: true,
+      index: isIndexable,
       follow: true,
       googleBot: {
-        index: true,
+        index: isIndexable,
         follow: true,
         "max-image-preview": "large",
         "max-snippet": -1,
@@ -139,13 +147,15 @@ export async function generateMetadata({ params }) {
 // PAGE COMPONENT
 // ================================
 export default async function CategoryPage({ params }) {
-  const category = await getCategoryBySlug(params.slug);
+  const { slug } = await params;
+  const category = await getCategoryBySlug(slug);
 
   if (!category) notFound();
 
   const products = await getProductsByCategoryId(category.id);
 
-  const frontendUrl = `${SITE_URL}/category/${category.slug}`;
+  // ✅ نفس المسار في الـ schema عشان ما يتعارض مع الـ canonical
+  const frontendUrl = `${SITE_URL}${categoryPath(category.slug)}`;
   const categorySchema = generateCategorySchema({ ...category, permalink: frontendUrl }, products);
   const breadcrumbSchema = generateCategoryBreadcrumb({ ...category, permalink: frontendUrl });
 
