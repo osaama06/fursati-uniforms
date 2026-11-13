@@ -1,5 +1,6 @@
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
+import { trackAddToCart } from '@/lib/analytics';
 
 const CartContext = createContext();
 
@@ -66,6 +67,9 @@ export const CartProvider = ({ children }) => {
 
       return [...prev, cartProduct];
     });
+
+    // برا الـ setState عشان ما ينرسل مرتين في وضع التطوير
+    trackAddToCart(cartProduct);
   };
 
   // إزالة منتج

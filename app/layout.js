@@ -233,6 +233,12 @@ export default async function RootLayout({
         >
           {`
             (function () {
+              // نجهّز gtag فوراً عشان أي حدث قبل تحميل السكربت ينحفظ في الطابور وما يضيع
+              window.dataLayer = window.dataLayer || [];
+              window.gtag = function () { dataLayer.push(arguments); };
+              gtag('js', new Date());
+              gtag('config', 'G-90YRR71JZ7', { send_page_view: true });
+
               let loaded = false;
 
               function loadGA() {
@@ -244,31 +250,54 @@ export default async function RootLayout({
                 script.async = true;
                 document.head.appendChild(script);
 
-                window.dataLayer = window.dataLayer || [];
-
-                function gtag() {
-                  dataLayer.push(arguments);
-                }
-
-                window.gtag = gtag;
-
-                gtag('js', new Date());
-
-                gtag('config', 'G-90YRR71JZ7', {
-                  send_page_view: true
-                });
-
                 window.removeEventListener('scroll', loadGA);
                 window.removeEventListener('click', loadGA);
                 window.removeEventListener('touchstart', loadGA);
               }
 
+              window.__loadGA = loadGA;
+
               window.addEventListener('scroll', loadGA, { once: true });
               window.addEventListener('click', loadGA, { once: true });
               window.addEventListener('touchstart', loadGA, { once: true });
+
+              // اللي يدخل ويطلع بدون ما يلمس شي كان ما ينحسب أبداً.
+              // نحمّل بعد ما تخلص الصفحة تحميلها كاملة ويكون المتصفح فاضي — ما يزاحم تحميل الصفحة
+              function loadWhenIdle() {
+                const idle = window.requestIdleCallback || function (cb) { return setTimeout(cb, 1500); };
+                idle(loadGA, { timeout: 5000 });
+              }
+              if (document.readyState === 'complete') loadWhenIdle();
+              else window.addEventListener('load', loadWhenIdle, { once: true });
             })();
           `}
         </Script>
+
+        {process.env.NEXT_PUBLIC_SNAP_PIXEL_ID && (
+          <Script
+            id="snap-pixel"
+            strategy="afterInteractive"
+          >
+            {`
+              (function(e,t,n){
+                if(e.snaptr)return;
+                var a=e.snaptr=function(){
+                  a.handleRequest ? a.handleRequest.apply(a,arguments) : a.queue.push(arguments)
+                };
+                a.queue=[];
+                var s='script';
+                var r=t.createElement(s);
+                r.async=!0;
+                r.src=n;
+                var u=t.getElementsByTagName(s)[0];
+                u.parentNode.insertBefore(r,u);
+              })(window,document,'https://sc-static.net/scevent.min.js');
+
+              snaptr('init', '${process.env.NEXT_PUBLIC_SNAP_PIXEL_ID}');
+              snaptr('track', 'PAGE_VIEW');
+            `}
+          </Script>
+        )}
 
         {process.env.NEXT_PUBLIC_FB_PIXEL_ID && (
           <Script

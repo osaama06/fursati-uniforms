@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useCart } from '@/app/context/CartContext';
 import styles from '@/styles/pages/checkOut.module.css';
+import { trackPurchase } from '@/lib/analytics';
 
 const CONTENT = {
   paid: {
@@ -89,9 +90,10 @@ export default function PaymentResultClient() {
   useEffect(() => {
     if (moneyTaken && !cleared.current) {
       cleared.current = true;
+      trackPurchase(order, total);
       clearCart();
     }
-  }, [moneyTaken, clearCart]);
+  }, [moneyTaken, clearCart, order, total]);
 
   return (
     <div dir="rtl" className={styles.checkoutPage} style={{ textAlign: 'center', padding: '80px 20px' }}>

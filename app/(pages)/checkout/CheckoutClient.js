@@ -1,6 +1,7 @@
 'use client';
 import { useCart } from '../../context/CartContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { trackBeginCheckout, savePendingOrder } from '@/lib/analytics';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import styles from '@/styles/pages/checkOut.module.css';
@@ -62,6 +63,14 @@ export default function CheckoutClient() {
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError]     = useState('');
+
+  // begin_checkout — مرة وحدة لما تفتح الصفحة والسلة فيها منتجات
+  const checkoutTracked = useRef(false);
+  useEffect(() => {
+    if (checkoutTracked.current || cartItems.length === 0) return;
+    checkoutTracked.current = true;
+    trackBeginCheckout(cartItems);
+  }, [cartItems]);
 
   // جلب العنوان المحفوظ
   useEffect(() => {
@@ -217,6 +226,9 @@ export default function CheckoutClient() {
         toast.error(data?.error || 'فشل في إنشاء الطلب');
         return;
       }
+
+      // نحفظ قيمة الطلب عشان حدث الشراء بعد الرجوع من ميسر
+      savePendingOrder(data.order.id, data.order.total, cartItems);
 
       // ─── الدفع بالبطاقة: نعرض نموذج ميسر، والسلة تنمسح بعد نجاح الدفع ───
       if (paymentMethod === 'card') {
