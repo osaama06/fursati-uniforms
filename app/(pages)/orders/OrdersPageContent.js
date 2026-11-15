@@ -1,180 +1,1308 @@
 'use client';
+import React, { useState, useEffect, useMemo } from "react";
+import { useCart } from "@/app/context/CartContext";
+import { useReviews } from "@/app/hooks/reviews";
+import SizeGuideTrigger from "@/app/_components/Size-guide/SizeGuideTrigger";
+import Image from "next/image";
+import Link from "next/link";
+import { FiShoppingCart } from 'react-icons/fi';
+import { Star, Heart, Share2, Award, Plus, Minus, X, ChevronLeft, ChevronRight, Truck, Clock, ShieldCheck } from "lucide-react";
+import ReviewForm from "@/app/_components/ReviewForm";
+import ProductSlider from "@/app/_components/ProductSlider/page";
+import toast from 'react-hot-toast';
+import { useWishlist } from '@/app/context/WishlistContext';
+import '@/styles/pages/ProductPage.css';
 
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { getStatusInfo, isHiddenFromCustomer } from './orderStatus';
-export default function OrdersPageContent() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const searchParams = useSearchParams();
-  const isNew = searchParams.get('new') === 'true';
+// ─── Trust info shown next to the add-to-cart button ─────────────────────────
+const FREE_SHIPPING_THRESHOLD = 300;
+const SHIPPING_FEE = 23;
 
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const timestamp = Date.now();
-      const res = await fetch(`/api/my-orders?t=${timestamp}`, { cache: 'no-store' });
-      const data = await res.json();
-      if (res.ok) {
-        // نخفي محاولات الدفع بالبطاقة اللي فشلت أو ما اكتملت
-        setOrders((Array.isArray(data) ? data : []).filter((o) => !isHiddenFromCustomer(o)));
-      } else {
-        setError(data.error || 'فشل في جلب البيانات');
-      }
-    } catch (err) {
-      setError('خطأ في الاتصال بالسيرفر');
-    } finally {
-      setLoading(false);
-    }
-  };
+function PurchaseTrustInfo({ className = "" }) {
+  return (
+    <ul className={`purchaseTrust ${className}`}>
+      <li>
+        <Truck className="purchaseTrustIcon" />
+        <span>
+          شحن مجاني للطلبات فوق {FREE_SHIPPING_THRESHOLD} ريال
+          <small>وأقل من كذا الشحن {SHIPPING_FEE} ريال</small>
+        </span>
+      </li>
+      <li>
+        <Clock className="purchaseTrustIcon" />
+        <span>التوصيل خلال 3 إلى 5 أيام عمل</span>
+      </li>
+      <li>
+        <ShieldCheck className="purchaseTrustIcon" />
+        <span>دفع آمن بالبطاقة، أو الدفع عند الاستلام</span>
+      </li>
+    </ul>
+  );
+}
 
-  useEffect(() => { fetchOrders(); }, [isNew]);
+// ─── "Complete the look": compact cross-sell block next to the product info ──
+function CompleteTheLook({ items = [], currentPrice = 0 }) {
+  if (!items.length) return null;
 
-  function OrdersSkeleton() {
-    const skeletonItem = {
-      background: 'linear-gradient(90deg, #f1f3f5 25%, #e9ecef 37%, #f1f3f5 63%)',
-      backgroundSize: '400% 100%',
-      animation: 'skeleton-loading 1.4s ease infinite',
-      borderRadius: '10px'
-    };
-
-    return (
-      <main style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem', direction: 'rtl' }}>
-
-        {/* هيدر وهمي */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2.5rem' }}>
-          <div style={{ ...skeletonItem, width: '200px', height: '28px' }} />
-          <div style={{ ...skeletonItem, width: '90px', height: '38px', borderRadius: '12px' }} />
-        </div>
-
-        {/* كروت وهمية */}
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            style={{
-              background: '#fff',
-              padding: '1.5rem',
-              borderRadius: '18px',
-              border: '1px solid #eee',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1.2rem',
-              gap: '1rem',
-              flexWrap: 'wrap'
-            }}
-          >
-            <div style={{ ...skeletonItem, width: '120px', height: '40px' }} />
-            <div style={{ ...skeletonItem, width: '110px', height: '30px' }} />
-            <div style={{ ...skeletonItem, width: '80px', height: '30px' }} />
-            <div style={{ ...skeletonItem, width: '140px', height: '40px', borderRadius: '12px' }} />
-          </div>
-        ))}
-
-        {/* أنيميشن */}
-        <style jsx>{`
-          @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-          }
-        `}</style>
-      </main>
-    );
-  }
-
-  if (loading) return <OrdersSkeleton />;
+  const priceOf = (p) => parseFloat(p.sale_price || p.price || 0) || 0;
+  const cheapest = Math.min(...items.map(priceOf).filter((n) => n > 0));
+  const unlocksFreeShipping =
+    currentPrice < FREE_SHIPPING_THRESHOLD &&
+    Number.isFinite(cheapest) &&
+    currentPrice + cheapest >= FREE_SHIPPING_THRESHOLD;
 
   return (
-    <main style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem', direction: 'rtl', fontFamily: 'inherit' }}>
-
-      {/* الهيدر */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: '800', margin: 0 }}>📦 طلباتي ({orders.length})</h1>
-        <button
-          onClick={fetchOrders}
-          style={{ padding: '10px 20px', cursor: 'pointer', borderRadius: '12px', border: '1px solid #ddd', background: '#fff', fontWeight: '600' }}
-        >
-          تحديث
-        </button>
-      </div>
-
-      {/* قائمة الطلبات */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-        {orders.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem', background: '#f8f9fa', borderRadius: '15px' }}>
-            <p style={{ color: '#666' }}>لا توجد طلبات سابقة في حسابك حالياً.</p>
-            <Link href="/" style={{ color: '#00c2cb', fontWeight: 'bold', textDecoration: 'none' }}>ابدأ التسوق من هنا</Link>
-          </div>
-        ) : (
-          orders.map((order) => {
-            const statusInfo = getStatusInfo(order.status);
-
-            return (
-              <div key={order.id} style={{
-                background: '#fff',
-                padding: '1.5rem',
-                borderRadius: '18px',
-                border: '1px solid #eee',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-                flexWrap: 'wrap',
-                gap: '1rem'
-              }}>
-                {/* رقم وتاريخ الطلب */}
-                <div style={{ minWidth: '150px' }}>
-                  <span style={{ fontWeight: '800', display: 'block', fontSize: '1.1rem', marginBottom: '4px' }}>#{order.number || order.id}</span>
-                  <span style={{ fontSize: '0.85rem', color: '#888' }}>
-                    {new Date(order.date_created).toLocaleDateString('ar-SA')}
-                  </span>
-                </div>
-
-                {/* حالة الطلب */}
-                <div style={{
-                  padding: '6px 16px',
-                  borderRadius: '10px',
-                  fontSize: '0.9rem',
-                  fontWeight: '700',
-                  backgroundColor: statusInfo.bg,
-                  color: statusInfo.color,
-                  minWidth: '110px',
-                  textAlign: 'center'
-                }}>
-                  {statusInfo.label}
-                </div>
-
-                {/* السعر النهائي */}
-                <div style={{ fontWeight: '800', color: '#1a1a1a', fontSize: '1.1rem' }}>
-                  {order.total} <span style={{ fontSize: '0.8rem' }}>ر.س</span>
-                </div>
-
-                {/* زر التفاصيل */}
-                <Link
-                  href={`/orders/${order.id}`}
-                  style={{
-                    textDecoration: 'none',
-                    color: '#00c2cb',
-                    background: '#f0fbfc',
-                    padding: '10px 20px',
-                    borderRadius: '10px',
-                    fontSize: '0.9rem',
-                    fontWeight: '700',
-                    transition: '0.2s',
-                    border: '1px solid #e0f7f8'
-                  }}
-                >
-                  تتبع الطلب
-                </Link>
-              </div>
-            );
-          })
+    <section className="completeLook" aria-label="كمّل الطقم">
+      <div className="completeLookHeader">
+        <h3>كمّل الطقم</h3>
+        {unlocksFreeShipping && (
+          <span className="completeLookHint">
+            <Truck className="completeLookHintIcon" />
+            أضف قطعة منها والشحن عليك مجاني
+          </span>
         )}
       </div>
 
-      {error && <p style={{ color: 'red', textAlign: 'center', marginTop: '2rem' }}>⚠️ {error}</p>}
-    </main>
+      <div className="completeLookList">
+        {items.map((item) => {
+          const price = priceOf(item);
+          const regular = parseFloat(item.regular_price || 0) || 0;
+          const onSale = item.sale_price && regular > price;
+          return (
+            <Link key={item.id} href={`/products/${item.slug}`} className="completeLookItem">
+              <div className="completeLookImage">
+                {item.images?.[0]?.src ? (
+                  <Image
+                    src={item.images[0].src}
+                    alt={item.name}
+                    width={96}
+                    height={120}
+                    sizes="96px"
+                  />
+                ) : null}
+              </div>
+              <div className="completeLookInfo">
+                <span className="completeLookName">{item.name}</span>
+                <span className="completeLookPrice">
+                  {price.toFixed(2)}
+                  <Image src="/sar.webp" alt="ريال" width={14} height={14} className="sarsymbol-img" />
+                  {onSale && <span className="completeLookOldPrice">{regular.toFixed(0)}</span>}
+                </span>
+                <span className="completeLookCta">اختر المقاس ←</span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+export default function ProductContent({ product, variations = [] }) {
+  const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist, wishlistItems } = useWishlist();
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [preloadGallery, setPreloadGallery] = useState(false);
+  const [selectedAttributes, setSelectedAttributes] = useState({});
+  const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState('description');
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [showAttributeError, setShowAttributeError] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [loadingRelated, setLoadingRelated] = useState(false);
+  const [crossSellProducts, setCrossSellProducts] = useState([]);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const [breadcrumbCategories, setBreadcrumbCategories] = useState([]);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [zoomVisible, setZoomVisible] = useState(false);
+  const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
+  const [lensPosition, setLensPosition] = useState({ x: 0, y: 0 });
+  const [customFieldValues, setCustomFieldValues] = useState({});
+
+  const {
+    reviews,
+    reviewStats,
+    loading: reviewsLoading,
+    error: reviewsError,
+    submitReview,
+    formatDate,
+  } = useReviews(product.id);
+
+  const customFields = useMemo(() => {
+    const metaValue = product?.meta_data?.find(
+      (item) => item.key === "custom_product_fields_json"
+    )?.value;
+    if (!metaValue || typeof metaValue !== "string" || metaValue.trim() === "") return [];
+    try {
+      const parsed = JSON.parse(metaValue);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.error("Invalid custom_product_fields_json:", error);
+      return [];
+    }
+  }, [product?.meta_data]);
+
+  const extraPrice = useMemo(() => {
+    return customFields.reduce((total, field) => {
+      const options = Array.isArray(field.field_options) ? field.field_options : [];
+      if (field.field_type === "radio") {
+        const selected = customFieldValues[field.field_key];
+        if (!selected) return total;
+        const match = options.find((opt) => opt.label === selected);
+        return total + (Number(match?.price) || 0);
+      }
+      if (field.field_type === "checkbox") {
+        const selected = customFieldValues[field.field_key];
+        if (!Array.isArray(selected) || selected.length === 0) return total;
+        const addedPrice = selected.reduce((sum, label) => {
+          const match = options.find((opt) => opt.label === label);
+          return sum + (Number(match?.price) || 0);
+        }, 0);
+        return total + addedPrice;
+      }
+      return total;
+    }, 0);
+  }, [customFields, customFieldValues]);
+
+  // ─── Helpers ────────────────────────────────────────────────────────────────
+
+  const normalizeText = (value = "") =>
+    String(value).trim().toLowerCase().replace(/\s+/g, "").replace(/[-_]/g, "");
+
+  const buildAttrKey = (attr = {}) => {
+    const slug = String(attr?.slug || "").trim();
+    const name = String(attr?.name || "").trim();
+    return slug || name;
+  };
+
+  const attributeKeysMatch = (productAttr = {}, variationAttr = {}) => {
+    const pSlug = String(productAttr?.slug || "").trim().toLowerCase();
+    const pName = String(productAttr?.name || "").trim().toLowerCase();
+    const vName = String(variationAttr?.name || "").trim().toLowerCase();
+    const vSlug = String(variationAttr?.slug || "").trim().toLowerCase();
+    if (!vName && !vSlug) return false;
+    if (pSlug && vSlug && pSlug === vSlug) return true;
+    if (pSlug && vName && pSlug === vName) return true;
+    if (pName && vName && pName === vName) return true;
+    if (pName && vSlug && pName === vSlug) return true;
+    const pSlugStripped = pSlug.replace(/^pa_/, "");
+    const vNameStripped = vName.replace(/^pa_/, "");
+    const vSlugStripped = vSlug.replace(/^pa_/, "");
+    if (pSlugStripped && vNameStripped && pSlugStripped === vNameStripped) return true;
+    if (pSlugStripped && vSlugStripped && pSlugStripped === vSlugStripped) return true;
+    return false;
+  };
+
+  const uniqueValues = (values = []) => {
+    const map = new Map();
+    values.forEach((value) => {
+      const clean = String(value || "").trim();
+      const normalized = normalizeText(clean);
+      if (clean && normalized && !map.has(normalized)) map.set(normalized, clean);
+    });
+    return Array.from(map.values());
+  };
+
+  // ─── Variation Attributes (includes color if it's a variation) ───────────
+
+  const variationAttributes = useMemo(() => {
+    return (product?.attributes || [])
+      .filter((attr) => attr?.variation)
+      .map((attr) => {
+        const key = buildAttrKey(attr);
+        const fromProduct = Array.isArray(attr.options) ? attr.options : [];
+        const fromVariations = (variations || []).flatMap((v) =>
+          (v.attributes || [])
+            .filter((va) => attributeKeysMatch(attr, va))
+            .map((va) => String(va.option || "").trim())
+            .filter(Boolean)
+        );
+
+        // Detect if this attribute is a color attribute
+        const attrNameLower = String(attr.name || "").toLowerCase();
+        const isColor =
+          attrNameLower.includes("color") ||
+          attrNameLower.includes("colour") ||
+          attr.name === "اللون" ||
+          attrNameLower === "لون";
+
+        return {
+          key,
+          name: String(attr.name || attr.slug || key).trim(),
+          options: uniqueValues([...fromProduct, ...fromVariations]),
+          isColor,
+          _productAttr: attr,
+        };
+      })
+      .filter((item) => item.options.length > 0);
+  }, [product?.attributes, variations]);
+
+  // ─── Selected Variation ──────────────────────────────────────────────────
+
+  const selectedVariation = useMemo(() => {
+    if (!variationAttributes.length) return null;
+    const hasMissingSelection = variationAttributes.some(
+      (attrDef) => !selectedAttributes[attrDef.key]
+    );
+    if (hasMissingSelection) return null;
+    return (
+      variations.find((variation) => {
+        return variationAttributes.every((attrDef) => {
+          const variationAttr = (variation.attributes || []).find((va) =>
+            attributeKeysMatch(attrDef._productAttr, va)
+          );
+          if (!variationAttr || !variationAttr.option) return true;
+          return (
+            normalizeText(variationAttr.option) ===
+            normalizeText(selectedAttributes[attrDef.key])
+          );
+        });
+      }) || null
+    );
+  }, [variationAttributes, variations, selectedAttributes]);
+
+  // ─── Image list: prefer variation image when available ───────────────────
+
+  const displayImages = useMemo(() => {
+    const productImages = product.images || [];
+    const variationImg = selectedVariation?.image?.src;
+
+    if (!variationImg) return productImages;
+
+    const rest = productImages.filter(
+      (img) => normalizeText(img.src) !== normalizeText(variationImg)
+    );
+    return [{ src: variationImg, alt: selectedVariation?.image?.alt || product.name }, ...rest];
+  }, [selectedVariation, product.images, product.name]);
+
+  // ─── Reset image to 0 when variation changes ────────────────────────────
+
+useEffect(() => {
+  setSelectedImage(0);
+  setPreloadGallery(false);
+}, [selectedVariation?.id]);
+  // ─── Product change reset + default_attributes ───────────────────────────
+
+  useEffect(() => {
+    setSelectedImage(0);
+    setQuantity(1);
+    setShowAttributeError(false);
+    setCustomFieldValues({});
+
+    const defaults = product?.default_attributes;
+
+    if (Array.isArray(defaults) && defaults.length > 0 && variationAttributes.length > 0) {
+      const defaultMap = {};
+      defaults.forEach((def) => {
+        const matched = variationAttributes.find((va) =>
+          attributeKeysMatch(va._productAttr, { name: def.name, slug: def.name })
+        );
+        if (!matched) return;
+        const realOption = matched.options.find(
+          (opt) => normalizeText(opt) === normalizeText(def.option)
+        );
+        if (realOption) defaultMap[matched.key] = realOption;
+      });
+      setSelectedAttributes(defaultMap);
+    } else {
+      setSelectedAttributes({});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id]);
+
+  useEffect(() => {
+    const fetchCategoryHierarchy = async () => {
+      if (!product?.categories?.length) return;
+      try {
+        const categoryIds = product.categories.map((c) => c.id).join(',');
+        const res = await fetch(`/api/categories?ids=${categoryIds}`);
+        const allCategories = await res.json();
+        const deepestCategory = allCategories.reduce((deepest, cat) => {
+          if (!deepest) return cat;
+          return cat.parent > 0 ? cat : deepest;
+        }, null);
+        if (!deepestCategory) return;
+        const hierarchy = [];
+        let current = deepestCategory;
+        while (current && current.parent !== 27) {
+          hierarchy.unshift(current);
+          current = allCategories.find((cat) => cat.id === current.parent);
+        }
+        if (current) hierarchy.unshift(current);
+        setBreadcrumbCategories(hierarchy);
+      } catch (error) {
+        console.error('Error fetching category hierarchy:', error);
+      }
+    };
+    fetchCategoryHierarchy();
+  }, [product?.categories]);
+
+  useEffect(() => {
+    const fetchRelatedProducts = async () => {
+      if (!product?.categories?.[0]?.id) return;
+      setLoadingRelated(true);
+      try {
+        const response = await fetch(
+          `/api/related-products?category=${product.categories[0].id}&exclude=${product.id}&per_page=8`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setRelatedProducts(data);
+        }
+      } catch (error) {
+        console.error('خطأ في جلب المنتجات المتعلقة:', error);
+      } finally {
+        setLoadingRelated(false);
+      }
+    };
+    fetchRelatedProducts();
+  }, [product?.id, product?.categories]);
+
+  // ─── Cross-sells ("complete the look") from WooCommerce Linked Products ──
+  const crossSellIds = useMemo(
+    () => (Array.isArray(product?.cross_sell_ids) ? product.cross_sell_ids : []),
+    [product?.cross_sell_ids]
+  );
+
+  useEffect(() => {
+    setCrossSellProducts([]);
+    if (crossSellIds.length === 0) return;
+    let cancelled = false;
+    const fetchCrossSells = async () => {
+      try {
+        const response = await fetch(`/api/cross-sells?ids=${crossSellIds.join(',')}`);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!cancelled && Array.isArray(data)) setCrossSellProducts(data);
+      } catch (error) {
+        console.error('خطأ في جلب المنتجات المكملة:', error);
+      }
+    };
+    fetchCrossSells();
+    return () => { cancelled = true; };
+  }, [product?.id, crossSellIds]);
+
+  // Don't repeat cross-sell items inside "similar products"
+  const filteredRelatedProducts = useMemo(
+    () => relatedProducts.filter((p) => !crossSellIds.includes(p.id)),
+    [relatedProducts, crossSellIds]
+  );
+
+  useEffect(() => {
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);
+    checkDesktop();
+    window.addEventListener("resize", checkDesktop);
+    return () => window.removeEventListener("resize", checkDesktop);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') setIsWishlisted(isInWishlist(product.id));
+  }, [product.id, wishlistItems]);
+
+  // ─── Handlers ───────────────────────────────────────────────────────────
+
+  const handleAttributeChange = (key, value) => {
+    setSelectedAttributes((prev) => ({ ...prev, [key]: value }));
+    setShowAttributeError(false);
+  };
+
+  const handleCustomFieldChange = (key, value) => {
+    setCustomFieldValues((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleCheckboxChange = (key, label) => {
+    setCustomFieldValues((prev) => {
+      const current = Array.isArray(prev[key]) ? prev[key] : [];
+      const exists = current.includes(label);
+      return { ...prev, [key]: exists ? current.filter((l) => l !== label) : [...current, label] };
+    });
+  };
+
+  // ─── Image upload handler ────────────────────────────────────────────────
+
+  const handleImageUpload = async (fieldKey, file) => {
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('نوع الملف غير مدعوم. يرجى رفع صورة JPG أو PNG أو WEBP');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('حجم الصورة كبير جداً. الحد الأقصى 5MB');
+      return;
+    }
+
+    handleCustomFieldChange(`${fieldKey}__loading`, true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || 'فشل رفع الصورة');
+        return;
+      }
+
+      handleCustomFieldChange(fieldKey, { url: data.url, public_id: data.public_id });
+      toast.success('تم رفع الصورة بنجاح ✅');
+    } catch {
+      toast.error('خطأ في رفع الصورة');
+    } finally {
+      handleCustomFieldChange(`${fieldKey}__loading`, false);
+    }
+  };
+
+  const handleAddToCart = () => {
+    setShowAttributeError(false);
+    if (variationAttributes.length > 0) {
+      const missingAttribute = variationAttributes.find((attr) => !selectedAttributes[attr.key]);
+      if (missingAttribute) {
+        setShowAttributeError(true);
+        toast.error(`اختر ${missingAttribute.name}`);
+        return;
+      }
+      if (!selectedVariation) {
+        toast.error("الخيارات المحددة غير متوفرة");
+        return;
+      }
+    }
+    for (const field of customFields) {
+      if (!field.field_required) continue;
+      const val = customFieldValues[field.field_key];
+      const isEmpty =
+        field.field_type === "image"
+          ? !val?.url
+          : field.field_type === "checkbox"
+          ? !Array.isArray(val) || val.length === 0
+          : field.field_type === "measurements"
+          ? !val || typeof val !== "object" ||
+            (field.field_inputs || []).some((inp) => !String(val[inp.key] || "").trim())
+          : !String(val || "").trim();
+      if (isEmpty) {
+        toast.error(`يرجى اختيار / تعبئة ${field.field_label}`);
+        return;
+      }
+    }
+
+    const customFieldsWithLabels = {};
+    customFields.forEach((field) => {
+      const value = customFieldValues[field.field_key];
+      const options = Array.isArray(field.field_options) ? field.field_options : [];
+
+      // ── image ──
+      if (field.field_type === "image") {
+        if (value?.url) {
+          customFieldsWithLabels[field.field_key] = {
+            label: field.field_label,
+            value: value.url,
+          };
+        }
+        return;
+      }
+
+      if (field.field_type === "checkbox") {
+        if (!Array.isArray(value) || value.length === 0) return;
+        const totalPrice = value.reduce((sum, label) => {
+          const match = options.find((opt) => opt.label === label);
+          return sum + (Number(match?.price) || 0);
+        }, 0);
+        customFieldsWithLabels[field.field_key] = {
+          label: field.field_label,
+          value: value.join(" / "),
+          price: totalPrice,
+        };
+        return;
+      }
+      if (field.field_type === "measurements") {
+        const val = customFieldValues[field.field_key];
+        if (val && typeof val === "object") {
+          const formatted = (field.field_inputs || [])
+            .map((inp) => `${inp.label}: ${val[inp.key] || 0} ${inp.unit || ""}`)
+            .join(" | ");
+          customFieldsWithLabels[field.field_key] = { label: field.field_label, value: formatted };
+        }
+        return;
+      }
+      if (value !== undefined && String(value).trim() !== "") {
+        const entry = { label: field.field_label, value: String(value) };
+        if (field.field_type === "radio") {
+          const match = options.find((opt) => (opt.label || opt) === value);
+          entry.price = Number(match?.price) || 0;
+        }
+        customFieldsWithLabels[field.field_key] = entry;
+      }
+    });
+
+    const cartImage = selectedVariation?.image?.src || product.images?.[0]?.src;
+
+    const itemPayload = {
+      id: selectedVariation?.id || product.id,
+      productId: product.id,
+      variationId: selectedVariation?.id || null,
+      name: product.name,
+      price: (
+        parseFloat(selectedVariation?.price || product.sale_price || product.price || 0) +
+        extraPrice
+      ).toFixed(2),
+      image: cartImage,
+      selectedAttributes,
+      customFields: customFieldsWithLabels,
+    };
+
+    for (let i = 0; i < quantity; i++) addToCart(itemPayload);
+
+    toast.success(`تمت إضافة ${quantity} قطعة إلى السلة`, {
+      style: { borderRadius: '10px', background: '#333', color: '#fff' },
+      iconTheme: { primary: '#fff', secondary: '#333' },
+    });
+  };
+
+  const handleQuantityChange = (change) => setQuantity(Math.max(1, quantity + change));
+
+  const handleReviewSubmit = async (reviewData) => {
+    setSubmittingReview(true);
+    try {
+      const result = await submitReview(reviewData);
+      toast.success(result.message);
+      setShowReviewForm(false);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleTouchStart = (e) => { setTouchEnd(null); setTouchStart(e.targetTouches[0].clientX); };
+  const handleTouchMove  = (e) => setTouchEnd(e.targetTouches[0].clientX);
+  const handleTouchEnd   = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const lastIndex = (displayImages.length || 1) - 1;
+    if (distance > 50  && selectedImage > 0)         setSelectedImage((p) => p - 1);
+    if (distance < -50 && selectedImage < lastIndex) setSelectedImage((p) => p + 1);
+    setTouchStart(null); setTouchEnd(null);
+  };
+
+  const goToNextImage = () =>
+    setSelectedImage((p) => (p + 1 >= (displayImages.length || 1) ? 0 : p + 1));
+  const goToPrevImage = () =>
+    setSelectedImage((p) => (p - 1 < 0 ? (displayImages.length || 1) - 1 : p - 1));
+
+  const handleImageMouseMove = (e) => {
+    if (!isDesktop || !currentImage) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const lensSize = 180;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setZoomPosition({
+      x: Math.max(0, Math.min(100, (x / rect.width) * 100)),
+      y: Math.max(0, Math.min(100, (y / rect.height) * 100)),
+    });
+    setLensPosition({
+      x: Math.max(lensSize / 2, Math.min(rect.width  - lensSize / 2, x)),
+      y: Math.max(lensSize / 2, Math.min(rect.height - lensSize / 2, y)),
+    });
+    setZoomVisible(true);
+  };
+  const handleImageMouseLeave = () => setZoomVisible(false);
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: product.name, text: `شاهد هذا المنتج: ${product.name}`, url: window.location.href });
+        return;
+      }
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("تم نسخ رابط المنتج");
+    } catch (error) {
+      if (error.name !== "AbortError") toast.error("تعذر مشاركة المنتج");
+    }
+  };
+
+  const handleToggleWishlist = () => {
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+      setIsWishlisted(false);
+      toast.success('تمت إزالة المنتج من المفضلة');
+    } else {
+      addToWishlist(product);
+      setIsWishlisted(true);
+      toast.success('تمت إضافة المنتج إلى المفضلة');
+    }
+  };
+
+  const calculateDiscount = () => {
+    if (product.regular_price && product.sale_price) {
+      const regular = parseFloat(product.regular_price);
+      const sale    = parseFloat(product.sale_price);
+      return Math.round(((regular - sale) / regular) * 100);
+    }
+    return 0;
+  };
+  const discount = calculateDiscount();
+
+  const currentPrice =
+    parseFloat(selectedVariation?.price || product.sale_price || product.price || 0) + extraPrice;
+
+  const showDiscount =
+    !selectedVariation &&
+    product.regular_price &&
+    product.sale_price;
+
+  const currentImage = displayImages[selectedImage]?.src || displayImages[0]?.src || "";
+
+  // ─── Render ──────────────────────────────────────────────────────────────
+
+  return (
+    <div className="productContainer">
+      <nav className="breadcrumb" aria-label="breadcrumb">
+        <span><Link href="/">الرئيسية</Link></span>
+        {breadcrumbCategories.map((cat) => (
+          <React.Fragment key={cat.id}>
+            <span> / </span>
+            <span><Link href={`/${cat.slug}`}>{cat.name}</Link></span>
+          </React.Fragment>
+        ))}
+      </nav>
+
+      <div className="productGrid">
+
+        {/* ── Image Section ── */}
+        <div className="imageSection">
+          <div
+            className="mainImageContainer"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseMove={handleImageMouseMove}
+            onMouseLeave={handleImageMouseLeave}
+          >
+            {displayImages.length > 0 ? (
+<Image
+  src={currentImage}
+  alt={product.name}
+  width={600}
+  height={600}
+  sizes="(max-width: 767px) 100vw, (max-width: 1023px) 350px, 680px"
+  className="mainImage"
+  priority={selectedImage === 0}
+  onLoad={() => {
+    if (selectedImage === 0) {
+      setPreloadGallery(true);
+    }
+  }}
+/>
+ 
+
+        
+            ) : (
+              <div className="mainImage" style={{ display:'flex', alignItems:'center', justifyContent:'center', color:'#565959' }}>
+                لا توجد صورة
+              </div>
+            )}
+
+            {isDesktop && zoomVisible && currentImage && (
+              <div
+                className="desktopZoomLens"
+                style={{
+                  left: `${lensPosition.x}px`,
+                  top: `${lensPosition.y}px`,
+                  backgroundImage: `url(${currentImage})`,
+                  backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                }}
+              />
+            )}
+
+            {displayImages.length > 1 && (
+              <>
+                <button className="mobileImageNav mobileImageNavPrev" onClick={goToPrevImage} type="button">
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+                <button className="mobileImageNav mobileImageNavNext" onClick={goToNextImage} type="button">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+              </>
+            )}
+
+<div className="imageOverlayButtons">
+  <button
+    onClick={handleToggleWishlist}
+    className={`overlayButton ${isWishlisted ? 'liked' : ''}`}
+    type="button"
+  >
+    <Heart className="w-4 h-4" fill={isWishlisted ? "currentColor" : "none"} />
+  </button>
+
+  <button className="overlayButton" onClick={handleShare} type="button">
+    <Share2 className="w-4 h-4" />
+  </button>
+</div>
+</div>
+
+{preloadGallery && displayImages.length > 1 && (
+  <div
+    aria-hidden="true"
+    style={{
+      position: "absolute",
+      width: "1px",
+      height: "1px",
+      overflow: "hidden",
+      opacity: 0,
+      pointerEvents: "none",
+    }}
+  >
+    {displayImages.slice(1).map((img) => (
+      <Image
+        key={img.src}
+        src={img.src}
+        alt=""
+        width={600}
+        height={600}
+        sizes="(max-width: 767px) 100vw, (max-width: 1023px) 350px, 680px"
+        loading="eager"
+        fetchPriority="low"
+      />
+    ))}
+  </div>
+)}
+{/* Thumbnails (mobile = horizontal, desktop = vertical via CSS) */}
+          {displayImages.length > 1 && (
+            <div className="thumbnailGrid">
+              {displayImages.map((img, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
+                  type="button"
+                >
+                  <Image
+                    src={img.src}
+                    alt={img.alt || `صورة ${index + 1}`}
+                    width={100}
+                    height={100}
+                    className="thumbnailImage"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Product Info ── */}
+        <div className="productInfo">
+          <div className="productHeader">
+            <h1>{product.name}</h1>
+            {reviewStats.total > 0 && (
+            <div className="ratingSection">
+              <div className="stars">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className={`star ${i < Math.floor(reviewStats.average) ? 'filled' : 'empty'}`} />
+                ))}
+                <span className="ratingValue">{reviewStats.average}</span>
+              </div>
+              <span className="reviewCount">({reviewStats.total} تقييم)</span>
+            </div>
+            )}
+
+            <div className="priceSection">
+              <span className="currentPrice">
+                {currentPrice.toFixed(2)}
+                <Image src="/sar.webp" alt="ريال" width={20} height={20} className="sarsymbol-img" />
+              </span>
+              {showDiscount && (
+                <>
+                  <span className="originalPrice">
+                    {product.regular_price}
+                    <Image src="/sar.webp" alt="ريال" width={20} height={20} className="sarsymbol-img" />
+                  </span>
+                  <span className="discountBadge">-{discount}%</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* ── Variation Attributes (color + size + any other) ── */}
+           <SizeGuideTrigger image="/size_guide1.png" />
+          {variationAttributes.map((attr) => (
+            <div className={attr.isColor ? "colorSection" : "sizeSection"} key={attr.key}>
+              <h3 className="sectionTitle">
+                {attr.name}:{" "}
+                {selectedAttributes[attr.key] && (
+                  <span style={{ fontWeight: 'normal' }}>{selectedAttributes[attr.key]}</span>
+                )}
+              </h3>
+
+              {attr.isColor ? (
+                <div className="colorSwatches">
+                  {attr.options.map((option) => {
+                    const isSelected = selectedAttributes[attr.key] === option;
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => handleAttributeChange(attr.key, option)}
+                        className={`colorSwatch ${isSelected ? 'selected' : ''}`}
+                        title={option}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="sizeGrid">
+                  {attr.options.map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => handleAttributeChange(attr.key, option)}
+                      className={`sizeOption ${selectedAttributes[attr.key] === option ? 'selected' : ''}`}
+                      type="button"
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {variationAttributes.length > 0 && showAttributeError && (
+            <p style={{ color: "red", marginTop: "10px", fontSize: "14px" }}>
+              يرجى اختيار جميع الخيارات المطلوبة
+            </p>
+          )}
+
+
+          
+
+          {/* ── Custom Fields ── */}
+          {customFields.length > 0 && (
+            <div className="customFieldsSection">
+              {customFields.map((field, index) => {
+                const value = customFieldValues[field.field_key] ?? "";
+                const options = Array.isArray(field.field_options) ? field.field_options : [];
+                const isUploading = !!customFieldValues[`${field.field_key}__loading`];
+                return (
+                  <div className="customFieldBlock" key={field.field_key || index}>
+                    <label className="customFieldLabel">
+                      {field.field_label}{field.field_required ? " *" : ""}
+                    </label>
+
+                    {/* ── image upload ── */}
+                    {field.field_type === "image" && (
+                      <div className="customFieldImageUpload">
+                        {value?.url ? (
+                          <div className="uploadedImagePreview">
+                            <img src={value.url} alt="صورة مرفوعة" className="uploadedImg" />
+                            <button
+                              type="button"
+                              className="removeImageBtn"
+                              onClick={() => handleCustomFieldChange(field.field_key, null)}
+                            >
+                              ✕ إزالة الصورة
+                            </button>
+                          </div>
+                        ) : (
+                          <label className={`imageUploadLabel ${isUploading ? 'uploading' : ''}`}>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              style={{ display: 'none' }}
+                              disabled={isUploading}
+                              onChange={(e) => handleImageUpload(field.field_key, e.target.files?.[0])}
+                            />
+                            {isUploading ? (
+                              <div className="uploadingIndicator">
+                                <div className="uploadSpinner" />
+                                <span>جاري الرفع...</span>
+                              </div>
+                            ) : (
+                              <>
+                                <span className="uploadIcon">🖼️</span>
+                                <span className="uploadText">اضغط لرفع صورة التطريز</span>
+                                <span className="uploadHint">JPG, PNG, WEBP — حتى 5MB</span>
+                              </>
+                            )}
+                          </label>
+                        )}
+                      </div>
+                    )}
+
+                    {field.field_type === "buttons" && (
+                      <div className="customFieldButtons">
+                        {options.map((option) => (
+                          <button
+                            key={option} type="button"
+                            className={`customFieldButton ${value === option ? "active" : ""}`}
+                            onClick={() => handleCustomFieldChange(field.field_key, option)}
+                          >{option}</button>
+                        ))}
+                      </div>
+                    )}
+                    {field.field_type === "radio" && (
+                      <div className="customFieldRadioGroup">
+                        {options.map((option) => {
+                          const optLabel = option.label || option;
+                          const optPrice = Number(option.price) || 0;
+                          const isSelected = value === optLabel;
+                          return (
+                            <button key={optLabel} type="button"
+                              className={`customFieldRadioOption ${isSelected ? "active" : ""}`}
+                              onClick={() => handleCustomFieldChange(field.field_key, optLabel)}
+                            >
+                              <span className="radioOptionLabel">{optLabel}</span>
+                              {optPrice > 0
+                                ? <span className="radioOptionPrice">+{optPrice} ر.س</span>
+                                : <span className="radioOptionPriceFree">مجاناً</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {field.field_type === "checkbox" && (
+                      <div className="customFieldCheckboxGroup">
+                        {options.map((option) => {
+                          const optLabel = option.label || option;
+                          const optPrice = Number(option.price) || 0;
+                          const selectedArr = Array.isArray(value) ? value : [];
+                          const isChecked = selectedArr.includes(optLabel);
+                          return (
+                            <button key={optLabel} type="button"
+                              className={`customFieldCheckboxOption ${isChecked ? "active" : ""}`}
+                              onClick={() => handleCheckboxChange(field.field_key, optLabel)}
+                            >
+                              <span className="checkboxIndicator">{isChecked ? "✓" : ""}</span>
+                              <span className="checkboxOptionLabel">{optLabel}</span>
+                              {optPrice > 0
+                                ? <span className="checkboxOptionPrice">+{optPrice} ر.س</span>
+                                : <span className="checkboxOptionPriceFree">مجاناً</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {field.field_type === "measurements" && (
+                      <div className="customFieldMeasurements">
+                        {(field.field_inputs || []).map((input) => {
+                          const inputVal = (customFieldValues[field.field_key] || {})[input.key] || "";
+                          return (
+                            <div className="measurementItem" key={input.key}>
+                              <label className="measurementLabel">{input.label}</label>
+                              <div className="measurementInputWrapper">
+                                <input
+                                  className="measurementInput" type="number" min="0" placeholder="0"
+                                  value={inputVal}
+                                  onChange={(e) => handleCustomFieldChange(field.field_key, {
+                                    ...(customFieldValues[field.field_key] || {}),
+                                    [input.key]: e.target.value,
+                                  })}
+                                />
+                                {input.unit && <span className="measurementUnit">{input.unit}</span>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {field.field_type === "select" && (
+                      <select className="customFieldInput" value={value}
+                        onChange={(e) => handleCustomFieldChange(field.field_key, e.target.value)}
+                      >
+                        <option value="">اختر {field.field_label}</option>
+                        {options.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
+                    )}
+                    {field.field_type === "textarea" && (
+                      <textarea className="customFieldTextarea"
+                        placeholder={field.field_placeholder || ""} value={value}
+                        onChange={(e) => handleCustomFieldChange(field.field_key, e.target.value)}
+                      />
+                    )}
+                    {(field.field_type === "text" || field.field_type === "number") && (
+                      <input className="customFieldInput"
+                        type={field.field_input_type || field.field_type || "text"}
+                        placeholder={field.field_placeholder || ""} value={value}
+                        onChange={(e) => handleCustomFieldChange(field.field_key, e.target.value)}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {product.short_description && (
+            <div className="featuresBox">
+              <h3>نبذة عن المنتج</h3>
+              <div dangerouslySetInnerHTML={{ __html: product.short_description }} />
+            </div>
+          )}
+
+          {/* Trust info for mobile (desktop shows it inside the buy box) */}
+          <PurchaseTrustInfo className="purchaseTrustMobile" />
+
+          {/* ── Complete the look (cross-sells) ── */}
+          <CompleteTheLook items={crossSellProducts} currentPrice={currentPrice} />
+
+          {/* Mobile sticky action bar */}
+          <div className="mobileActionBox">
+            <div className="mobileQuantitySection">
+              <div className="mobileQuantityControls">
+                <button onClick={() => handleQuantityChange(-1)} className="mobileQuantityButton" type="button">
+                  <Minus className="w-4 h-4" />
+                </button>
+                <span className="mobileQuantityValue">{quantity}</span>
+                <button onClick={() => handleQuantityChange(1)} className="mobileQuantityButton" type="button">
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <button onClick={handleAddToCart} className="mobileAddToCartBtn" type="button">
+              <FiShoppingCart /> أضف إلى السلة
+            </button>
+          </div>
+        </div>
+
+        {/* ── Buy Box (desktop) ── */}
+        <div className="buyBox">
+          <div className="buyBoxPrice">
+            {currentPrice.toFixed(2)}
+            <Image src="/sar.webp" alt="ريال" width={20} height={20} className="sarsymbol-img" />
+          </div>
+          {showDiscount && (
+            <div style={{ marginBottom: '8px' }}>
+              <span className="originalPrice" style={{ fontSize: '14px' }}>
+                {product.regular_price}
+                <Image src="/sar.webp" alt="ريال" width={20} height={20} className="sarsymbol-img" />
+              </span>
+              <span className="discountBadge" style={{ marginLeft: '8px', fontSize: '12px' }}>
+                -{discount}%
+              </span>
+            </div>
+          )}
+          <div className="buyBoxQuantity">
+            <h4>الكمية:</h4>
+            <div className="quantityControls">
+              <button onClick={() => handleQuantityChange(-1)} className="quantityButton" type="button">
+                <Minus className="w-3 h-3" />
+              </button>
+              <span className="quantityValue">{quantity}</span>
+              <button onClick={() => handleQuantityChange(1)} className="quantityButton" type="button">
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+          <div className="buyBoxActions">
+            <button onClick={handleAddToCart} className="buyBoxAddToCart" type="button">
+              <FiShoppingCart /> أضف إلى السلة
+            </button>
+          </div>
+          <PurchaseTrustInfo />
+        </div>
+      </div>
+
+      {/* ── Tabs ── */}
+      <div className="tabsSection">
+        <div className="tabsHeader">
+          <button onClick={() => setActiveTab('description')} className={`tabButton ${activeTab === 'description' ? 'active' : ''}`} type="button">
+            تفاصيل المنتج
+          </button>
+          <button onClick={() => setActiveTab('specifications')} className={`tabButton ${activeTab === 'specifications' ? 'active' : ''}`} type="button">
+            المواصفات التقنية
+          </button>
+          <button onClick={() => setActiveTab('reviews')} className={`tabButton ${activeTab === 'reviews' ? 'active' : ''}`} type="button">
+            التقييمات ({reviewStats.total})
+          </button>
+        </div>
+
+        <div className="tabContent">
+          {activeTab === 'description' && (
+            <div className="descriptionContent">
+              <h3>تفاصيل المنتج</h3>
+              {product.description
+                ? <div className="descriptionText" dangerouslySetInnerHTML={{ __html: product.description }} />
+                : <p style={{ color: '#565959' }}>لا يوجد وصف تفصيلي لهذا المنتج حالياً.</p>}
+            </div>
+          )}
+
+          {activeTab === 'specifications' && (
+            <div>
+              <h3 className="sectionTitle">المواصفات التقنية</h3>
+              {product.attributes && product.attributes.length > 0 ? (
+                <table className="specificationsTable">
+                  <tbody>
+                    {product.attributes.map((attr, index) => (
+                      <tr key={index}>
+                        <td className="specName">{attr.name}</td>
+                        <td>{Array.isArray(attr.options) ? attr.options.join(', ') : attr.options}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p style={{ color: '#565959' }}>لا توجد مواصفات تقنية متاحة لهذا المنتج.</p>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'reviews' && (
+            <div>
+              <div className="reviewsHeader">
+                <h3 className="reviewsTitle">تقييمات العملاء</h3>
+                <button className="writeReviewBtn" onClick={() => setShowReviewForm(true)} type="button">
+                  اكتب تقييماً
+                </button>
+              </div>
+              {reviewsError && (
+                <div style={{ padding:'16px', backgroundColor:'#fef2f2', color:'#dc2626', borderRadius:'8px', marginBottom:'16px', border:'1px solid #fecaca' }}>
+                  {reviewsError}
+                </div>
+              )}
+              {reviewStats.total > 0 && (
+                <div className="ratingSummary">
+                  <div className="summaryHeader">
+                    <div className="overallRating">{reviewStats.average}</div>
+                    <div>
+                      <div className="summaryStars">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`star ${i < Math.floor(reviewStats.average) ? 'filled' : 'empty'}`} />
+                        ))}
+                      </div>
+                      <div className="summaryText">بناءً على {reviewStats.total} تقييم</div>
+                    </div>
+                  </div>
+                  <div className="ratingBreakdown">
+                    {[5, 4, 3, 2, 1].map((stars) => (
+                      <div key={stars} className="breakdownRow">
+                        <span className="breakdownStars">{stars}</span>
+                        <Star className="breakdownIcon" />
+                        <div className="breakdownBarContainer">
+                          <div className="breakdownFill" style={{ width: reviewStats.total > 0 ? `${(reviewStats.breakdown[stars] / reviewStats.total) * 100}%` : '0%' }} />
+                        </div>
+                        <span className="breakdownCount">{reviewStats.breakdown[stars] || 0}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="reviewsList">
+                {reviewsLoading ? (
+                  <div className="loadingReviews">
+                    <div className="loadingSpinner" />
+                    <p>جاري تحميل التقييمات...</p>
+                  </div>
+                ) : reviews.length > 0 ? (
+                  reviews.map((review) => (
+                    <div key={review.id} className="reviewItem">
+                      <div className="reviewHeader">
+                        <div className="reviewerInfo">
+                          <div className="reviewerAvatar">{review.reviewer.charAt(0).toUpperCase()}</div>
+                          <div className="reviewerMeta">
+                            <div className="reviewerName">
+                              {review.reviewer}
+                              <span className="verifiedBadge"><Award className="w-3 h-3" />موثق</span>
+                            </div>
+                            <span className="reviewDate">{formatDate(review.date_created)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="reviewRating">
+                        <div className="reviewStars">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`reviewStar star ${i < review.rating ? 'filled' : 'empty'}`} />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="reviewText" dangerouslySetInnerHTML={{ __html: review.review }} />
+                      <div className="reviewActions">
+                        <button className="helpfulBtn" type="button">
+                          <div style={{ display:'flex', alignItems:'center', gap:'4px' }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                            </svg>
+                            مفيد؟
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="emptyReviews">
+                    <h4>لا توجد تقييمات بعد</h4>
+                    <p>كن أول من يقيم هذا المنتج</p>
+                    <button className="writeReviewBtn" onClick={() => setShowReviewForm(true)} type="button">
+                      اكتب أول تقييم
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Review Form Modal ── */}
+      {showReviewForm && (
+        <div className="reviewFormOverlay" onClick={(e) => e.target === e.currentTarget && setShowReviewForm(false)}>
+          <div className="reviewFormModal">
+            <div className="reviewFormHeader">
+              <h3>اكتب تقييماً للمنتج</h3>
+              <button className="reviewFormClose" onClick={() => setShowReviewForm(false)} disabled={submittingReview} type="button">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="reviewFormContent">
+              <ReviewForm
+                isOpen={showReviewForm}
+                onClose={() => setShowReviewForm(false)}
+                onSubmit={handleReviewSubmit}
+                isSubmitting={submittingReview}
+                productName={product.name}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Related Products ── */}
+      {loadingRelated && (
+        <div className="skeleton-slider-container">
+          <div className="skeleton-slider-header">
+            <div className="skeleton-slider-title pulse" />
+          </div>
+          <div className="skeleton-slider-cards">
+            {[1,2,3,4,5].map((i) => (
+              <div key={i} className="skeleton-card">
+                <div className="skeleton-card-image pulse" />
+                <div className="skeleton-card-title pulse" />
+                <div className="skeleton-card-price pulse" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {!loadingRelated && filteredRelatedProducts.length > 0 && (
+        <ProductSlider
+          category={{
+            id: product.categories?.[0]?.id,
+            slug: product.categories?.[0]?.slug,
+            name: `منتجات مشابهة`,
+          }}
+          products={filteredRelatedProducts}
+        />
+      )}
+    </div>
   );
 }

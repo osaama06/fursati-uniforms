@@ -1,25 +1,30 @@
 import { NextResponse } from 'next/server';
 
+const MAX_ITEMS = 12;
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const categoryId = searchParams.get('category');
-    const excludeId = searchParams.get('exclude');
-    const perPage = searchParams.get('per_page') || '8';
+    const idsParam = searchParams.get('ids') || '';
 
-    if (!categoryId) {
-      return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
+    // Accept only numeric IDs, no duplicates, capped
+    const ids = [...new Set(
+      idsParam
+        .split(',')
+        .map((id) => id.trim())
+        .filter((id) => /^\d+$/.test(id))
+    )].slice(0, MAX_ITEMS);
+
+    if (ids.length === 0) {
+      return NextResponse.json([]);
     }
 
     const auth = Buffer.from(
       `${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`
     ).toString('base64');
 
-    let url = `https://fursatiuniforms.store/wp-json/wc/v3/products?category=${categoryId}&per_page=${perPage}&status=publish`;
-
-    if (excludeId) {
-      url += `&exclude=${excludeId}`;
-    }
+    // orderby=include keeps the same order you set in WordPress "Cross-sells"
+    const url = `https://fursatiuniforms.store/wp-json/wc/v3/products?include=${ids.join(',')}&per_page=${ids.length}&orderby=include&status=publish`;
 
     const response = await fetch(url, {
       headers: {
@@ -35,18 +40,20 @@ export async function GET(request) {
 
     const products = await response.json();
 
-    // فلترة المنتجات المتاحة فقط
-    const availableProducts = products.filter(product =>
+    // Only visible, published, in-stock products
+    // (no point suggesting something the customer can't buy)
+    const availableProducts = products.filter((product) =>
       product.status === 'publish' &&
-      product.catalog_visibility !== 'hidden'
+      product.catalog_visibility !== 'hidden' &&
+      product.stock_status !== 'outofstock'
     );
 
     return NextResponse.json(availableProducts);
 
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error('Error fetching cross-sell products:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch products' },
+      { error: 'Failed to fetch cross-sell products' },
       { status: 500 }
     );
   }

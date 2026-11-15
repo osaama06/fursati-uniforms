@@ -688,3 +688,131 @@
   .buyBox .purchaseTrust li small { font-size: 11px; }
   .buyBox .purchaseTrustIcon { width: 18px; height: 18px; }
 }
+
+/* =========================================
+   COMPLETE THE LOOK (cross-sells next to product info)
+   ========================================= */
+.completeLook {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1.5px solid #1B365D;
+  border-radius: 12px;
+  background: #fff;
+  direction: rtl;
+}
+
+.completeLookHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.completeLookHeader h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1B365D;
+  margin: 0;
+}
+
+.completeLookHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #15803d;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.completeLookHintIcon { width: 14px; height: 14px; }
+
+.completeLookList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.completeLookItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  background: #f8fafc;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.completeLookItem:hover {
+  border-color: #1B365D;
+  background: #fff;
+}
+
+.completeLookImage {
+  width: 64px;
+  height: 80px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.completeLookImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.completeLookInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.completeLookName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.completeLookPrice {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #1B365D;
+}
+
+.completeLookOldPrice {
+  font-size: 12px;
+  font-weight: 400;
+  color: #94a3b8;
+  text-decoration: line-through;
+  margin-right: 6px;
+}
+
+.completeLookCta {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1B365D;
+}
+
+@media (min-width: 1024px) {
+  .completeLookHeader h3 { font-size: 15px; }
+  .completeLookName { font-size: 13px; }
+}
