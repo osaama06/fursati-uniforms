@@ -6,12 +6,38 @@ import SizeGuideTrigger from "@/app/_components/Size-guide/SizeGuideTrigger";
 import Image from "next/image";
 import Link from "next/link";
 import { FiShoppingCart } from 'react-icons/fi';
-import { Star, Heart, Share2, Award, Plus, Minus, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, Heart, Share2, Award, Plus, Minus, X, ChevronLeft, ChevronRight, Truck, Clock, ShieldCheck } from "lucide-react";
 import ReviewForm from "@/app/_components/ReviewForm";
 import ProductSlider from "@/app/_components/ProductSlider/page";
 import toast from 'react-hot-toast';
 import { useWishlist } from '@/app/context/WishlistContext';
 import '@/styles/pages/ProductPage.css';
+
+// ─── Trust info shown next to the add-to-cart button ─────────────────────────
+const FREE_SHIPPING_THRESHOLD = 300;
+const SHIPPING_FEE = 23;
+
+function PurchaseTrustInfo({ className = "" }) {
+  return (
+    <ul className={`purchaseTrust ${className}`}>
+      <li>
+        <Truck className="purchaseTrustIcon" />
+        <span>
+          شحن مجاني للطلبات فوق {FREE_SHIPPING_THRESHOLD} ريال
+          <small>وأقل من كذا الشحن {SHIPPING_FEE} ريال</small>
+        </span>
+      </li>
+      <li>
+        <Clock className="purchaseTrustIcon" />
+        <span>التوصيل خلال 3 إلى 5 أيام عمل</span>
+      </li>
+      <li>
+        <ShieldCheck className="purchaseTrustIcon" />
+        <span>دفع آمن بالبطاقة، أو الدفع عند الاستلام</span>
+      </li>
+    </ul>
+  );
+}
 
 export default function ProductContent({ product, variations = [] }) {
   const { addToCart } = useCart();
@@ -27,6 +53,7 @@ export default function ProductContent({ product, variations = [] }) {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
+  const [crossSellProducts, setCrossSellProducts] = useState([]);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [breadcrumbCategories, setBreadcrumbCategories] = useState([]);
@@ -274,6 +301,36 @@ useEffect(() => {
     };
     fetchRelatedProducts();
   }, [product?.id, product?.categories]);
+
+  // ─── Cross-sells ("complete the look") from WooCommerce Linked Products ──
+  const crossSellIds = useMemo(
+    () => (Array.isArray(product?.cross_sell_ids) ? product.cross_sell_ids : []),
+    [product?.cross_sell_ids]
+  );
+
+  useEffect(() => {
+    setCrossSellProducts([]);
+    if (crossSellIds.length === 0) return;
+    let cancelled = false;
+    const fetchCrossSells = async () => {
+      try {
+        const response = await fetch(`/api/cross-sells?ids=${crossSellIds.join(',')}`);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!cancelled && Array.isArray(data)) setCrossSellProducts(data);
+      } catch (error) {
+        console.error('خطأ في جلب المنتجات المكملة:', error);
+      }
+    };
+    fetchCrossSells();
+    return () => { cancelled = true; };
+  }, [product?.id, crossSellIds]);
+
+  // Don't repeat cross-sell items inside "similar products"
+  const filteredRelatedProducts = useMemo(
+    () => relatedProducts.filter((p) => !crossSellIds.includes(p.id)),
+    [relatedProducts, crossSellIds]
+  );
 
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);
@@ -687,6 +744,7 @@ useEffect(() => {
         <div className="productInfo">
           <div className="productHeader">
             <h1>{product.name}</h1>
+            {reviewStats.total > 0 && (
             <div className="ratingSection">
               <div className="stars">
                 {[...Array(5)].map((_, i) => (
@@ -696,6 +754,7 @@ useEffect(() => {
               </div>
               <span className="reviewCount">({reviewStats.total} تقييم)</span>
             </div>
+            )}
 
             <div className="priceSection">
               <span className="currentPrice">
@@ -933,6 +992,9 @@ useEffect(() => {
             </div>
           )}
 
+          {/* Trust info for mobile (desktop shows it inside the buy box) */}
+          <PurchaseTrustInfo className="purchaseTrustMobile" />
+
           {/* Mobile sticky action bar */}
           <div className="mobileActionBox">
             <div className="mobileQuantitySection">
@@ -986,6 +1048,7 @@ useEffect(() => {
               <FiShoppingCart /> أضف إلى السلة
             </button>
           </div>
+          <PurchaseTrustInfo />
         </div>
       </div>
 
@@ -1152,6 +1215,18 @@ useEffect(() => {
         </div>
       )}
 
+      {/* ── Cross-sells: complete the look ── */}
+      {crossSellProducts.length > 0 && (
+        <ProductSlider
+          category={{
+            id: product.categories?.[0]?.id,
+            slug: product.categories?.[0]?.slug,
+            name: `يكمّل إطلالتك`,
+          }}
+          products={crossSellProducts}
+        />
+      )}
+
       {/* ── Related Products ── */}
       {loadingRelated && (
         <div className="skeleton-slider-container">
@@ -1169,14 +1244,14 @@ useEffect(() => {
           </div>
         </div>
       )}
-      {!loadingRelated && relatedProducts.length > 0 && (
+      {!loadingRelated && filteredRelatedProducts.length > 0 && (
         <ProductSlider
           category={{
             id: product.categories?.[0]?.id,
             slug: product.categories?.[0]?.slug,
             name: `منتجات مشابهة`,
           }}
-          products={relatedProducts}
+          products={filteredRelatedProducts}
         />
       )}
     </div>
