@@ -39,12 +39,143 @@ function PurchaseTrustInfo({ className = "" }) {
   );
 }
 
-// ─── "Complete the look": compact cross-sell block next to the product info ──
-function CompleteTheLook({ items = [], currentPrice = 0 }) {
+// ─── "Complete the look": stacked cross-sell items, each with its own options + add button ──
+const clean = (v = "") => String(v).trim().toLowerCase().replace(/\s+/g, "").replace(/[-_]/g, "").replace(/^pa/, "");
+
+const attrMatches = (productAttr = {}, variationAttr = {}) => {
+  if (productAttr.id && variationAttr.id) return productAttr.id === variationAttr.id;
+  const p = [productAttr.slug, productAttr.name].filter(Boolean).map(clean);
+  const v = [variationAttr.slug, variationAttr.name].filter(Boolean).map(clean);
+  return p.some((x) => v.includes(x));
+};
+
+function CompleteLookItem({ item, onAdd }) {
+  const variationsData = Array.isArray(item.variations_data) ? item.variations_data : [];
+  const isVariable = item.type === "variable";
+
+  // Items with required custom fields (e.g. embroidery) must be configured on their own page
+  const hasRequiredCustomFields = useMemo(() => {
+    const raw = item?.meta_data?.find((m) => m.key === "custom_product_fields_json")?.value;
+    if (!raw || typeof raw !== "string") return false;
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) && parsed.some((f) => f.field_required);
+    } catch {
+      return false;
+    }
+  }, [item?.meta_data]);
+
+  const attrs = useMemo(
+    () => (item.attributes || [])
+      .filter((a) => a.variation && Array.isArray(a.options) && a.options.length > 0)
+      .map((a) => ({ ...a, key: String(a.slug || a.name).trim() })),
+    [item.attributes]
+  );
+
+  // Default selection: product default_attributes, otherwise first option
+  const [selected, setSelected] = useState(() => {
+    const init = {};
+    attrs.forEach((a) => {
+      const def = (item.default_attributes || []).find((d) => attrMatches(a, d));
+      const defOption = def && a.options.find((o) => clean(o) === clean(def.option));
+      init[a.key] = defOption || a.options[0];
+    });
+    return init;
+  });
+
+  const matchedVariation = useMemo(() => {
+    if (!isVariable) return null;
+    return variationsData.find((v) =>
+      attrs.every((a) => {
+        const va = (v.attributes || []).find((x) => attrMatches(a, x));
+        if (!va || !va.option) return true; // "Any" option
+        return clean(va.option) === clean(selected[a.key]);
+      })
+    ) || null;
+  }, [isVariable, variationsData, attrs, selected]);
+
+  const price = parseFloat(
+    matchedVariation?.price || item.sale_price || item.price || 0
+  ) || 0;
+  const image = matchedVariation?.image?.src || item.images?.[0]?.src;
+
+  const unavailable =
+    isVariable && (!matchedVariation || matchedVariation.stock_status === "outofstock");
+
+  const handleAdd = () => {
+    if (unavailable) return;
+    onAdd({
+      id: matchedVariation?.id || item.id,
+      productId: item.id,
+      variationId: matchedVariation?.id || null,
+      name: item.name,
+      price: price.toFixed(2),
+      image,
+      selectedAttributes: isVariable ? selected : {},
+      customFields: {},
+    });
+  };
+
+  return (
+    <div className="completeLookItem">
+      <Link href={`/products/${item.slug}`} className="completeLookImage">
+        {image ? (
+          <Image src={image} alt={item.name} width={96} height={120} sizes="96px" />
+        ) : null}
+      </Link>
+
+      <div className="completeLookInfo">
+        <Link href={`/products/${item.slug}`} className="completeLookName">
+          {item.name}
+        </Link>
+        <span className="completeLookPrice">
+          {price.toFixed(2)}
+          <Image src="/sar.webp" alt="ريال" width={14} height={14} className="sarsymbol-img" />
+        </span>
+
+        {!hasRequiredCustomFields && attrs.length > 0 && (
+          <div className="completeLookOptions">
+            {attrs.map((a) => (
+              <select
+                key={a.key}
+                className="completeLookSelect"
+                aria-label={a.name}
+                value={selected[a.key] || ""}
+                onChange={(e) => setSelected((prev) => ({ ...prev, [a.key]: e.target.value }))}
+              >
+                {a.options.map((o) => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+              </select>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {hasRequiredCustomFields ? (
+        <Link href={`/products/${item.slug}`} className="completeLookAddBtn">
+          الخيارات
+        </Link>
+      ) : (
+        <button
+          type="button"
+          className="completeLookAddBtn"
+          onClick={handleAdd}
+          disabled={unavailable}
+        >
+          {unavailable ? "غير متوفر" : "أضف"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function CompleteTheLook({ items = [], currentPrice = 0, onAdd }) {
   if (!items.length) return null;
 
   const priceOf = (p) => parseFloat(p.sale_price || p.price || 0) || 0;
-  const cheapest = Math.min(...items.map(priceOf).filter((n) => n > 0));
+  const prices = items.map(priceOf).filter((n) => n > 0);
+  const cheapest = prices.length ? Math.min(...prices) : Infinity;
   const unlocksFreeShipping =
     currentPrice < FREE_SHIPPING_THRESHOLD &&
     Number.isFinite(cheapest) &&
@@ -54,6 +185,7 @@ function CompleteTheLook({ items = [], currentPrice = 0 }) {
     <section className="completeLook" aria-label="كمّل الطقم">
       <div className="completeLookHeader">
         <h3>كمّل الطقم</h3>
+        <p>نسّقها مع قطع تناسبها</p>
         {unlocksFreeShipping && (
           <span className="completeLookHint">
             <Truck className="completeLookHintIcon" />
@@ -63,35 +195,9 @@ function CompleteTheLook({ items = [], currentPrice = 0 }) {
       </div>
 
       <div className="completeLookList">
-        {items.map((item) => {
-          const price = priceOf(item);
-          const regular = parseFloat(item.regular_price || 0) || 0;
-          const onSale = item.sale_price && regular > price;
-          return (
-            <Link key={item.id} href={`/products/${item.slug}`} className="completeLookItem">
-              <div className="completeLookImage">
-                {item.images?.[0]?.src ? (
-                  <Image
-                    src={item.images[0].src}
-                    alt={item.name}
-                    width={96}
-                    height={120}
-                    sizes="96px"
-                  />
-                ) : null}
-              </div>
-              <div className="completeLookInfo">
-                <span className="completeLookName">{item.name}</span>
-                <span className="completeLookPrice">
-                  {price.toFixed(2)}
-                  <Image src="/sar.webp" alt="ريال" width={14} height={14} className="sarsymbol-img" />
-                  {onSale && <span className="completeLookOldPrice">{regular.toFixed(0)}</span>}
-                </span>
-                <span className="completeLookCta">اختر المقاس ←</span>
-              </div>
-            </Link>
-          );
-        })}
+        {items.map((item) => (
+          <CompleteLookItem key={item.id} item={item} onAdd={onAdd} />
+        ))}
       </div>
     </section>
   );
@@ -562,6 +668,14 @@ useEffect(() => {
     for (let i = 0; i < quantity; i++) addToCart(itemPayload);
 
     toast.success(`تمت إضافة ${quantity} قطعة إلى السلة`, {
+      style: { borderRadius: '10px', background: '#333', color: '#fff' },
+      iconTheme: { primary: '#fff', secondary: '#333' },
+    });
+  };
+
+  const handleAddCrossSell = (itemPayload) => {
+    addToCart(itemPayload);
+    toast.success(`تمت إضافة ${itemPayload.name} إلى السلة`, {
       style: { borderRadius: '10px', background: '#333', color: '#fff' },
       iconTheme: { primary: '#fff', secondary: '#333' },
     });
@@ -1043,6 +1157,13 @@ useEffect(() => {
             </div>
           )}
 
+          {/* ── Complete the look (cross-sells) ── */}
+          <CompleteTheLook
+            items={crossSellProducts}
+            currentPrice={currentPrice}
+            onAdd={handleAddCrossSell}
+          />
+
           {product.short_description && (
             <div className="featuresBox">
               <h3>نبذة عن المنتج</h3>
@@ -1053,8 +1174,6 @@ useEffect(() => {
           {/* Trust info for mobile (desktop shows it inside the buy box) */}
           <PurchaseTrustInfo className="purchaseTrustMobile" />
 
-          {/* ── Complete the look (cross-sells) ── */}
-          <CompleteTheLook items={crossSellProducts} currentPrice={currentPrice} />
 
           {/* Mobile sticky action bar */}
           <div className="mobileActionBox">

@@ -690,37 +690,41 @@
 }
 
 /* =========================================
-   COMPLETE THE LOOK (cross-sells next to product info)
+   COMPLETE THE LOOK (stacked cross-sells, each with options + add button)
    ========================================= */
 .completeLook {
-  margin: 16px 0;
-  padding: 16px;
-  border: 1.5px solid #1B365D;
-  border-radius: 12px;
-  background: #fff;
+  margin: 20px 0;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
   direction: rtl;
 }
 
 .completeLookHeader {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 4px;
   margin-bottom: 12px;
 }
 
 .completeLookHeader h3 {
   font-size: 16px;
   font-weight: 700;
-  color: #1B365D;
+  color: #0f172a;
+  margin: 0;
+}
+
+.completeLookHeader p {
+  font-size: 13px;
+  color: #64748b;
   margin: 0;
 }
 
 .completeLookHint {
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  margin-top: 4px;
   font-size: 12px;
   font-weight: 600;
   color: #15803d;
@@ -742,17 +746,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px;
+  padding: 10px;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  text-decoration: none;
-  color: inherit;
-  background: #f8fafc;
-  transition: border-color 0.2s, background 0.2s;
-}
-
-.completeLookItem:hover {
-  border-color: #1B365D;
+  border-radius: 12px;
   background: #fff;
 }
 
@@ -762,7 +758,8 @@
   flex-shrink: 0;
   border-radius: 8px;
   overflow: hidden;
-  background: #fff;
+  background: #f8fafc;
+  display: block;
 }
 
 .completeLookImage img {
@@ -772,6 +769,7 @@
 }
 
 .completeLookInfo {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -783,6 +781,7 @@
   font-weight: 600;
   color: #0f172a;
   line-height: 1.4;
+  text-decoration: none;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -798,18 +797,61 @@
   color: #1B365D;
 }
 
-.completeLookOldPrice {
-  font-size: 12px;
-  font-weight: 400;
-  color: #94a3b8;
-  text-decoration: line-through;
-  margin-right: 6px;
+.completeLookOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
 }
 
-.completeLookCta {
-  font-size: 12px;
-  font-weight: 600;
+.completeLookSelect {
+  height: 32px;
+  min-width: 70px;
+  padding: 0 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 13px;
+  font-family: inherit;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.completeLookSelect:focus {
+  outline: none;
+  border-color: #1B365D;
+}
+
+.completeLookAddBtn {
+  flex-shrink: 0;
+  align-self: center;
+  min-width: 64px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1.5px solid #1B365D;
+  border-radius: 8px;
+  background: #fff;
   color: #1B365D;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.completeLookAddBtn:hover:not(:disabled) {
+  background: #1B365D;
+  color: #fff;
+}
+
+.completeLookAddBtn:disabled {
+  border-color: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
 }
 
 @media (min-width: 1024px) {
