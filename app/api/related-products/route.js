@@ -1,70 +1,33 @@
 import { NextResponse } from 'next/server';
 
-const MAX_ITEMS = 6;
-const WOO_BASE = 'https://fursatiuniforms.store/wp-json/wc/v3';
-
-function authHeaders() {
-  const auth = Buffer.from(
-    `${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`
-  ).toString('base64');
-  return {
-    'Authorization': `Basic ${auth}`,
-    'Content-Type': 'application/json',
-  };
-}
-
-// Only the variation fields the "complete the look" box needs
-function trimVariation(v) {
-  return {
-    id: v.id,
-    price: v.price,
-    regular_price: v.regular_price,
-    sale_price: v.sale_price,
-    stock_status: v.stock_status,
-    purchasable: v.purchasable,
-    image: v.image ? { src: v.image.src, alt: v.image.alt } : null,
-    attributes: (v.attributes || []).map((a) => ({
-      id: a.id,
-      name: a.name,
-      slug: a.slug,
-      option: a.option,
-    })),
-  };
-}
-
-async function fetchVariations(productId, headers) {
-  const res = await fetch(
-    `${WOO_BASE}/products/${productId}/variations?per_page=100&status=publish`,
-    { headers, cache: 'no-store' }
-  );
-  if (!res.ok) return [];
-  const data = await res.json();
-  return Array.isArray(data) ? data.map(trimVariation) : [];
-}
-
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const idsParam = searchParams.get('ids') || '';
+    const categoryId = searchParams.get('category');
+    const excludeId = searchParams.get('exclude');
+    const perPage = searchParams.get('per_page') || '8';
 
-    // Accept only numeric IDs, no duplicates, capped
-    const ids = [...new Set(
-      idsParam
-        .split(',')
-        .map((id) => id.trim())
-        .filter((id) => /^\d+$/.test(id))
-    )].slice(0, MAX_ITEMS);
-
-    if (ids.length === 0) {
-      return NextResponse.json([]);
+    if (!categoryId) {
+      return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
     }
 
-    const headers = authHeaders();
+    const auth = Buffer.from(
+      `${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`
+    ).toString('base64');
 
-    // orderby=include keeps the same order you set in WordPress "Cross-sells"
-    const url = `${WOO_BASE}/products?include=${ids.join(',')}&per_page=${ids.length}&orderby=include&status=publish`;
+    let url = `https://fursatiuniforms.store/wp-json/wc/v3/products?category=${categoryId}&per_page=${perPage}&status=publish`;
 
-    const response = await fetch(url, { headers, cache: 'no-store' });
+    if (excludeId) {
+      url += `&exclude=${excludeId}`;
+    }
+
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
 
     if (!response.ok) {
       throw new Error(`WooCommerce API error: ${response.status}`);
@@ -72,29 +35,18 @@ export async function GET(request) {
 
     const products = await response.json();
 
-    // Only visible, published, in-stock products
-    const availableProducts = products.filter((product) =>
+    // فلترة المنتجات المتاحة فقط
+    const availableProducts = products.filter(product =>
       product.status === 'publish' &&
-      product.catalog_visibility !== 'hidden' &&
-      product.stock_status !== 'outofstock'
+      product.catalog_visibility !== 'hidden'
     );
 
-    // Variable products need their variations so the customer can pick size/color inline
-    const withVariations = await Promise.all(
-      availableProducts.map(async (product) => ({
-        ...product,
-        variations_data: product.type === 'variable'
-          ? await fetchVariations(product.id, headers)
-          : [],
-      }))
-    );
-
-    return NextResponse.json(withVariations);
+    return NextResponse.json(availableProducts);
 
   } catch (error) {
-    console.error('Error fetching cross-sell products:', error);
+    console.error('Error fetching products:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch cross-sell products' },
+      { error: 'Failed to fetch products' },
       { status: 500 }
     );
   }
