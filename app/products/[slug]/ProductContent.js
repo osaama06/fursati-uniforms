@@ -111,6 +111,7 @@ function CompleteLookItem({ item, onAdd }) {
       name: item.name,
       price: price.toFixed(2),
       image,
+      slug: item.slug,
       selectedAttributes: isVariable ? selected : {},
       customFields: {},
     });
@@ -661,6 +662,7 @@ useEffect(() => {
         extraPrice
       ).toFixed(2),
       image: cartImage,
+      slug: product.slug,
       selectedAttributes,
       customFields: customFieldsWithLabels,
     };
