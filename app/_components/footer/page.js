@@ -1,31 +1,43 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { 
-  Truck, 
-  RotateCcw, 
-  ShieldCheck, 
-  Mail, 
-  MapPin, 
-  Instagram, 
-  Twitter, 
-  Music2 
+import {
+  Truck,
+  RotateCcw,
+  ShieldCheck,
+  Mail,
+  MapPin,
+  Instagram,
+  Twitter,
+  Music2
 } from "lucide-react";
 import "@/styles/components/footer.css";
+
+const PAYMENTS = [
+  { src: "/payments/mada.svg", alt: "مدى" },
+  { src: "/payments/visa.svg", alt: "فيزا" },
+  { src: "/payments/mastercard.svg", alt: "ماستركارد" },
+  { src: "/payments/applepay.svg", alt: "أبل باي" },
+];
+
+const LEGAL = [
+  { src: "/legal/cr.png", alt: "السجل التجاري", label: "السجل التجاري", value: "7042579263" },
+  { src: "/legal/vat.png", alt: "ضريبة القيمة المضافة", label: "الرقم الضريبي", value: "312662765100003" },
+];
 
 export default function Footer() {
   return (
     <footer className="ultra-footer" dir="rtl">
       <div className="footer-container">
         <div className="footer-layout">
-          
+
           <div className="footer-brand-section">
             <div className="brand-header">
               <Image src="/logo.png" alt="لوجو متجر فرصتي" width={40} height={40} />
               <h2 className="brand-logo">فرصتي<span>.</span></h2>
             </div>
             <p className="brand-philosophy">
-              22 عام من الثقة 22عام من الجودة 22 عام من التميز ومازلنا معكم كمان وكمان 
+              22 عام من الثقة 22عام من الجودة 22 عام من التميز ومازلنا معكم كمان وكمان
             </p>
             <div className="social-links-minimal">
               <a href="https://www.tiktok.com/@fursati_uniforms" className="social-icon-btn" aria-label="تيك توك"><Music2 size={18} /></a>
@@ -40,10 +52,8 @@ export default function Footer() {
               <Link href="/about-us">من نحن</Link>
               <Link href="/blog">المدونة</Link>
               <Link href="/contact">اتصل بنا</Link>
-               <span>الرقم الضريبي :312662765100003</span>
-
             </div>
-            
+
             <div className="nav-col">
               <h3>الدعم</h3>
               <Link href="/return-policy">سياسة الاستبدال و الإرجاع</Link>
@@ -73,14 +83,29 @@ export default function Footer() {
           </div>
         </div>
 
+        <div className="legal-info">
+          {LEGAL.map((l) => (
+            <div key={l.src} className="legal-item">
+              <Image src={l.src} alt={l.alt} width={44} height={50} className="legal-logo" />
+              <div className="legal-text">
+                <span className="legal-label">{l.label}</span>
+                <span className="legal-value">{l.value}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <div className="footer-lower">
           <p className="copyright-text">
             © {new Date().getFullYear()} جميع الحقوق محفوظة فرصتي | fursati
           </p>
-          <div className="payment-methods-clean">
-             <span aria-label="مدى">Mada</span> 
-             <span aria-label="فيزا">Visa</span> 
-             <span aria-label="أبل باي">Apple Pay</span> 
+
+          <div className="payment-methods-clean" aria-label="طرق الدفع">
+            {PAYMENTS.map((p) => (
+              <span key={p.src} className="payment-card">
+                <Image src={p.src} alt={p.alt} width={48} height={32} />
+              </span>
+            ))}
           </div>
         </div>
       </div>

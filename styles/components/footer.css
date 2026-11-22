@@ -1,5 +1,3 @@
-
-
 .footer-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -113,7 +111,7 @@
   transition: color 0.3s;
 }
 
-.contact-item:hover, 
+.contact-item:hover,
 .contact-item:hover svg {
   color: #38bdf8 !important;
 }
@@ -124,21 +122,20 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
   margin-top: 40px;
 }
-copyright-text {
+
+.copyright-text {
   color: #555 !important;
   font-size: 13px;
-}
-
-.payment-methods-clean span {
-  color: #333 !important;
-  font-weight: 600;
+  margin: 0;
 }
 
 .brand-philosophy {
   color: #444 !important;
 }
+
 /* ترتيب عناوين الفوتر */
 .nav-col h3 {
   font-size: 18px;
@@ -147,12 +144,64 @@ copyright-text {
   font-weight: 700;
 }
 
+/* بطاقات الدفع */
 .payment-methods-clean {
   display: flex;
-  gap: 15px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #cbd5e1;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.payment-card {
+  display: block;
+  line-height: 0;
+}
+
+.payment-card img {
+  display: block;
+  width: 48px;
+  height: 32px;
+}
+
+/* السجل التجاري والرقم الضريبي */
+.legal-info {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 40px;
+}
+
+.legal-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.legal-logo {
+  width: 44px;
+  height: auto;
+  border-radius: 4px;
+}
+
+.legal-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: right;
+}
+
+.legal-label {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.legal-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  direction: ltr;
+  text-align: right;
+  letter-spacing: 0.5px;
 }
 
 @media (max-width: 992px) {
@@ -160,4 +209,6 @@ copyright-text {
   .brand-header, .social-links-minimal, .contact-item { justify-content: center; }
   .footer-nav-wrapper { grid-template-columns: 1fr; }
   .footer-lower { flex-direction: column; gap: 20px; }
+  .payment-methods-clean { justify-content: center; }
+  .legal-info { gap: 24px; }
 }
