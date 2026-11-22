@@ -14,8 +14,16 @@ import { useWishlist } from '@/app/context/WishlistContext';
 import '@/styles/pages/ProductPage.css';
 
 // ─── Trust info shown next to the add-to-cart button ─────────────────────────
-const FREE_SHIPPING_THRESHOLD = 300;
+const FREE_SHIPPING_THRESHOLD = 200;
 const SHIPPING_FEE = 23;
+
+// نفس الأيقونات والمسارات المستخدمة في الفوتر (app/_components/footer/page.js)
+const PAYMENT_ICONS = [
+  { src: "/payments/mada.svg", alt: "مدى" },
+  { src: "/payments/visa.svg", alt: "فيزا" },
+  { src: "/payments/mastercard.svg", alt: "ماستركارد" },
+  { src: "/payments/applepay.svg", alt: "أبل باي" },
+];
 
 function PurchaseTrustInfo({ className = "" }) {
   return (
@@ -33,7 +41,14 @@ function PurchaseTrustInfo({ className = "" }) {
       </li>
       <li>
         <ShieldCheck className="purchaseTrustIcon" />
-        <span>دفع آمن بالبطاقة، أو الدفع عند الاستلام</span>
+        <span>
+          دفع آمن بالبطاقة، أو الدفع عند الاستلام
+          <span className="purchaseTrustPayments" aria-label="طرق الدفع المتاحة">
+            {PAYMENT_ICONS.map((p) => (
+              <Image key={p.src} src={p.src} alt={p.alt} width={36} height={24} />
+            ))}
+          </span>
+        </span>
       </li>
     </ul>
   );

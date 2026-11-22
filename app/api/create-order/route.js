@@ -17,7 +17,7 @@ const round2 = (n) => Math.round(n * 100) / 100;
 // ─── قواعد الشحن ─────────────────────────────────────────────────────────────
 const SHIPPING_FLAT = 23;
 const COD_FEE = 10; // رسوم الدفع عند الاستلام
-const FREE_SHIPPING_THRESHOLD = 300;
+const FREE_SHIPPING_THRESHOLD = 200;
 
 // ─── حدود ─────────────────────────────────────────────────────────────────────
 const MAX_QTY_PER_LINE = 50;

@@ -150,7 +150,7 @@ export default function CheckoutClient() {
 
   const SHIPPING_COST = 23;
   const COD_FEE = 10; // نفس قيمة السيرفر — للعرض فقط
-  const FREE_SHIPPING_THRESHOLD = 300;
+  const FREE_SHIPPING_THRESHOLD = 200;
 
   // ⚠️ هذي الأرقام للعرض فقط — المبلغ الفعلي يحسبه السيرفر
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);

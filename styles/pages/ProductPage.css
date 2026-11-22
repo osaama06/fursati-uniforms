@@ -674,6 +674,20 @@
   margin: 16px 0;
 }
 
+.purchaseTrust li span.purchaseTrustPayments {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.purchaseTrustPayments img {
+  display: block;
+  width: 36px;
+  height: 24px;
+}
+
 @media (min-width: 1024px) {
   .purchaseTrustMobile { display: none; }
 
