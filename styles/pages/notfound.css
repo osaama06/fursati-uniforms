@@ -1,66 +1,128 @@
 .nf-container {
-  min-height: 80vh;
+  min-height: 70vh;
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: #c2b9e9;
-  padding: 30px;
+  justify-content: center;
+  padding: 60px 20px;
+  background: #f8fafc;
 }
 
 .nf-box {
-  text-align: center;
-  background: #4f4f51;
-  padding: 40px 30px;
-  border-radius: 16px;
-  max-width: 500px;
   width: 100%;
-  box-shadow: 0 0 15px rgba(0,0,0,0.3);
-  color: #fff;
+  max-width: 520px;
+  text-align: center;
+}
+
+/* خط النبض */
+.nf-pulse {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  color: #38bdf8;
+  margin: 0 auto 10px;
+  display: block;
+}
+
+.nf-pulse path {
+  stroke-dasharray: 420;
+  stroke-dashoffset: 420;
+  animation: nf-beat 2.4s ease-in-out infinite;
+}
+
+@keyframes nf-beat {
+  0% { stroke-dashoffset: 420; }
+  60% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -420; }
+}
+
+.nf-code {
+  font-size: 5.5rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #0f172a;
+  margin: 0 0 16px;
+  letter-spacing: 4px;
 }
 
 .nf-title {
-  font-size: 90px;
-  margin: 0;
+  font-size: 1.6rem;
   font-weight: 800;
-  color: #f58f7c;
-}
-
-.nf-sub {
-  font-size: 26px;
-  margin: 10px 0 20px;
+  color: #0f172a;
+  margin: 0 0 14px;
 }
 
 .nf-text {
-  font-size: 18px;
-  line-height: 1.8;
-  opacity: 0.9;
-  margin-bottom: 30px;
+  font-size: 1rem;
+  line-height: 1.9;
+  color: #64748b;
+  margin: 0 0 32px;
+}
+
+.nf-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
 }
 
 .nf-btn {
-  display: inline-block;
-  background: #f58f7c;
-  color: #2c2b30;
-  padding: 12px 25px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 170px;
+  padding: 14px 28px;
   border-radius: 10px;
-  text-decoration: none;
+  font-size: 0.95rem;
   font-weight: 700;
-  transition: 0.2s;
+  text-decoration: none;
+  transition: all 0.3s ease;
 }
 
-.nf-btn:hover {
-  background: #f2c4ce;
+.nf-btn-primary {
+  background: #0f172a;
+  color: #fff;
+  border: 1px solid #0f172a;
 }
 
-/* موبايل */
-@media (max-width: 600px) {
-  .nf-title {
-    font-size: 65px;
-  }
-  .nf-sub {
-    font-size: 22px;
-  }
-  .nf-text {
-    font-size: 16px;
+.nf-btn-primary:hover {
+  background: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.nf-btn-secondary {
+  background: transparent;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+.nf-btn-secondary:hover {
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.nf-help {
+  font-size: 0.9rem;
+  color: #64748b;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.3s;
+}
+
+.nf-help:hover {
+  color: #38bdf8;
+}
+
+@media (max-width: 640px) {
+  .nf-code { font-size: 4.2rem; }
+  .nf-title { font-size: 1.3rem; }
+  .nf-actions { flex-direction: column; }
+  .nf-btn { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-pulse path {
+    animation: none;
+    stroke-dashoffset: 0;
   }
 }
