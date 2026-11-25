@@ -1,12 +1,10 @@
 import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { verifyAppToken } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import AddressForm from './AddressForm';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { robots: 'noindex, nofollow' };
-
-const secret = process.env.WT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987';
 
 async function getCustomerData(email) {
   const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString('base64');
@@ -27,12 +25,8 @@ export default async function AddressPage() {
   const token = cookieStore.get('token')?.value;
   if (!token) redirect('/login');
 
-  let decoded;
-  try {
-    decoded = jwt.verify(token, secret);
-  } catch {
-    redirect('/login');
-  }
+  const decoded = verifyAppToken(token);
+  if (!decoded) redirect('/login');
 
   const customer = await getCustomerData(decoded.email);
   if (!customer) redirect('/account');

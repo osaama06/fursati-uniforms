@@ -1,9 +1,7 @@
 // app/api/my-orders/route.js
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
-
-const secret = process.env.WT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987';
+import { verifyAppToken } from '@/lib/auth';
 
 export async function GET() {
   const cookieStore = await cookies(); // ✅ await
@@ -13,10 +11,12 @@ export async function GET() {
     return NextResponse.json({ error: 'غير مصرح' }, { status: 401 });
   }
 
-  try {
-    const decoded = jwt.verify(token, secret);
-    console.log('decoded token:', decoded);
+  const decoded = verifyAppToken(token);
+  if (!decoded) {
+    return NextResponse.json({ error: 'غير مصرح أو توكن غير صالح' }, { status: 401 });
+  }
 
+  try {
     const customerId = decoded?.customer_id || decoded?.data?.user?.id;
 
     if (!customerId) {

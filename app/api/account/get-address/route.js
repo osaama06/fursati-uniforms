@@ -1,18 +1,14 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
-
-const secret = process.env.WT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987';
+import { verifyAppToken } from '@/lib/auth';
 
 export async function GET() {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
   if (!token) return NextResponse.json({ error: 'غير مسجل' }, { status: 401 });
 
-  let decoded;
-  try {
-    decoded = jwt.verify(token, secret);
-  } catch {
+  const decoded = verifyAppToken(token);
+  if (!decoded) {
     return NextResponse.json({ error: 'توكن غير صالح' }, { status: 401 });
   }
 

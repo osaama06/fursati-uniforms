@@ -16,8 +16,6 @@ export async function POST(request) {
       );
     }
 
-    console.log('🔐 محاولة تسجيل دخول:', username);
-
     // 1️⃣ التحقق من WordPress
     const wpRes = await fetch(WP_JWT_URL, {
       method: 'POST',
@@ -42,8 +40,6 @@ export async function POST(request) {
       );
     }
 
-    console.log('✅ تم التحقق من WordPress:', wpData.user_email);
-
     // 2️⃣ جلب customer_id من WooCommerce
     let customerId = null;
     
@@ -65,7 +61,6 @@ export async function POST(request) {
         const customers = await customerRes.json();
         if (customers && customers.length > 0) {
           customerId = customers[0].id;
-          console.log('✅ customer_id:', customerId);
         }
       }
     } catch (err) {
@@ -79,8 +74,6 @@ export async function POST(request) {
       name: wpData.user_display_name,
       username: wpData.user_nicename
     });
-
-    console.log('✅ تم إنشاء Token - customer_id:', customerId);
 
     // 4️⃣ إنشاء Response
     const response = NextResponse.json({

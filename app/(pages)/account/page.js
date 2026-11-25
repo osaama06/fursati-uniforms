@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { verifyAppToken } from '@/lib/auth';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import LogoutButton from './LogoutButton';
@@ -12,8 +12,6 @@ export const dynamic = 'force-dynamic';
 export const metadata = {
   robots: 'noindex, nofollow',
 };
-
-const secret = process.env.WT_SECRET || '@#Yt5$Dsdg6@!#dfghASD987';
 
 async function getCustomerData(email) {
   if (!email) return null;
@@ -58,12 +56,8 @@ export default async function AccountPage() {
   const token = cookieStore.get('token')?.value;
   if (!token) redirect('/login');
 
-  let decoded;
-  try {
-    decoded = jwt.verify(token, secret);
-  } catch {
-    redirect('/login');
-  }
+  const decoded = verifyAppToken(token);
+  if (!decoded) redirect('/login');
 
   const customerId = decoded?.customer_id || decoded?.data?.user?.id;
 
