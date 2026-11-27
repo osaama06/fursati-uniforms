@@ -5,6 +5,7 @@ import { trackBeginCheckout, savePendingOrder } from '@/lib/analytics';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import styles from '@/styles/pages/checkOut.module.css';
+import { isValidShortNationalAddress, normalizeShortNationalAddress } from '@/lib/shortNationalAddress';
 
 // ─── Moyasar Form ────────────────────────────────────────────────────────────
 const MOYASAR_VERSION = '1.15.0';
@@ -206,7 +207,13 @@ export default function CheckoutClient() {
   const handleOrder = async (e) => {
     e.preventDefault();
     if (!form.phone.trim()) { toast.error('أدخل رقم الجوال'); return; }
-    if (!form.postcode.trim()) { toast.error('أدخل الرقم الوطني'); return; }
+
+    const normalizedPostcode = normalizeShortNationalAddress(form.postcode);
+    if (!isValidShortNationalAddress(normalizedPostcode)) {
+      toast.error('أدخل العنوان الوطني المختصر بصيغة صحيحة (4 أحرف إنجليزية ثم 4 أرقام، مثل ABCD1234)');
+      return;
+    }
+    setForm((prev) => ({ ...prev, postcode: normalizedPostcode }));
 
     setLoading(true);
     try {
@@ -215,6 +222,7 @@ export default function CheckoutClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          postcode: normalizedPostcode,
           cartItems,
           coupon_code:    appliedCoupon?.code || null,
           payment_method: paymentMethod,
@@ -391,9 +399,9 @@ export default function CheckoutClient() {
                 </div>
 
                 <div className={styles.inputGroup}>
-                  <label htmlFor="postcode">الرقم الوطني *</label>
+                  <label htmlFor="postcode">العنوان الوطني المختصر *</label>
                   <input id="postcode" name="postcode" value={form.postcode}
-                    placeholder="الرقم الوطني المختصر 4 حرف - 4 أرقام" onChange={handleChange}
+                    placeholder="مثال: ABCD1234" onChange={handleChange}
                     className={styles.checkoutInput} required />
                 </div>
 

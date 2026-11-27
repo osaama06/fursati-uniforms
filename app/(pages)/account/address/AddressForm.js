@@ -2,15 +2,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { isValidShortNationalAddress, normalizeShortNationalAddress } from '@/lib/shortNationalAddress';
 
-export default function AddressForm({ customerId, billing }) {
+// الهوية تجي من التوكن في السيرفر — ما نرسل customerId
+export default function AddressForm({ billing }) {
   const [data, setData] = useState({
     first_name: billing?.first_name || '',
     last_name:  billing?.last_name  || '',
     phone:      billing?.phone      || '',
     address_1:  billing?.address_1  || '',
     city:       billing?.city       || '',
-    country:    billing?.country    || 'SA',
+    postcode:   billing?.postcode   || '',
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -18,18 +20,31 @@ export default function AddressForm({ customerId, billing }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
     setSuccess(false);
+
+    const normalizedPostcode = normalizeShortNationalAddress(data.postcode);
+    if (!isValidShortNationalAddress(normalizedPostcode)) {
+      setError('العنوان الوطني المختصر يجب أن يكون 4 أحرف إنجليزية ثم 4 أرقام (مثل ABCD1234)');
+      return;
+    }
+
+    setLoading(true);
     try {
       const res = await fetch('/api/account/update-address', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerId, billing: data }),
+        body: JSON.stringify({
+          billing: { ...data, postcode: normalizedPostcode, country: 'SA' },
+        }),
       });
       const json = await res.json();
-      if (res.ok) setSuccess(true);
-      else setError(json.error || 'حدث خطأ');
+      if (res.ok) {
+        setData((prev) => ({ ...prev, postcode: normalizedPostcode }));
+        setSuccess(true);
+      } else {
+        setError(json.error || 'حدث خطأ');
+      }
     } catch {
       setError('خطأ في الاتصال');
     } finally {
@@ -83,18 +98,22 @@ export default function AddressForm({ customerId, billing }) {
           </div>
         ))}
 
-        {/* الدولة */}
+        {/* العنوان الوطني المختصر */}
+        <div style={{ marginBottom: '14px' }}>
+          <label style={labelStyle}>العنوان الوطني المختصر</label>
+          <input
+            value={data.postcode}
+            onChange={e => setData({ ...data, postcode: e.target.value })}
+            placeholder="مثال: ABCD1234"
+            style={{ ...inputStyle, direction: 'ltr', textAlign: 'left' }}
+          />
+        </div>
+
+        {/* الدولة — ثابتة، السعودية فقط */}
         <div style={{ marginBottom: '20px' }}>
           <label style={labelStyle}>الدولة</label>
-          <select value={data.country} onChange={e => setData({ ...data, country: e.target.value })}
-            style={{ ...inputStyle, background: '#fff' }}>
-            <option value="SA">المملكة العربية السعودية</option>
-            <option value="AE">الإمارات</option>
-            <option value="KW">الكويت</option>
-            <option value="QA">قطر</option>
-            <option value="BH">البحرين</option>
-            <option value="OM">عُمان</option>
-          </select>
+          <input value="المملكة العربية السعودية" readOnly
+            style={{ ...inputStyle, background: '#f1f5f9' }} />
         </div>
 
         {success && <Alert type="success">✅ تم حفظ العنوان بنجاح</Alert>}
