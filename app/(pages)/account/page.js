@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { verifyAppToken } from '@/lib/auth';
+import { getCustomerByEmail } from '@/lib/getCustomerByEmail';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import LogoutButton from './LogoutButton';
@@ -13,19 +14,10 @@ export const metadata = {
   robots: 'noindex, nofollow',
 };
 
+// الصفحة تعرض بيانات بديلة لو ما لقينا العميل — فأي فشل يرجّع null
 async function getCustomerData(email) {
-  if (!email) return null;
-  const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString('base64');
   try {
-    const res = await fetch(
-      `https://fursatiuniforms.store/wp-json/wc/v3/customers?email=${encodeURIComponent(email)}`,
-      {
-        headers: { Authorization: `Basic ${auth}` },
-        cache: 'no-store',
-      }
-    );
-    const data = await res.json();
-    return Array.isArray(data) && data.length > 0 ? data[0] : null;
+    return await getCustomerByEmail(email);
   } catch {
     return null;
   }

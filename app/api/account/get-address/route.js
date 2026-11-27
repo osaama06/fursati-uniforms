@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyAppToken } from '@/lib/auth';
+import { getCustomerByEmail } from '@/lib/getCustomerByEmail';
 
 export async function GET() {
   const cookieStore = await cookies();
@@ -12,16 +13,10 @@ export async function GET() {
     return NextResponse.json({ error: 'توكن غير صالح' }, { status: 401 });
   }
 
-  const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString('base64');
-
   try {
-    const res = await fetch(`https://fursatiuniforms.store/wp-json/wc/v3/customers?email=${decoded.email}`, {
-      headers: { Authorization: `Basic ${auth}` },
-      cache: 'no-store',
-    });
-    const data = await res.json();
-    if (!data || data.length === 0) return NextResponse.json({ billing: null });
-    return NextResponse.json({ billing: data[0].billing });
+    const customer = await getCustomerByEmail(decoded.email);
+    if (!customer) return NextResponse.json({ billing: null });
+    return NextResponse.json({ billing: customer.billing ?? null });
   } catch {
     return NextResponse.json({ error: 'خطأ في السيرفر' }, { status: 500 });
   }
