@@ -15,7 +15,7 @@ async function getOrderDetails(orderId) {
   if (!/^\d+$/.test(String(orderId))) return null;
   const auth = Buffer.from(`${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`).toString('base64');
   try {
-    const res = await fetch(`https://fursatiuniforms.store/wp-json/wc/v3/orders/${orderId}`, {
+    const res = await fetch(`${process.env.WOO_URL}/wp-json/wc/v3/orders/${orderId}`, {
       headers: { Authorization: `Basic ${auth}` },
       cache: 'no-store',
     });

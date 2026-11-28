@@ -1,9 +1,9 @@
 // app/api/login/route.js
 import { NextResponse } from 'next/server';
 import { createAppToken } from '@/lib/auth';
+import { getCustomerByEmail } from '@/lib/getCustomerByEmail';
 
 const WP_JWT_URL = process.env.WOO_URL + '/wp-json/jwt-auth/v1/token';
-const WOO_API_URL = process.env.WOO_URL + '/wp-json/wc/v3/customers';
 
 export async function POST(request) {
   try {
@@ -40,47 +40,40 @@ export async function POST(request) {
       );
     }
 
-    // 2️⃣ جلب customer_id من WooCommerce
-    let customerId = null;
-    
+    // 2️⃣ جلب العميل من WooCommerce — getCustomerByEmail تطابق البريد،
+    //    فما نربط الجلسة بعميل ثاني لو تغيّر سلوك فلتر Woo.
+    let customer;
     try {
-      const auth = Buffer.from(
-        `${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`
-      ).toString('base64');
-
-      const customerRes = await fetch(
-        `${WOO_API_URL}?email=${encodeURIComponent(wpData.user_email)}`,
-        {
-          headers: {
-            Authorization: `Basic ${auth}`
-          }
-        }
+      customer = await getCustomerByEmail(wpData.user_email);
+    } catch {
+      // عطل اتصال/سيرفر — ما نصدر توكن ناقص، نطلب إعادة المحاولة
+      return NextResponse.json(
+        { success: false, message: 'تعذّر تحميل حسابك، حاول مرة ثانية' },
+        { status: 503 }
       );
+    }
 
-      if (customerRes.ok) {
-        const customers = await customerRes.json();
-        if (customers && customers.length > 0) {
-          customerId = customers[0].id;
-        }
-      }
-    } catch (err) {
-      console.warn('⚠️ خطأ في جلب العميل:', err.message);
+    // بلا customer_id الطلبات تنعمل كطلبات يتيمة وما تظهر في "طلباتي"
+    if (!customer) {
+      return NextResponse.json(
+        { success: false, message: 'حسابك غير مكتمل، تواصل مع الدعم' },
+        { status: 403 }
+      );
     }
 
     // 3️⃣ إنشاء Token مخصص
     const customToken = createAppToken({
-      customer_id: customerId,
+      customer_id: customer.id,
       email: wpData.user_email,
       name: wpData.user_display_name,
       username: wpData.user_nicename
     });
 
-    // 4️⃣ إنشاء Response
+    // 4️⃣ إنشاء Response — التوكن في الكوكي httpOnly فقط، ما نرجعه في الجسم
     const response = NextResponse.json({
       success: true,
-      token: customToken,
       user: {
-        customer_id: customerId,
+        customer_id: customer.id,
         email: wpData.user_email,
         name: wpData.user_display_name
       }
@@ -102,7 +95,7 @@ export async function POST(request) {
   } catch (err) {
     console.error('❌ خطأ في الخادم:', err);
     return NextResponse.json(
-      { success: false, message: 'خطأ في الخادم', error: err.message },
+      { success: false, message: 'خطأ في الخادم' },
       { status: 500 }
     );
   }

@@ -11,14 +11,27 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
     }
 
+    // أرقام فقط — بدونه القيم تندرج في الرابط وتضيف بارامترات لـ Woo
+    if (!/^\d+$/.test(String(categoryId))) {
+      return NextResponse.json({ error: 'Invalid category ID' }, { status: 400 });
+    }
+
+    const safePerPage = /^\d+$/.test(String(perPage))
+      ? String(Math.min(Math.max(parseInt(perPage, 10), 1), 100))
+      : '8';
+
+    const safeExclude = excludeId
+      ? [...new Set(String(excludeId).split(',').map((s) => s.trim()).filter((s) => /^\d+$/.test(s)))].join(',')
+      : '';
+
     const auth = Buffer.from(
       `${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`
     ).toString('base64');
 
-    let url = `https://fursatiuniforms.store/wp-json/wc/v3/products?category=${categoryId}&per_page=${perPage}&status=publish`;
+    let url = `${process.env.WOO_URL}/wp-json/wc/v3/products?category=${encodeURIComponent(categoryId)}&per_page=${encodeURIComponent(safePerPage)}&status=publish`;
 
-    if (excludeId) {
-      url += `&exclude=${excludeId}`;
+    if (safeExclude) {
+      url += `&exclude=${encodeURIComponent(safeExclude)}`;
     }
 
     const response = await fetch(url, {

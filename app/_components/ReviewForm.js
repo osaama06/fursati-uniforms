@@ -20,10 +20,11 @@ export default function ReviewForm({ isOpen, onClose, onSubmit, isSubmitting, pr
       newErrors.rating = 'يرجى اختيار تقييم';
     }
 
+    // ما فيه حد أدنى — كلمة واحدة تكفي
     if (!formData.comment.trim()) {
       newErrors.comment = 'يرجى كتابة تعليق';
-    } else if (formData.comment.trim().length < 10) {
-      newErrors.comment = 'التعليق يجب أن يكون 10 أحرف على الأقل';
+    } else if (formData.comment.length > 1000) {
+      newErrors.comment = 'التعليق طويل جداً — الحد الأقصى 1000 حرف';
     }
 
     if (!formData.reviewer_name.trim()) {
@@ -164,11 +165,12 @@ export default function ReviewForm({ isOpen, onClose, onSubmit, isSubmitting, pr
                 onChange={(e) => handleInputChange('comment', e.target.value)}
                 placeholder="شاركنا رأيك في المنتج..."
                 rows={4}
+                maxLength={1000}
                 className={`formTextarea ${errors.comment ? 'error' : ''}`}
                 disabled={isSubmitting}
               />
               <div className="commentLength">
-                {formData.comment.length}/500
+                {formData.comment.length}/1000
               </div>
               {errors.comment && <span className="formError">{errors.comment}</span>}
             </div>

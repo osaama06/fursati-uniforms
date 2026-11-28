@@ -29,7 +29,7 @@ async function getRecentOrders(customerId) {
   try {
     // نجيب 10 ونفلتر محاولات الدفع الفاشلة، وبعدها ناخذ آخر 3
     const res = await fetch(
-      `https://fursatiuniforms.store/wp-json/wc/v3/orders?customer=${customerId}&orderby=date&order=desc&per_page=10`,
+      `${process.env.WOO_URL}/wp-json/wc/v3/orders?customer=${encodeURIComponent(customerId)}&orderby=date&order=desc&per_page=10`,
       {
         headers: { Authorization: `Basic ${auth}` },
         cache: 'no-store',

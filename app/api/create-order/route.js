@@ -330,7 +330,7 @@ export async function POST(req) {
       billing: {
         first_name: customerName,
         last_name:  '',
-        email:      payload.email || 'noemail@example.com',
+        email:      payload.email || '',
         phone,
         address_1:  address,
         city,

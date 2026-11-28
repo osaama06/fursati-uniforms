@@ -1,4 +1,10 @@
 // app/api/reviews/route.js
+
+// سقف أعلى فقط — ما فيه حد أدنى، تعليق بكلمة واحدة مقبول
+const MAX_COMMENT = 1000;
+const MAX_NAME = 100;
+const MAX_EMAIL = 200;
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const productId = searchParams.get('product_id');
@@ -7,13 +13,18 @@ export async function GET(request) {
     return Response.json({ error: 'Product ID is required' }, { status: 400 });
   }
 
+  // رقم فقط — بدونه القيمة تندرج في الرابط وتضيف بارامترات لـ Woo
+  if (!/^\d+$/.test(String(productId))) {
+    return Response.json({ error: 'Invalid product ID' }, { status: 400 });
+  }
+
   const auth = Buffer.from(
     `${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`
   ).toString('base64');
 
   try {
     const response = await fetch(
-      `https://fursatiuniforms.store/wp-json/wc/v3/products/reviews?product=${productId}&per_page=100`,
+      `${process.env.WOO_URL}/wp-json/wc/v3/products/reviews?product=${encodeURIComponent(productId)}&per_page=100`,
       {
         headers: {
           Authorization: `Basic ${auth}`,
@@ -68,13 +79,28 @@ export async function POST(request) {
     );
   }
 
+  if (!/^\d+$/.test(String(product_id))) {
+    return Response.json({ error: 'Invalid product ID' }, { status: 400 });
+  }
+
+  // سقف أعلى فقط — التعليق القصير مقبول
+  if (String(comment).length > MAX_COMMENT) {
+    return Response.json(
+      { error: `التعليق طويل جداً — الحد الأقصى ${MAX_COMMENT} حرف` },
+      { status: 400 }
+    );
+  }
+  if (String(reviewer_name).length > MAX_NAME || String(reviewer_email).length > MAX_EMAIL) {
+    return Response.json({ error: 'الاسم أو البريد طويل جداً' }, { status: 400 });
+  }
+
   const auth = Buffer.from(
     `${process.env.WOO_CONSUMER_KEY}:${process.env.WOO_SECRET_KEY}`
   ).toString('base64');
 
   try {
     const response = await fetch(
-      'https://fursatiuniforms.store/wp-json/wc/v3/products/reviews',
+      `${process.env.WOO_URL}/wp-json/wc/v3/products/reviews`,
       {
         method: 'POST',
         headers: {
@@ -87,6 +113,9 @@ export async function POST(request) {
           reviewer: reviewer_name,
           reviewer_email: reviewer_email,
           rating: parseInt(rating),
+          // الافتراضي في Woo هو approved — أي نشر فوري بلا مراجعة.
+          // hold = بانتظار المراجعة، والتقييم ما يظهر لين يُعتمد يدوياً.
+          status: 'hold',
         }),
       }
     );
@@ -97,9 +126,11 @@ export async function POST(request) {
       throw new Error(data.message || 'Failed to submit review');
     }
 
+    // التقييم بحالة hold، والـ GET يرجّع المعتمد فقط — فما يظهر الحين.
+    // الرسالة لازم تقول كذا عشان العميل ما يستغرب.
     return Response.json({
       success: true,
-      message: 'تم إرسال تقييمك بنجاح!',
+      message: 'تم إرسال تقييمك وسيظهر بعد المراجعة',
       review: data,
     });
   } catch (error) {

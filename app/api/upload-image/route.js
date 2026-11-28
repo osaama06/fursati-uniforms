@@ -17,8 +17,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'لم يتم إرسال ملف' }, { status: 400 });
     }
 
-    // التحقق من النوع
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    // التحقق من النوع — نفس قائمة صفحة المنتج بالضبط (كان السيرفر يقبل gif والواجهة لا)
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json({ error: 'نوع الملف غير مدعوم. يرجى رفع صورة JPG أو PNG أو WEBP' }, { status: 400 });
     }
@@ -36,8 +36,13 @@ export async function POST(request) {
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
-          folder: 'furssati-orders',
+          folder: 'furssati-orders',   // مجلد ثابت — لا يتحكم فيه العميل
+          // resource_type: 'image' هو الحامي الفعلي — file.type يجي من العميل
+          // وقابل للتلاعب، وكلاوديناري يرفض اللي ما هو صورة.
           resource_type: 'image',
+          overwrite: false,            // ما نكتب فوق أصل موجود
+          unique_filename: true,       // اسم عشوائي لكل رفعة
+          use_filename: false,         // ما نستخدم اسم ملف العميل
           transformation: [{ quality: 'auto', fetch_format: 'auto' }],
         },
         (error, result) => {

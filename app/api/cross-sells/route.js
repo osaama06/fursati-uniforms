@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 const MAX_ITEMS = 6;
-const WOO_BASE = 'https://fursatiuniforms.store/wp-json/wc/v3';
+const WOO_BASE = `${process.env.WOO_URL}/wp-json/wc/v3`;
 
 function authHeaders() {
   const auth = Buffer.from(
